@@ -20,10 +20,10 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
+          --health-cmd "pg_isready -U smartbus -d neondb"
+          --health-interval 5s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
 
     steps:
       - name: Checkout Code
@@ -41,7 +41,7 @@ jobs:
 
       - name: Run Backend Unit Tests
         env:
-          DB_HOST: localhost
+          DB_HOST: 127.0.0.1
           DB_PORT: 5432
           DB_NAME: neondb
           DB_USERNAME: smartbus
@@ -49,7 +49,7 @@ jobs:
           DB_SSL_MODE: disable
         run: |
           cd backend
-          ./mvnw clean test
+          ./mvnw clean test -B
 
   frontend-build:
     name: Frontend TypeScript Build (React 19)
