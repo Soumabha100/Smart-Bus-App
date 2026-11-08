@@ -28,8 +28,8 @@ If you have **Docker Desktop** installed, you do **not** need to install Java 25
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/<your-repo-path>/AI-Smart-Bus-Application.git
-   cd AI-Smart-Bus-Application
+   git clone https://github.com/Soumabha100/Smart-Bus-App.git
+   cd Smart-Bus-App
    ```
 2. **Create your `.env` file:**
    * On Mac/Linux: `cp .env.example .env`
