@@ -71,5 +71,16 @@
   - Added interactive password reveal and friendly error preview banner to demonstrate realistic travel diary authentication states.
 - **Problems & Fixes**:
   - Ensured all SVG paths match the original Stitch coordinates (`M 45 285 C 90 275...` and `M 28 68 C 45 45...`) for visual continuity.
+
+## Phase 4 - Screen 3: Progressive Form with RHF & Zod (2026-11-13)
+- **Files Changed**:
+  - `frontend/src/schemas/authSchema.ts`: Created strict validation schemas for registration and login (`name` min 2, `email` valid format, `password` min 8 with at least one letter and one number).
+  - `frontend/src/pages/RegisterPage.tsx`: Built interactive 3-step progressive account creation interface (Step 1: Name, Step 2: Email, Step 3: Password).
+- **Decisions & Why**:
+  - Maintained single persistent `react-hook-form` instance across step transitions so travelers can navigate back (`handlePrev`) without losing entered data.
+  - Added visual indicator dots that reflect active step (coral pill) vs completed steps (teal dots).
+  - Added real-time password strength meter and contextual hints on Step 3 for friendly security guidance.
+- **Problems & Fixes**:
+  - Used explicit per-step validation triggers (`trigger('name')`, `trigger('email')`) before allowing transition to the next step.
 - **Next Steps**:
-  - Phase 4: Build Screen 3 (Register) with a 3-step animated form using `react-hook-form` and `zod` validation, preserving form state across back/forward navigation.
+  - Phase 5: Backend Auth & API Services (`com.smartbus.auth`, Flyway migration `V2__create_users.sql`, `POST /api/auth/register`, `POST /api/auth/login`, JWT filter, and frontend `httpClient.ts` / `authApi.ts`).
