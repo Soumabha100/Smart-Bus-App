@@ -1,0 +1,35 @@
+<!-- Roamly Register Screen (Stitch ID: 20939f58cf94478e82d93103c1c9f79d) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0B1220] text-[#FFF7ED] font-['Inter'] min-h-screen flex flex-col p-4">
+  <div class="max-w-md mx-auto w-full pt-10 flex flex-col items-center">
+    <!-- 3-step indicator dots -->
+    <div class="flex items-center gap-3 mb-8">
+      <div class="w-8 h-2 rounded-full bg-[#FF7A59]"></div>
+      <div class="w-2 h-2 rounded-full bg-white/20"></div>
+      <div class="w-2 h-2 rounded-full bg-white/20"></div>
+    </div>
+
+    <h1 class="font-['Sora'] text-2xl font-bold mb-2 text-center">Step 1: What is your name?</h1>
+    <p class="text-sm text-gray-400 mb-6 text-center">Your travel diary identity</p>
+
+    <div class="w-full bg-[#19202E]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-xl flex flex-col gap-4">
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5" for="name">Full Name</label>
+        <input class="w-full h-12 px-4 rounded-xl bg-[#0B1220] border border-white/15 focus:outline-none focus:border-[#FF7A59] text-white text-sm" id="name" placeholder="e.g. Rohan Sen"/>
+      </div>
+      <button class="w-full h-12 rounded-full bg-[#FF7A59] text-white font-['Sora'] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#e06547] transition-all mt-4">
+        <span>Next</span>
+        <span>→</span>
+      </button>
+    </div>
+  </div>
+</body>
+</html>
+
