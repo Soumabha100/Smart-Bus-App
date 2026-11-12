@@ -61,5 +61,15 @@
 - **Problems & Fixes**:
   - TypeScript `verbatimModuleSyntax` flagged type-only import for `BusTicketData`; adjusted to `import type`.
   - Synchronized `SystemStatusPage` property names to match `SystemStatus` interface in `types/system.ts`.
+
+## Phase 3 - Screens 1 & 2 High-Fidelity Conversion (2026-11-13)
+- **Files Changed**:
+  - `frontend/src/pages/OnboardingPage.tsx`: Built full high-fidelity Onboarding screen faithful to `01-onboarding.html`. Includes atmospheric sunrise gradient, multi-layered tea hill silhouettes, glowing Journey Line ribbon, animated waypoint beads, silhouetted travel bus on hilltop, waypoint note pill (`Siliguri ⟿ Darjeeling • 3h 15m • Twilight express`), Chapter I badge, poetic typography, feature mosaic chips, and glowing pill CTA.
+  - `frontend/src/pages/LoginPage.tsx`: Built complete Traveler Login screen matching `02-login.html`. Includes top app header with back button and brand mark, lyrical journey line SVG illustration with wanderer tram carriage, Traveler Vault badge, ambient parchment card, friendly toggleable error banner (*"That password doesn’t match. Try again?"*), email input with `local_post_office` icon and saved traveler indicator, password input with `lock_open` and eye toggle, Continue button with glowing dot, social sign-in buttons, *"New here? Join us"* prompt, travel diary snippet tile (*"Kyoto Express · Car 4"*), and offline pass security badge.
+- **Decisions & Why**:
+  - Encapsulated mobile viewports inside `max-w-[480px]` with desktop ambient centering to guarantee identical pixel-perfect geometry at both 390px and 1440px.
+  - Added interactive password reveal and friendly error preview banner to demonstrate realistic travel diary authentication states.
+- **Problems & Fixes**:
+  - Ensured all SVG paths match the original Stitch coordinates (`M 45 285 C 90 275...` and `M 28 68 C 45 45...`) for visual continuity.
 - **Next Steps**:
-  - Phase 3: Convert Onboarding and Login into high-fidelity React screens matching the Stitch HTML reference at 390px and 1440px.
+  - Phase 4: Build Screen 3 (Register) with a 3-step animated form using `react-hook-form` and `zod` validation, preserving form state across back/forward navigation.
