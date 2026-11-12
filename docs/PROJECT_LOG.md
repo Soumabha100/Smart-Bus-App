@@ -41,5 +41,25 @@
   - Implemented `PerforatedTicket` using physical circular cutout notches (`-ml-3` and `-mr-3`) combined with dashed border styling for guaranteed cross-browser consistency without clipping box-shadows.
 - **Problems & Fixes**:
   - Initial `npm install` encountered peer dependency conflict on React 19; resolved cleanly via `--legacy-peer-deps` without breaking React 19 compatibility.
+
+## Phase 2 - Routing Skeleton (2026-11-13)
+- **Files Changed**:
+  - `frontend/src/utils/tokenStorage.ts`: Created JWT and session state storage manager with typed retrieval.
+  - `frontend/src/components/auth/ProtectedRoute.tsx`: Built auth guard that routes unauthorized travelers to `/login` preserving origin intent.
+  - `frontend/src/pages/OnboardingPage.tsx`: Initialized route `/`.
+  - `frontend/src/pages/LoginPage.tsx`: Initialized route `/login`.
+  - `frontend/src/pages/RegisterPage.tsx`: Initialized route `/register`.
+  - `frontend/src/pages/HomePage.tsx`: Initialized protected route `/home`.
+  - `frontend/src/pages/ResultsPage.tsx`: Initialized protected route `/results`.
+  - `frontend/src/pages/NotFoundPage.tsx`: Initialized 404 handler for unmatched routes.
+  - `frontend/src/pages/SystemStatusPage.tsx`: Preserved Sprint 0 walking skeleton health check at `/system-status`.
+  - `frontend/src/pages/index.ts`: Central barrel exports for all page views.
+  - `frontend/src/App.tsx`: Wired `BrowserRouter`, `Routes`, and route guards.
+- **Decisions & Why**:
+  - Preserved the existing system status verification UI at `/system-status` so that backend/Neon health checks remain fully accessible.
+  - Wrapped `/home` and `/results` in `ProtectedRoute` to enforce authentication boundaries as specified.
+- **Problems & Fixes**:
+  - TypeScript `verbatimModuleSyntax` flagged type-only import for `BusTicketData`; adjusted to `import type`.
+  - Synchronized `SystemStatusPage` property names to match `SystemStatus` interface in `types/system.ts`.
 - **Next Steps**:
-  - Phase 2: Routing skeleton in `App.tsx` for all 5 discovered pages plus 404 page and `ProtectedRoute`.
+  - Phase 3: Convert Onboarding and Login into high-fidelity React screens matching the Stitch HTML reference at 390px and 1440px.
