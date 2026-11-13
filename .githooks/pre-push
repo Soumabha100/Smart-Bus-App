@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Smart Bus Bengal - Git Pre-Push Hook: Branch Protection
+# Prevents direct pushes to the 'main' branch to prevent merge conflicts.
+# ==============================================================================
+
+protected_branch="main"
+
+while read local_ref local_sha remote_ref remote_sha
+do
+    if [[ "$remote_ref" =~ "refs/heads/$protected_branch"$ ]] && [ "$ALLOW_MAIN_PUSH" != "1" ]; then
+        echo ""
+        echo "🛑 [GIT BLOCKED] Direct push to '$protected_branch' is prohibited for this project!"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "👉 Reason: To protect against accidental conflicts and ensure CI tests pass,"
+        echo "   all changes must go through a feature branch and a GitHub Pull Request."
+        echo ""
+        echo "💡 Recommended Workflow:"
+        echo "   1. Create your branch : git checkout -b feature/your-feature-name"
+        echo "   2. Push your branch   : git push -u origin feature/your-feature-name"
+        echo "   3. Open a Pull Request: https://github.com/Soumabha100/Smart-Bus-App/pulls"
+        echo ""
+        echo "🚨 Emergency Bypass (use only if critical):"
+        echo "   git push --no-verify origin $protected_branch"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo ""
+        exit 1
+    fi
+done
+
+exit 0
+
