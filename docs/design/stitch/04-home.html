@@ -1,0 +1,100 @@
+<!-- Roamly Home Screen (Stitch ID: b8335398de02489ebcdda21a191a8001) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0B1220] text-[#FFF7ED] font-['Inter'] min-h-screen flex flex-col pb-24">
+  <div class="max-w-md mx-auto w-full px-4 pt-8">
+    <header class="flex items-center justify-between mb-6">
+      <div>
+        <p class="text-xs uppercase tracking-widest text-[#2DD4BF]">Good evening</p>
+        <h1 class="font-['Sora'] text-2xl font-bold text-white">Rohan Sen</h1>
+      </div>
+      <div class="w-10 h-10 rounded-full bg-[#19202E] border border-white/10 flex items-center justify-center font-bold text-[#FF7A59]">
+        RS
+      </div>
+    </header>
+
+    <!-- Plan Your Line Card -->
+    <div class="w-full bg-[#19202E]/70 backdrop-blur-xl border border-white/10 rounded-3xl p-5 mb-6 shadow-xl">
+      <h2 class="font-['Sora'] text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Plan your line</h2>
+      
+      <!-- Big Circles Joined by Curved Dotted Line -->
+      <div class="flex items-center justify-between relative px-4 py-2 mb-6">
+        <button class="flex flex-col items-center gap-1 z-10">
+          <div class="w-16 h-16 rounded-full bg-[#0B1220] border-2 border-[#2DD4BF] flex items-center justify-center text-lg font-bold text-[#2DD4BF] shadow-[0_0_15px_rgba(45,212,191,0.3)]">
+            KOL
+          </div>
+          <span class="text-xs text-gray-300">Kolkata</span>
+        </button>
+
+        <!-- Curved Dotted Line -->
+        <div class="flex-1 mx-2 relative flex items-center justify-center">
+          <svg class="w-full h-8" viewBox="0 0 100 24" fill="none">
+            <path d="M 0 12 C 30 2, 70 22, 100 12" stroke="#44E2CD" stroke-width="2" stroke-dasharray="4 4"/>
+          </svg>
+        </div>
+
+        <button class="flex flex-col items-center gap-1 z-10">
+          <div class="w-16 h-16 rounded-full bg-[#0B1220] border-2 border-[#FF7A59] flex items-center justify-center text-lg font-bold text-[#FF7A59] shadow-[0_0_15px_rgba(255,122,89,0.3)]">
+            DAR
+          </div>
+          <span class="text-xs text-gray-300">Darjeeling</span>
+        </button>
+      </div>
+
+      <!-- Date Chips -->
+      <div class="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none">
+        <button class="px-4 py-2 rounded-full bg-[#FF7A59] text-white text-xs font-semibold shrink-0">Today, 14 Nov</button>
+        <button class="px-4 py-2 rounded-full bg-[#0B1220] border border-white/10 text-gray-300 text-xs shrink-0">Tomorrow, 15 Nov</button>
+        <button class="px-4 py-2 rounded-full bg-[#0B1220] border border-white/10 text-gray-300 text-xs shrink-0">Sat, 16 Nov</button>
+      </div>
+
+      <!-- Mood Chips -->
+      <div class="flex flex-wrap gap-2">
+        <button class="px-3.5 py-1.5 rounded-full bg-[#2DD4BF]/20 border border-[#2DD4BF] text-[#2DD4BF] text-xs font-medium">✨ Sleep well</button>
+        <button class="px-3.5 py-1.5 rounded-full bg-[#0B1220] border border-white/10 text-gray-400 text-xs">⚡ Fastest</button>
+        <button class="px-3.5 py-1.5 rounded-full bg-[#0B1220] border border-white/10 text-gray-400 text-xs">💰 Budget friendly</button>
+        <button class="px-3.5 py-1.5 rounded-full bg-[#0B1220] border border-white/10 text-gray-400 text-xs">🌄 Scenic route</button>
+      </div>
+    </div>
+
+    <!-- Journeys People Love Section -->
+    <h3 class="font-['Sora'] text-base font-semibold mb-3">Journeys people love</h3>
+    <div class="flex gap-4 overflow-x-auto pb-4 scrollbar-none">
+      <div class="min-w-[240px] bg-[#19202E]/60 border border-white/10 rounded-2xl p-4 shrink-0">
+        <div class="flex items-center justify-between text-xs text-gray-400 mb-2">
+          <span>Siliguri ⟿ Gangtok</span>
+          <span class="text-[#2DD4BF] font-semibold">₹450</span>
+        </div>
+        <p class="font-['Sora'] text-sm font-semibold text-white mb-2">Teesta River Ridge</p>
+        <div class="text-[11px] text-gray-400">4h 30m • Scenic mountain pass</div>
+      </div>
+      <div class="min-w-[240px] bg-[#19202E]/60 border border-white/10 rounded-2xl p-4 shrink-0">
+        <div class="flex items-center justify-between text-xs text-gray-400 mb-2">
+          <span>Kolkata ⟿ Digha</span>
+          <span class="text-[#2DD4BF] font-semibold">₹320</span>
+        </div>
+        <p class="font-['Sora'] text-sm font-semibold text-white mb-2">Bay Coastline Express</p>
+        <div class="text-[11px] text-gray-400">4h 00m • AC Volvo Sleeper</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Bottom Bar with Center 'Go' Button -->
+  <div class="fixed bottom-4 inset-x-0 max-w-md mx-auto px-4 z-50">
+    <div class="h-16 rounded-full bg-[#19202E]/90 backdrop-blur-xl border border-white/15 px-6 flex items-center justify-between shadow-2xl">
+      <button class="text-xs text-[#2DD4BF] font-medium">Explore</button>
+      <a href="/results" class="w-14 h-14 -mt-5 rounded-full bg-gradient-to-tr from-[#FF7A59] to-[#FFB4A2] text-white flex items-center justify-center font-['Sora'] font-bold text-sm shadow-[0_4px_16px_rgba(255,122,89,0.5)]">
+        Go
+      </a>
+      <button class="text-xs text-gray-400 font-medium">Saved</button>
+    </div>
+  </div>
+</body>
+</html>
+

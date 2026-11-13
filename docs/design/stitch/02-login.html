@@ -1,0 +1,65 @@
+<!-- Roamly Login Screen (Stitch ID: 84483d8ff4b84293a465aaa4c036e06a) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#FFF7ED] text-[#0B1220] font-['Inter'] min-h-screen flex flex-col p-4">
+  <div class="max-w-md mx-auto w-full pt-8 pb-12 flex flex-col items-center">
+    <!-- Curved Route Line Decoration -->
+    <div class="w-48 h-20 mb-4 flex items-center justify-center">
+      <svg class="w-full h-full" viewBox="0 0 200 90" fill="none">
+        <defs>
+          <linearGradient id="loginRouteGrad" x1="20" y1="70" x2="180" y2="55" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#FF7A59"></stop>
+            <stop offset="50%" stop-color="#FFB4A2"></stop>
+            <stop offset="100%" stop-color="#2DD4BF"></stop>
+          </linearGradient>
+        </defs>
+        <path d="M 28 68 C 45 45, 65 20, 100 20 C 135 20, 145 60, 172 58" stroke="url(#loginRouteGrad)" stroke-width="4" stroke-linecap="round"></path>
+        <circle cx="28" cy="68" r="5" fill="#FF7A59"></circle>
+        <circle cx="100" cy="20" r="4" fill="#FFB4A2"></circle>
+        <circle cx="172" cy="58" r="6" fill="#2DD4BF"></circle>
+      </svg>
+    </div>
+
+    <h1 class="font-['Sora'] text-2xl font-bold text-[#0B1220] text-center mb-1">Good to see you again</h1>
+    <p class="text-sm text-gray-600 text-center mb-6">Pick up right where your travel diary left off</p>
+
+    <!-- Error Banner Example -->
+    <div class="w-full bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-2xl mb-4 text-sm flex items-center justify-between">
+      <span>That password doesn't match. Try again?</span>
+      <a href="#" class="text-xs text-[#FF7A59] underline font-medium">Forgot?</a>
+    </div>
+
+    <!-- Login Form Card -->
+    <div class="w-full bg-white/80 backdrop-blur-xl border border-amber-100 rounded-3xl p-6 shadow-sm flex flex-col gap-4">
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1.5" for="email">Email</label>
+        <input class="w-full h-12 px-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#FF7A59] text-sm" id="email" type="email" placeholder="wanderer@roamly.journal"/>
+      </div>
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600" for="password">Password</label>
+        </div>
+        <div class="relative">
+          <input class="w-full h-12 px-4 pr-12 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#FF7A59] text-sm" id="password" type="password" placeholder="••••••••"/>
+        </div>
+      </div>
+
+      <button class="w-full h-12 rounded-full bg-[#0B1220] text-white font-['Sora'] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[#19202E] transition-all mt-2">
+        <span>Continue</span>
+        <span>→</span>
+      </button>
+    </div>
+
+    <p class="mt-6 text-sm text-gray-600">
+      New here? <a href="/register" class="text-[#FF7A59] font-medium hover:underline">Join us</a>
+    </p>
+  </div>
+</body>
+</html>
+

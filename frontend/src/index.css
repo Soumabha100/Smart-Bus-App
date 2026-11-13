@@ -1,1 +1,94 @@
 @import "tailwindcss";
+
+@theme {
+  --color-midnight: #0B1220;
+  --color-midnight-surface: #0C1321;
+  --color-midnight-low: #151B2A;
+  --color-midnight-container: #19202E;
+  --color-midnight-high: #232A39;
+  --color-midnight-highest: #2E3544;
+
+  --color-cream: #FFF7ED;
+  --color-cream-light: #FFFDF9;
+  --color-cream-muted: #DFC0B8;
+
+  --color-coral: #FF7A59;
+  --color-coral-hover: #E06547;
+  --color-coral-light: #FFB4A2;
+  --color-coral-subtle: #FFDAD2;
+
+  --color-teal: #2DD4BF;
+  --color-teal-glow: #44E2CD;
+  --color-teal-dark: #004D44;
+  --color-teal-light: #62FAE3;
+
+  --color-theme-morning-peach: #FDBA74;
+  --color-theme-morning-gold: #F59E0B;
+  --color-theme-evening-violet: #8B5CF6;
+  --color-theme-evening-deep: #1E1B4B;
+  --color-theme-night-navy: #0B1220;
+  --color-theme-night-teal: #2DD4BF;
+
+  --font-sora: "Sora", sans-serif;
+  --font-inter: "Inter", sans-serif;
+
+  --radius-24: 24px;
+}
+
+/* Glass card styling */
+.glass-card {
+  background: rgba(25, 32, 46, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card-light {
+  background: rgba(255, 247, 237, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 122, 89, 0.15);
+}
+
+/* Perforated ticket edge effect */
+.ticket-stub {
+  position: relative;
+  background: rgba(25, 32, 46, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+}
+
+/* Keyframe animations */
+@keyframes dash {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Accessibility: prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
