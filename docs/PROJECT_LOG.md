@@ -103,3 +103,64 @@
   8. Scoped Feature Work: Modifications limited strictly to the assigned feature scope.
   9. Continuous Documentation: All changes, decisions, and problem resolutions logged in `docs/PROJECT_LOG.md`.
   10. Integration Path: Changes integrated via Git branches and GitHub Pull Requests.
+
+## Phase 5 - Replacement of HomePage with Stitch AI Travel Intelligence Dashboard (2026-11-13)
+- **Stitch Design ID**: `8136311009390191591` ("ROAMLY — AI Travel Intelligence Dashboard")
+- **Files Modified**:
+  - `frontend/src/pages/HomePage.tsx`: Completely replaced the obsolete HomePage visual implementation with the new Stitch AI Travel Intelligence Dashboard layout while maintaining existing route `/home`, auth guard integration (`ProtectedRoute`), and user session handling (`tokenStorage`).
+- **Layout & Components Implemented**:
+  1. **Top Fixed Navigation Header**:
+     - Modern ROAMLY logo with bus insignia.
+     - Navigation items: `Dashboard` (active tab), `Route Planning` (scrolls to planner), `My Bookings` (navigates to `/results`), `AI Assistant` (opens Copilot drawer), and `Risk Reports` (scrolls to intelligence panel).
+     - Live indicator: `AI Engine Online` badge with pulsing teal dot.
+     - Interactive Notifications popover showcasing live radar and vehicle status alerts.
+     - Traveler Profile avatar with initial badge, user email display, and one-click Sign Out action.
+  2. **Telemetry Context Ribbon**:
+     - Telemetry Workspace / Bengal Transit Radar `v4.8 Predictive` breadcrumb.
+     - High-speed NH12/NH19 Sensor Array indicator with 12ms live sync pulse.
+  3. **Three-Column Desktop Grid** (`1440px` target canvas):
+     - **Left Column (`lg:col-span-3`) - Smart Route Planner**:
+       - Predictive Engine header with Adaptive badge.
+       - Terminus inputs for Origin (Esplanade Terminus) and Destination (Tenzing Norgay Terminus) with swap button.
+       - Depart Date & Depart Time selectors with calendar/clock glyphs.
+       - Reach-by Deadline (`08:30 AM Next Day`, "Target Met").
+       - Interactive Max Budget Cap range slider (₹800 to ₹3,500) with dynamic currency formatting.
+       - Bus specification fleet filter chips (`Volvo Multi-Axle Sleeper`, `BharatBenz Seater`, `Electric Luxury`).
+       - Primary CTA `Find Smart Routes` navigating to `/results` with selected query parameters.
+       - Computed routes and timetable fit telemetry helper.
+     - **Central Column (`lg:col-span-6`) - AI Recommended Journey**:
+       - Header banner with continuous telemetry rerouting badge and `98.4% Match Score`.
+       - Operator card: Greenline Volvo B11R 9600 with verified badge, Tier-1 fleet status, and 4.9 rating.
+       - Timeline node display: Kolkata departure (07:45 PM), duration (11h 45m, 584 km via NH12 bypass), and Siliguri arrival (07:30 AM).
+       - Sleek route node bar with Malda Midnight Hub 30-minute rest stop.
+       - Fare card: ₹1,450 (Best Value, ₹1,700 avg strikethrough), 7 Lower Berths Left pulsing alert, and onboard amenity tags.
+       - AI validation metric tiles: 99.1% On-Time, 19% Savings, +60m Headroom.
+       - AI Synthesis Reasoning card explaining the Farakka-Raiganj bypass time savings and dual-driver midnight rotation.
+       - Primary CTA `View Journey & Select Berths` wired directly to `/results`.
+     - **Right Column (`lg:col-span-3`) - Travel Intelligence Panel**:
+       - Live Telemetry radar header.
+       - En Route Micro-Climates: temperature and visibility across Kolkata (28°C Clear), Farakka (24°C Mist), and Siliguri (21°C Crisp) with zero precipitation guarantee.
+       - Route Disruption Radar: NH12 Dalkhola Bypass delay alert (+14m delay auto-compensated in timetable) and Farakka Barrage smooth flow report.
+       - Operator Telemetry Index: Safety 9.8/10, Fleet Age 1.2 yr, Punctuality 96.8%.
+       - Quality & Security Checklist: Highway Security Patrol 24/7, Rest Stop Hygiene Grade A+, 94% Smooth Asphalt.
+       - Terminal advisory for Friday exodus peak.
+  4. **Full-Width Interactive Regional Transit Map**:
+     - Header bar with corridor legend (Primary Active, Express Highway, Slow Corridor) and filter toggles (All Corridors, Live Fleet, Risk Hotspots).
+     - Responsive SVG topology showing West Bengal transit geometry: Hooghly/Ganges river, NH19 western corridor, NH114A coastal corridor, and NH12 North-South corridor.
+     - Glowing rotating hubs for Kolkata and Siliguri, animated active bus particle, and intermediate hub nodes (Digha, Durgapur, Asansol, Malda, Darjeeling).
+     - Floating dynamic cards for Siliguri Gateway Hub (21°C, NH10 Open) and Esplanade Central (Gate 03).
+     - Interactive map controls (Zoom In, Zoom Out, Reset Center).
+  5. **Interactive "Ask ROAMLY" AI Copilot**:
+     - Floating capsule action button in bottom right corner.
+     - Interactive AI chat drawer providing immediate simulated guidance for sleeper berth queries, rest stop amenities, highway delays, and ticket advice.
+  6. **Telemetry Footer**:
+     - ROAMLY AI Predictive Travel Telemetry status and Global Radar Node #402-A metadata.
+- **Design System Fidelity**:
+  - Main background `#0B1020`, Sidebar `#111827`, Card `#192235`, Secondary Card `#202B40`.
+  - Primary coral `#FF8066`, Secondary teal `#19C6B5` / `#42DCCA`, Mint `#75E5D0`.
+  - Typography: `Sora` for headings/metrics, `Inter` for body/labels.
+  - Border radius: 16px/24px rounded cards, pill chips, 12px inputs.
+- **Verification**:
+  - `npm run build` executed successfully (`tsc -b && vite build` bundled with 0 errors).
+  - `npm run lint` executed successfully (0 errors).
+  - Preserved all other pages, components, backend infrastructure, and two-developer collaboration rules.
