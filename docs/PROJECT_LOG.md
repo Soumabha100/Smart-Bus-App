@@ -164,3 +164,49 @@
   - `npm run build` executed successfully (`tsc -b && vite build` bundled with 0 errors).
   - `npm run lint` executed successfully (0 errors).
   - Preserved all other pages, components, backend infrastructure, and two-developer collaboration rules.
+
+## Phase 6 - Implementation of Roamly Smart Bus Journey Planner Stitch Design (2026-11-13)
+- **Stitch Design ID**: `11128684862382041494` ("Roamly - Smart Bus Journey Planner")
+- **Design Theme**: Nocturne Transit (`#0D1320` canvas, `#FF6B4A` primary coral, `#43EDCD` / `#00D2B4` radiant teal, `Sora` & `Inter` typography).
+- **Files Modified**:
+  - `frontend/src/pages/HomePage.tsx`: Faithfully implemented the updated Stitch homepage design in a single responsive component supporting both Desktop (1440 × 1024) and Mobile (390 × 844) viewports.
+- **Components & Features Implemented**:
+  1. **Fixed Navigation Bar (`h-20`)**:
+     - Brand insignia with glowing bus emblem, "Roamly" heading, and "VOYAGE SYSTEMS" tracking subtitle.
+     - Desktop links: `Book Journeys` (active elevated state), `Live Tracker`, `Explore Routes`, `My Bookings`, and `Offers`.
+     - Mobile hamburger toggle drawer with full responsive navigation.
+     - Live `24/7 Telematics Support` indicator with pulsing teal dot.
+     - `₹ INR` currency badge and profile avatar connected to `tokenStorage` with dropdown and Sign Out action.
+  2. **Hero & Smart Journey Planner Module**:
+     - AI-Powered Route Optimization callout ribbon and glowing gradient headline.
+     - Origin input with `Origin Hub` tag, `near_me` icon, clear button, and popular boarding pills ("Silk Board", "Koramangala", "Esplanade").
+     - Centered animated swap button with 180° rotation on click.
+     - Destination input with `Destination` tag, `location_on` icon, clear button, and top drop-offs pills ("Mapusa", "Calangute", "Siliguri").
+     - Hot Routes quick-select pills ("Mumbai", "Hyderabad", "Coimbatore", "Chennai", "Manali", "Pune", "Darjeeling").
+     - Dual schedule grid: Departure schedule (Date & Time Window) and Required Arrival Reach-By cutoff (Reach Date & 07:00 AM Cutoff with Guaranteed On-Time Match badge).
+     - Maximum Travel Budget module: synchronized range slider (₹500 to ₹3,500) updating live `₹ / berth` display, with scale marks and fast preset chips (`₹800`, `₹1,200`, `₹1,500`, `₹2,200`).
+     - Multi-select interactive travel preference chips with coral/teal active indicators (`Sleeper Berth`, `Seater Recliner`, `Climate AC`, `Natural Air`, `Fastest Non-Stop`, `Budget Friendly`, `Western Ghats Scenic`, `Single Women Reserved`).
+     - Primary CTA button "Find My Smart Journey" with loading animation and direct navigation to `/results` passing all selected parameters.
+     - Real-time match banner with verified bus count and criteria reflection.
+  3. **The "Journey Line" Live Telemetrics Visualization**:
+     - Live Waypoint Telemetry header with on-time index and active trip badge.
+     - 4-metric telemetry bar: Departed Origin, Speed & Cabin (74 km/h | 22.5°C), Smart Rest Stop (Hubballi Food Plaza), and Predicted Arrival (12 min ahead of schedule).
+     - SVG Journey Ribbon Visualizer: completed 65% gradient track, waypoint nodes with check and restaurant icons, and animated live bus position beacon with radar ping.
+     - Telematics sensor strip: Dry road surface, twin-driver verification, and 5G active status.
+  4. **"Journeys People Love" Fleet Grid**:
+     - 4 high-demand route cards (Bengaluru → Goa, Mumbai → Pune, Delhi → Manali, Hyderabad → BLR) with fleet categories, star ratings, schedules, and direct "Book Seat" actions wired to `/results`.
+  5. **Weekend Escapes & Curated Getaways**:
+     - Bento-style 3-card grid (Ooty & Nilgiri Heights, Gokarna Quiet Shores, Hampi Ruins & River) with travel windows and starting fares.
+  6. **Roamly Copilot AI Assistant**:
+     - Natural language query search bar with prompt chips ("Solo female quiet sleeper to Hyderabad", "Fastest AC bus Mumbai to Pune").
+     - Real-time parsed parameters response box.
+  7. **Comprehensive Footer**:
+     - Popular Highline Routes, Smart Route AI Guarantee, Safety Protocols, and Roamly Mobile Suite with store badges.
+- **Responsive Adaptations**:
+  - Desktop (1440 × 1024): 2-column input grid with centered floating swap button, 4-column metric bar, 4-column fleet grid, and 3-column bento getaways.
+  - Mobile (390 × 844): Naturally stacks inputs and schedules vertically, swap button centers cleanly, touch targets meet accessibility standards (44px+), zero horizontal scrolling (`overflow-x-hidden`).
+- **Verification**:
+  - `npm run build`: Bundled with 0 errors (`tsc -b && vite build` in 1.49s).
+  - `npm run lint`: 0 errors.
+  - Dev server verified returning HTTP 200 OK.
+  - All existing routes, authentication, and backend APIs preserved.

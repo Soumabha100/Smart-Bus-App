@@ -6,56 +6,106 @@ export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const user = tokenStorage.getUser();
 
-  // Smart Route Planner Form State
-  const [origin, setOrigin] = useState('Kolkata (Esplanade Terminus)');
-  const [destination, setDestination] = useState('Siliguri (Tenzing Norgay Terminus)');
-  const [departDate, setDepartDate] = useState('18 Oct 2025');
-  const [departTime, setDepartTime] = useState('07:30 PM');
-  const [maxBudget, setMaxBudget] = useState(1800);
-  const [selectedFleetClass, setSelectedFleetClass] = useState('Volvo Multi-Axle Sleeper');
+  // ─────────────────────────────────────────────────────────────
+  // 1. JOURNEY PLANNER FORM STATES
+  // ─────────────────────────────────────────────────────────────
+  const [origin, setOrigin] = useState('Bengaluru, Majestic & Indiranagar');
+  const [destination, setDestination] = useState('Goa (Panaji & Madgaon)');
+  const [departDate, setDepartDate] = useState('Fri, 24 Oct 2025');
+  const [departTimeWindow, setDepartTimeWindow] = useState('09:30 PM (Night Cruise)');
+  const [reachDate, setReachDate] = useState('Sat, 25 Oct 2025');
+  const [reachCutoff, setReachCutoff] = useState('07:00 AM (Early Fresh)');
+  const [budget, setBudget] = useState(1500);
 
-  // Interactive UI States
-  const [activeNavTab, setActiveNavTab] = useState<'dashboard' | 'route-planning' | 'my-bookings' | 'ai-assistant' | 'risk-reports'>('dashboard');
-  const [selectedMapFilter, setSelectedMapFilter] = useState<'all' | 'fleet' | 'risk'>('all');
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
-  const [mapZoom, setMapZoom] = useState(1);
-  const [aiChatInput, setAiChatInput] = useState('');
-  const [aiChatMessages, setAiChatMessages] = useState<Array<{ sender: 'ai' | 'user'; text: string }>>([
-    {
-      sender: 'ai',
-      text: 'Namaskar! I am ROAMLY AI Copilot. Ask me anything about West Bengal bus corridors, sleeper berth comfort, NH12 conditions, or rest-stop hygiene.',
-    },
+  // Multi-Select Preference Chips
+  const [selectedPreferences, setSelectedPreferences] = useState<string[]>([
+    'Sleeper Berth',
+    'Climate AC',
+    'Fastest Non-Stop',
+    'Budget Friendly',
   ]);
 
-  const handleSwapTerminals = () => {
+  // UI Interactive States
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSwapRotated, setIsSwapRotated] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // AI Copilot States
+  const [aiPromptInput, setAiPromptInput] = useState(
+    'Find a sleeper bus reaching Panaji before 8 AM with charging ports under ₹1,400'
+  );
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
+
+  // ─────────────────────────────────────────────────────────────
+  // 2. HANDLERS
+  // ─────────────────────────────────────────────────────────────
+  const handleSwap = () => {
+    setIsSwapRotated(!isSwapRotated);
     const temp = origin;
     setOrigin(destination);
     setDestination(temp);
   };
 
-  const handleSearchSmartRoutes = (e?: React.FormEvent) => {
+  const handleTogglePreference = (prefName: string) => {
+    if (selectedPreferences.includes(prefName)) {
+      setSelectedPreferences(selectedPreferences.filter((p) => p !== prefName));
+    } else {
+      setSelectedPreferences([...selectedPreferences, prefName]);
+    }
+  };
+
+  const handleSearchJourneys = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    setIsSearching(true);
+    setTimeout(() => {
+      setIsSearching(false);
+      navigate('/results', {
+        state: {
+          from: origin.split(',')[0].trim(),
+          to: destination.split('(')[0].trim(),
+          date: departDate,
+          budget: budget,
+          preferences: selectedPreferences,
+          mood: selectedPreferences.includes('Fastest Non-Stop')
+            ? 'Fastest'
+            : selectedPreferences.includes('Sleeper Berth')
+            ? 'Sleep well'
+            : 'Recommended',
+        },
+      });
+    }, 400);
+  };
+
+  const handleBookFeaturedRoute = (routeFrom: string, routeTo: string, routePrice: number) => {
     navigate('/results', {
       state: {
-        from: origin.split(' ')[0] || 'Kolkata',
-        to: destination.split(' ')[0] || 'Siliguri',
+        from: routeFrom,
+        to: routeTo,
         date: departDate,
-        mood: 'Fastest',
+        budget: routePrice,
+        mood: 'Recommended',
       },
     });
   };
 
-  const handleSelectRecommendedJourney = () => {
-    navigate('/results', {
-      state: {
-        from: 'Kolkata',
-        to: 'Siliguri',
-        date: departDate,
-        mood: 'Sleep well',
-      },
-    });
+  const handleRunAiPrompt = (overridePrompt?: string) => {
+    const promptText = overridePrompt || aiPromptInput;
+    if (overridePrompt) setAiPromptInput(overridePrompt);
+
+    if (promptText.toLowerCase().includes('hyderabad')) {
+      setAiResponse(
+        'Found 8 Verified Single-Women Sleeper Coaches matching Bengaluru → Hyderabad, Arrival < 07:30 AM, Budget Cap ₹1,200, CCTV & Emergency Alert Shield.'
+      );
+    } else if (promptText.toLowerCase().includes('pune')) {
+      setAiResponse(
+        'Found 12 Superfast Multi-Axle AC Coaches matching Mumbai → Pune, Departures after 06:00 PM, Highway Express Priority Lane, ₹449.'
+      );
+    } else {
+      setAiResponse(
+        'Found 14 Luxury Sleeper Coaches matching Bengaluru → Panaji, Arrival < 08:00 AM, Price Cap ₹1,400, Guaranteed Type-C Charging Ports.'
+      );
+    }
   };
 
   const handleSignOut = () => {
@@ -63,212 +113,144 @@ export const HomePage: React.FC = () => {
     navigate('/login');
   };
 
-  const handleSendAiMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!aiChatInput.trim()) return;
-
-    const query = aiChatInput.trim();
-    setAiChatMessages((prev) => [...prev, { sender: 'user', text: query }]);
-    setAiChatInput('');
-
-    setTimeout(() => {
-      let reply = 'Our real-time NH12 radar confirms road expansion between Farakka and Raiganj is operating smoothly with minimal fog index.';
-      const lower = query.toLowerCase();
-      if (lower.includes('berth') || lower.includes('seat') || lower.includes('sleeper')) {
-        reply = 'Lower berths 04L & 06L on the Greenline Volvo B11R 9600 feature 180° flat beds, individual reading lamps, and universal 220V charging ports.';
-      } else if (lower.includes('food') || lower.includes('malda') || lower.includes('hygiene') || lower.includes('stop')) {
-        reply = 'The Malda Midnight Rest Hub (01:15 AM) has Grade A+ certified sanitized restrooms, vegetarian & non-veg dining options, and 24/7 security.';
-      } else if (lower.includes('delay') || lower.includes('traffic') || lower.includes('jam')) {
-        reply = 'Dalkhola bypass currently has a minor +14 min delay which is already factored into your 07:30 AM arrival schedule.';
-      }
-      setAiChatMessages((prev) => [...prev, { sender: 'ai', text: reply }]);
-    }, 600);
-  };
-
   return (
-    <div className="bg-[#0B1020] font-['Inter',sans-serif] text-[#F5F5FA] min-h-screen relative selection:bg-[#FF8066]/30 selection:text-[#FF8066]">
+    <div className="bg-[#0D1320] font-['Inter',sans-serif] text-[#DDE2F5] min-h-screen selection:bg-[#00D0B2]/30 selection:text-[#00D0B2] overflow-x-hidden relative">
       {/* ─────────────────────────────────────────────────────────────
-          TOP FIXED NAVIGATION BAR
+          AMBIENT CANVAS BACKGROUND REFRACTIONS
           ───────────────────────────────────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0B1020]/90 backdrop-blur-xl border-b border-[#1E293B]">
-        <div className="h-16 max-w-[1440px] mx-auto px-4 sm:px-8 flex items-center justify-between gap-6">
-          {/* Logo & Navigation Links */}
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/home')}>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#FF8066] to-[#19C6B5] p-0.5 flex items-center justify-center shadow-lg shadow-[#FF8066]/20">
-                <div className="w-full h-full bg-[#0B1020] rounded-[6px] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[#FF8066] text-[20px]">directions_bus</span>
+      <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-gradient-to-b from-[#FF6B4A]/15 via-[#43EDCD]/10 to-transparent blur-[140px] pointer-events-none -z-10" />
+      <div className="absolute top-[800px] -left-64 w-[600px] h-[600px] bg-[#43EDCD]/5 blur-[160px] pointer-events-none -z-10" />
+      <div className="absolute top-[1600px] -right-64 w-[700px] h-[700px] bg-[#FFB4A3]/5 blur-[180px] pointer-events-none -z-10" />
+
+      {/* ─────────────────────────────────────────────────────────────
+          HEADER: FIXED DESKTOP & MOBILE NAVIGATION
+          ───────────────────────────────────────────────────────────── */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#080E1B]/85 backdrop-blur-2xl border-b border-[#2F3543]/40 shadow-[0_4px_30px_-4px_rgba(0,0,0,0.5)]">
+        <div className="h-20 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between gap-4">
+          {/* Brand Logo & Tagline */}
+          <div className="flex items-center gap-6 lg:gap-10">
+            <button
+              type="button"
+              onClick={() => navigate('/home')}
+              className="flex items-center gap-3 group text-left cursor-pointer focus:outline-none"
+            >
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FF6B4A] to-[#43EDCD] p-0.5 flex items-center justify-center shadow-lg shadow-[#FF6B4A]/25 transition-transform duration-300 group-hover:scale-105">
+                <div className="w-full h-full bg-[#080E1B] rounded-[10px] flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[#FF6B4A] text-[22px]">directions_bus</span>
                 </div>
               </div>
-              <span className="font-['Sora',sans-serif] text-lg font-bold tracking-wider text-[#F5F5FA] uppercase">
-                ROAMLY
-              </span>
-            </div>
+              <div className="flex flex-col">
+                <span className="font-['Sora',sans-serif] text-xl font-bold tracking-tight text-[#DDE2F5] leading-none">
+                  Roamly
+                </span>
+                <span className="text-[10px] text-[#43EDCD] tracking-widest uppercase font-semibold mt-1">
+                  Voyage Systems
+                </span>
+              </div>
+            </button>
 
-            <nav className="hidden lg:flex items-center gap-1">
+            {/* Desktop Navigation Links */}
+            <nav className="hidden xl:flex items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => setActiveNavTab('dashboard')}
-                className={`px-4 py-2 font-['Inter',sans-serif] text-sm font-semibold rounded-lg transition-colors ${
-                  activeNavTab === 'dashboard'
-                    ? 'bg-[#202B40] text-[#FF8066] border border-[#232F48]'
-                    : 'text-[#A5ADBE] hover:text-[#F5F5FA] hover:bg-[#192235]'
-                }`}
+                onClick={() => navigate('/home')}
+                className="px-4 py-2 rounded-lg font-['Inter',sans-serif] text-sm font-semibold transition-all duration-200 bg-[#242A38] text-[#57FBDB] shadow-[0_0_16px_-4px_rgba(67,237,205,0.25)] border border-[#2F3543]/50"
               >
-                Dashboard
+                Book Journeys
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  setActiveNavTab('route-planning');
-                  const el = document.getElementById('route-planner-section');
+                  const el = document.getElementById('live-tracker-section');
                   el?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className={`px-4 py-2 font-['Inter',sans-serif] text-sm transition-colors rounded-lg ${
-                  activeNavTab === 'route-planning'
-                    ? 'bg-[#202B40] text-[#FF8066] border border-[#232F48]'
-                    : 'text-[#A5ADBE] hover:text-[#F5F5FA] hover:bg-[#192235]'
-                }`}
+                className="px-4 py-2 rounded-lg font-['Inter',sans-serif] text-sm text-[#E1BFB8] hover:text-[#DDE2F5] hover:bg-[#1A1F2D] transition-all duration-200"
               >
-                Route Planning
+                Live Tracker
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  setActiveNavTab('my-bookings');
-                  navigate('/results');
+                  const el = document.getElementById('journeys-love-section');
+                  el?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className={`px-4 py-2 font-['Inter',sans-serif] text-sm transition-colors rounded-lg ${
-                  activeNavTab === 'my-bookings'
-                    ? 'bg-[#202B40] text-[#FF8066] border border-[#232F48]'
-                    : 'text-[#A5ADBE] hover:text-[#F5F5FA] hover:bg-[#192235]'
-                }`}
+                className="px-4 py-2 rounded-lg font-['Inter',sans-serif] text-sm text-[#E1BFB8] hover:text-[#DDE2F5] hover:bg-[#1A1F2D] transition-all duration-200"
+              >
+                Explore Routes
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/results')}
+                className="px-4 py-2 rounded-lg font-['Inter',sans-serif] text-sm text-[#E1BFB8] hover:text-[#DDE2F5] hover:bg-[#1A1F2D] transition-all duration-200"
               >
                 My Bookings
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  setActiveNavTab('ai-assistant');
-                  setIsAiChatOpen(true);
-                }}
-                className={`px-4 py-2 font-['Inter',sans-serif] text-sm transition-colors rounded-lg ${
-                  activeNavTab === 'ai-assistant'
-                    ? 'bg-[#202B40] text-[#FF8066] border border-[#232F48]'
-                    : 'text-[#A5ADBE] hover:text-[#F5F5FA] hover:bg-[#192235]'
-                }`}
-              >
-                AI Assistant
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveNavTab('risk-reports');
-                  const el = document.getElementById('travel-intelligence-section');
+                  const el = document.getElementById('copilot-section');
                   el?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className={`px-4 py-2 font-['Inter',sans-serif] text-sm transition-colors rounded-lg ${
-                  activeNavTab === 'risk-reports'
-                    ? 'bg-[#202B40] text-[#FF8066] border border-[#232F48]'
-                    : 'text-[#A5ADBE] hover:text-[#F5F5FA] hover:bg-[#192235]'
-                }`}
+                className="px-4 py-2 rounded-lg font-['Inter',sans-serif] text-sm text-[#E1BFB8] hover:text-[#DDE2F5] hover:bg-[#1A1F2D] transition-all duration-200"
               >
-                Risk Reports
+                AI Assistant
               </button>
             </nav>
           </div>
 
-          {/* Right Header Status, Alerts & Profile */}
-          <div className="flex items-center gap-4">
-            {/* Live Indicator */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-[#19C6B5]/10 border border-[#19C6B5]/30">
-              <span className="w-2 h-2 rounded-full bg-[#19C6B5] animate-pulse"></span>
-              <span className="font-['Inter',sans-serif] text-xs font-semibold text-[#19C6B5] tracking-wider uppercase">
-                AI Engine Online
+          {/* Right Header Controls */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* 24/7 Telematics Support Pill */}
+            <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#161B29] border border-[#2F3543]/60 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-[#43EDCD] animate-pulse" />
+              <span className="text-[11px] text-[#57FBDB] uppercase tracking-wider font-semibold">
+                24/7 Telematics Support
               </span>
             </div>
 
-            {/* Notifications Button */}
-            <div className="relative">
-              <button
-                aria-label="Notifications"
-                type="button"
-                onClick={() => {
-                  setIsNotificationsOpen(!isNotificationsOpen);
-                  setIsProfileMenuOpen(false);
-                }}
-                className="relative p-2 rounded-lg text-[#A5ADBE] hover:text-[#F5F5FA] hover:bg-[#192235] transition-colors"
-              >
-                <span className="material-symbols-outlined text-[20px]">notifications</span>
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#FF8066] ring-2 ring-[#0B1020]"></span>
-              </button>
-
-              {/* Notification Popover Dropdown */}
-              {isNotificationsOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-[#192235] border border-[#232F48] rounded-xl shadow-2xl p-4 z-50 text-left">
-                  <div className="flex items-center justify-between pb-3 border-b border-[#232F48] mb-3">
-                    <span className="font-['Sora',sans-serif] text-sm font-semibold text-[#F5F5FA]">
-                      Radar Alerts (2)
-                    </span>
-                    <span className="text-xs text-[#19C6B5]">Live Synced</span>
-                  </div>
-                  <div className="space-y-2.5">
-                    <div className="p-2.5 rounded-lg bg-[#202B40] text-xs">
-                      <div className="flex items-center gap-1.5 text-[#F5B95F] font-semibold mb-1">
-                        <span className="material-symbols-outlined text-[14px]">warning</span>
-                        NH12 Dalkhola Bypass
-                      </div>
-                      <p className="text-[#A5ADBE]">
-                        +14 min heavy traffic delay factored into arrival timetable.
-                      </p>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-[#202B40] text-xs">
-                      <div className="flex items-center gap-1.5 text-[#19C6B5] font-semibold mb-1">
-                        <span className="material-symbols-outlined text-[14px]">verified</span>
-                        Greenline Volvo B11R 9600
-                      </div>
-                      <p className="text-[#A5ADBE]">
-                        Pre-departure inspection completed at Esplanade Bay 04.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+            {/* Currency Selector */}
+            <div className="flex items-center justify-center h-8 px-2.5 rounded-lg bg-[#161B29] border border-[#2F3543]/50 text-[#DDE2F5] text-xs font-semibold">
+              <span className="text-[#BBC6E6]">₹</span>
+              <span className="ml-1 text-[11px] text-[#E1BFB8]">INR</span>
             </div>
 
-            {/* Profile Avatar & Dropdown */}
+            <div className="h-6 w-px bg-[#2F3543]/60 hidden sm:block" />
+
+            {/* Profile Avatar & Menu */}
             <div className="relative">
               <button
                 type="button"
-                onClick={() => {
-                  setIsProfileMenuOpen(!isProfileMenuOpen);
-                  setIsNotificationsOpen(false);
-                }}
-                className="flex items-center gap-2 p-1 rounded-full hover:bg-[#192235] transition-colors focus:outline-none"
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className="flex items-center gap-2.5 p-1 rounded-full hover:bg-[#1A1F2D] transition-colors focus:outline-none"
               >
-                <div className="relative">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FF8066] to-[#75E5D0] flex items-center justify-center text-xs font-bold text-[#0B1020] ring-1 ring-[#232F48]">
-                    {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
-                  </div>
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#19C6B5] ring-2 ring-[#0B1020]"></span>
+                <div className="flex flex-col text-right hidden sm:flex">
+                  <span className="text-xs font-semibold text-[#DDE2F5] leading-tight">
+                    {user?.name || 'Anya S.'}
+                  </span>
+                  <span className="text-[10px] text-[#FFB4A3] flex items-center justify-end gap-1 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B4A] inline-block" />
+                    Roamly Club
+                  </span>
                 </div>
-                <span className="hidden md:inline-block font-['Inter',sans-serif] text-sm text-[#F5F5FA] font-medium">
-                  {user?.name || 'Alex Reed'}
-                </span>
-                <span className="hidden md:inline-block material-symbols-outlined text-[#A5ADBE] text-[18px]">
-                  expand_more
-                </span>
+                <div className="relative">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FF6B4A] to-[#43EDCD] p-0.5 flex items-center justify-center">
+                    <div className="w-full h-full bg-[#1A1F2D] rounded-full flex items-center justify-center text-xs font-bold text-[#DDE2F5]">
+                      {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
+                    </div>
+                  </div>
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#43EDCD] ring-2 ring-[#080E1B]" />
+                </div>
               </button>
 
-              {/* Profile Menu Dropdown */}
+              {/* Profile Dropdown */}
               {isProfileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-[#192235] border border-[#232F48] rounded-xl shadow-2xl p-2 z-50 text-left">
-                  <div className="px-3 py-2 border-b border-[#232F48] mb-1">
-                    <p className="text-sm font-semibold text-[#F5F5FA] truncate">
-                      {user?.name || 'Alex Reed'}
+                <div className="absolute right-0 mt-2 w-56 bg-[#1A1F2D] border border-[#2F3543] rounded-xl shadow-2xl p-2 z-50 text-left">
+                  <div className="px-3 py-2 border-b border-[#2F3543] mb-1">
+                    <p className="text-sm font-semibold text-[#DDE2F5] truncate">
+                      {user?.name || 'Anya S.'}
                     </p>
-                    <p className="text-xs text-[#A5ADBE] truncate">
-                      {user?.email || 'alex.reed@roamly.ai'}
+                    <p className="text-xs text-[#E1BFB8] truncate">
+                      {user?.email || 'anya.traveler@roamly.com'}
                     </p>
                   </div>
                   <button
@@ -277,9 +259,9 @@ export const HomePage: React.FC = () => {
                       setIsProfileMenuOpen(false);
                       navigate('/results');
                     }}
-                    className="w-full text-left px-3 py-2 text-xs text-[#F5F5FA] hover:bg-[#202B40] rounded-lg transition-colors flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 text-xs text-[#DDE2F5] hover:bg-[#242A38] rounded-lg transition-colors flex items-center gap-2"
                   >
-                    <span className="material-symbols-outlined text-[16px] text-[#19C6B5]">confirmation_number</span>
+                    <span className="material-symbols-outlined text-[16px] text-[#43EDCD]">confirmation_number</span>
                     My Bookings
                   </button>
                   <button
@@ -288,16 +270,16 @@ export const HomePage: React.FC = () => {
                       setIsProfileMenuOpen(false);
                       navigate('/system-status');
                     }}
-                    className="w-full text-left px-3 py-2 text-xs text-[#F5F5FA] hover:bg-[#202B40] rounded-lg transition-colors flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 text-xs text-[#DDE2F5] hover:bg-[#242A38] rounded-lg transition-colors flex items-center gap-2"
                   >
-                    <span className="material-symbols-outlined text-[16px] text-[#75E5D0]">health_and_safety</span>
-                    System Health
+                    <span className="material-symbols-outlined text-[16px] text-[#BBC6E6]">health_and_safety</span>
+                    System Status
                   </button>
-                  <div className="border-t border-[#232F48] my-1"></div>
+                  <div className="border-t border-[#2F3543] my-1" />
                   <button
                     type="button"
                     onClick={handleSignOut}
-                    className="w-full text-left px-3 py-2 text-xs text-[#F36B75] hover:bg-[#202B40] rounded-lg transition-colors flex items-center gap-2 font-medium"
+                    className="w-full text-left px-3 py-2 text-xs text-[#FF6B4A] hover:bg-[#242A38] rounded-lg transition-colors flex items-center gap-2 font-medium"
                   >
                     <span className="material-symbols-outlined text-[16px]">logout</span>
                     Sign Out
@@ -305,950 +287,1152 @@ export const HomePage: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Mobile Hamburger Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="xl:hidden p-2 rounded-lg text-[#E1BFB8] hover:text-[#DDE2F5] hover:bg-[#1A1F2D] transition-colors"
+              aria-label="Toggle Navigation"
+            >
+              <span className="material-symbols-outlined text-[24px]">
+                {mobileMenuOpen ? 'close' : 'menu'}
+              </span>
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="xl:hidden bg-[#080E1B] border-b border-[#2F3543] px-4 py-3 space-y-2">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                navigate('/home');
+              }}
+              className="w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-[#242A38] text-[#57FBDB]"
+            >
+              Book Journeys
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                document.getElementById('live-tracker-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="w-full text-left px-3 py-2 rounded-lg text-sm text-[#E1BFB8] hover:bg-[#1A1F2D]"
+            >
+              Live Tracker
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                document.getElementById('journeys-love-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="w-full text-left px-3 py-2 rounded-lg text-sm text-[#E1BFB8] hover:bg-[#1A1F2D]"
+            >
+              Explore Routes
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                navigate('/results');
+              }}
+              className="w-full text-left px-3 py-2 rounded-lg text-sm text-[#E1BFB8] hover:bg-[#1A1F2D]"
+            >
+              My Bookings
+            </button>
+          </div>
+        )}
       </header>
 
       {/* ─────────────────────────────────────────────────────────────
-          MAIN CONTENT WORKSPACE
+          MAIN CONTENT
           ───────────────────────────────────────────────────────────── */}
-      <main className="w-full pt-20 bg-[#0B1020] min-h-[calc(100vh-4rem)] max-w-[1440px] mx-auto px-4 sm:px-8">
-        <div className="flex flex-col w-full text-[#F5F5FA] pb-12">
-          {/* Top Breadcrumb & Status Ribbon */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-[#202B40] text-[#FF8066] border border-[#232F48]">
-                <span className="material-symbols-outlined text-[18px]">alt_route</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs sm:text-sm font-['Inter',sans-serif]">
-                <span className="text-[#A5ADBE]">Telemetry Workspace</span>
-                <span className="text-[#A5ADBE]/40">/</span>
-                <span className="text-[#F5F5FA] font-semibold">Bengal Transit Radar</span>
-                <span className="px-2 py-0.5 rounded-full bg-[#19C6B5]/20 text-[#19C6B5] text-[11px] font-semibold uppercase tracking-wider ml-1">
-                  v4.8 Predictive
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-[#A5ADBE] text-xs bg-[#192235] px-3 py-1.5 rounded-lg border border-[#232F48] shadow-sm">
-                <span className="material-symbols-outlined text-[16px] text-[#19C6B5]">satellite_alt</span>
-                <span>
-                  Telemetry Stream:{' '}
-                  <span className="text-[#F5F5FA] font-medium">NH12 / NH19 High-Speed Sensor Array</span>
-                </span>
-              </div>
-              <div className="hidden sm:flex items-center gap-2 bg-[#192235] px-3 py-1.5 rounded-lg border border-[#232F48] shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-[#19C6B5] animate-ping"></span>
-                <span className="text-xs text-[#F5F5FA] font-medium uppercase tracking-wider">
-                  Sync: 12ms
-                </span>
-              </div>
-            </div>
-          </div>
-
+      <main className="w-full pt-24 sm:pt-28 pb-16 bg-[#0D1320] min-h-[calc(100vh-20rem)]">
+        <div className="flex flex-col w-full relative">
           {/* ─────────────────────────────────────────────────────────
-              SECTION 1: TOP 3-COLUMN DESKTOP GRID (12 Cols)
+              SECTION 1: HERO & SMART JOURNEY PLANNER
               ───────────────────────────────────────────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* ── LEFT COLUMN: SMART ROUTE PLANNER (lg:col-span-3) ── */}
-            <div
-              id="route-planner-section"
-              className="lg:col-span-3 flex flex-col gap-4 bg-[#111827] border border-[#232F48] p-5 rounded-2xl shadow-xl relative overflow-hidden"
-            >
-              {/* Ambient Glow */}
-              <div className="absolute -top-12 -left-12 w-36 h-36 bg-[#FF8066]/10 rounded-full blur-2xl pointer-events-none"></div>
-
-              {/* Title & Adaptive Tag */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] tracking-wider uppercase text-[#A5ADBE] block font-semibold">
-                    Predictive Engine
-                  </span>
-                  <h2 className="font-['Sora',sans-serif] text-lg font-bold text-[#F5F5FA]">
-                    Smart Route Planner
-                  </h2>
-                </div>
-                <div className="px-2.5 py-1 rounded-full bg-[#19C6B5]/20 flex items-center gap-1 border border-[#19C6B5]/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#19C6B5]"></span>
-                  <span className="text-[10px] text-[#19C6B5] font-bold uppercase tracking-wider">
-                    Adaptive
-                  </span>
-                </div>
+          <section className="w-full px-4 sm:px-6 lg:px-12 pt-4 pb-12 flex flex-col items-center">
+            {/* Header Callout & Title */}
+            <div className="max-w-4xl text-center flex flex-col items-center gap-3 mb-8">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#161B29] border border-[#2F3543]/60 shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-[#43EDCD] animate-ping" />
+                <span className="text-xs text-[#57FBDB] uppercase tracking-widest font-semibold">
+                  AI-Powered Route Optimization • Live Bus Tracking
+                </span>
               </div>
+              <h1 className="font-['Sora',sans-serif] text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#DDE2F5] leading-tight">
+                Where would you like to{' '}
+                <span className="bg-gradient-to-r from-[#FF6B4A] via-[#FFB4A3] to-[#43EDCD] bg-clip-text text-transparent">
+                  travel today?
+                </span>
+              </h1>
+              <p className="font-['Inter',sans-serif] text-sm sm:text-base text-[#BBC6E6] max-w-2xl font-light">
+                Plan your journey. We'll find the right bus for you with precision arrival telemetry and instant fare matching.
+              </p>
+            </div>
 
-              {/* Planner Form */}
-              <form className="flex flex-col gap-3.5 mt-1" onSubmit={handleSearchSmartRoutes}>
-                {/* Origin Input */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-semibold text-[#A5ADBE] flex items-center gap-1 uppercase">
-                    <span className="material-symbols-outlined text-[14px] text-[#FF8066]">trip_origin</span>
-                    Origin Terminus
-                  </label>
-                  <div className="relative flex items-center bg-[#202B40] rounded-xl px-3 py-2.5 border border-[#232F48] focus-within:border-[#FF8066] transition-colors">
-                    <span className="material-symbols-outlined text-[18px] text-[#FF8066] mr-2">near_me</span>
-                    <input
-                      type="text"
-                      value={origin}
-                      onChange={(e) => setOrigin(e.target.value)}
-                      className="bg-transparent w-full text-[#F5F5FA] text-sm focus:outline-none"
-                    />
-                  </div>
-                </div>
+            {/* PRIMARY INTERACTIVE JOURNEY PLANNER CARD */}
+            <div className="w-full max-w-6xl bg-[#1A1F2D]/90 backdrop-blur-2xl rounded-[1.75rem] border border-[#2F3543]/60 p-5 sm:p-8 md:p-10 shadow-2xl relative">
+              {/* Top Accent Line */}
+              <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-[#43EDCD]/40 to-transparent" />
 
-                {/* Terminus Swap Button */}
-                <div className="flex justify-center -my-2 relative z-10">
-                  <button
-                    type="button"
-                    onClick={handleSwapTerminals}
-                    className="w-7 h-7 rounded-full bg-[#192235] border border-[#232F48] flex items-center justify-center text-[#A5ADBE] hover:text-[#FF8066] hover:border-[#FF8066] transition-colors shadow-md"
-                    title="Swap Origin and Destination"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">swap_vert</span>
-                  </button>
-                </div>
-
-                {/* Destination Input */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-semibold text-[#A5ADBE] flex items-center gap-1 uppercase">
-                    <span className="material-symbols-outlined text-[14px] text-[#19C6B5]">location_on</span>
-                    Destination Hub
-                  </label>
-                  <div className="relative flex items-center bg-[#202B40] rounded-xl px-3 py-2.5 border border-[#232F48] focus-within:border-[#19C6B5] transition-colors">
-                    <span className="material-symbols-outlined text-[18px] text-[#19C6B5] mr-2">fmd_good</span>
-                    <input
-                      type="text"
-                      value={destination}
-                      onChange={(e) => setDestination(e.target.value)}
-                      className="bg-transparent w-full text-[#F5F5FA] text-sm focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Date & Time Grid */}
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[11px] font-semibold text-[#A5ADBE] uppercase">Depart Date</label>
-                    <div className="flex items-center bg-[#202B40] rounded-xl px-3 py-2 border border-[#232F48]">
-                      <span className="material-symbols-outlined text-[16px] text-[#A5ADBE] mr-1.5">calendar_today</span>
+              <form onSubmit={handleSearchJourneys} className="flex flex-col gap-6">
+                {/* ROW 1: ORIGIN & DESTINATION WITH FLOATING SWAP */}
+                <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
+                  {/* FROM FIELD */}
+                  <div className="relative flex flex-col p-4 rounded-xl bg-[#080E1B] border border-[#2F3543]/60 focus-within:border-[#FF6B4A] focus-within:bg-[#161B29] transition-all">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] text-[#FF6B4A] flex items-center gap-1 uppercase tracking-wider font-semibold">
+                        <span className="material-symbols-outlined text-base">near_me</span>
+                        From / Departing From
+                      </span>
+                      <span className="text-[10px] text-[#BBC6E6] bg-[#2F3543]/40 px-2 py-0.5 rounded-full font-medium">
+                        Origin Hub
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <span className="material-symbols-outlined text-[#FF6B4A] text-2xl">pin_drop</span>
                       <input
                         type="text"
-                        value={departDate}
-                        onChange={(e) => setDepartDate(e.target.value)}
-                        className="bg-transparent w-full text-[#F5F5FA] text-xs font-medium focus:outline-none"
+                        value={origin}
+                        onChange={(e) => setOrigin(e.target.value)}
+                        placeholder="Enter departure city or terminal"
+                        className="w-full bg-transparent text-[#DDE2F5] font-['Sora',sans-serif] text-sm sm:text-base font-semibold focus:outline-none placeholder:text-[#E1BFB8]/40"
                       />
+                      {origin && (
+                        <button
+                          type="button"
+                          onClick={() => setOrigin('')}
+                          className="text-[#E1BFB8] hover:text-[#DDE2F5] transition-colors p-1"
+                          title="Clear input"
+                        >
+                          <span className="material-symbols-outlined text-base">close</span>
+                        </button>
+                      )}
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[11px] font-semibold text-[#A5ADBE] uppercase">Depart Time</label>
-                    <div className="flex items-center bg-[#202B40] rounded-xl px-3 py-2 border border-[#232F48]">
-                      <span className="material-symbols-outlined text-[16px] text-[#A5ADBE] mr-1.5">schedule</span>
-                      <input
-                        type="text"
-                        value={departTime}
-                        onChange={(e) => setDepartTime(e.target.value)}
-                        className="bg-transparent w-full text-[#F5F5FA] text-xs font-medium focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Reach-By Constraint */}
-                <div className="flex flex-col gap-1">
-                  <div className="flex justify-between items-center">
-                    <label className="text-[11px] font-semibold text-[#A5ADBE] uppercase">Reach-By Deadline</label>
-                    <span className="text-[11px] text-[#19C6B5] font-semibold">Target Met</span>
-                  </div>
-                  <div className="flex items-center bg-[#202B40] rounded-xl px-3 py-2 border border-[#232F48]">
-                    <span className="material-symbols-outlined text-[18px] text-[#75E5D0] mr-2">alarm_on</span>
-                    <span className="text-xs text-[#F5F5FA] font-medium">08:30 AM (Next Day)</span>
-                  </div>
-                </div>
-
-                {/* Maximum Budget Slider */}
-                <div className="flex flex-col gap-2 bg-[#192235] p-3 rounded-xl border border-[#232F48]">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[11px] text-[#A5ADBE] uppercase font-semibold">Max Budget Cap</span>
-                    <span className="font-['Sora',sans-serif] text-base font-bold text-[#FF8066]">
-                      ₹{maxBudget.toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="800"
-                    max="3500"
-                    step="50"
-                    value={maxBudget}
-                    onChange={(e) => setMaxBudget(Number(e.target.value))}
-                    className="w-full accent-[#FF8066] h-1.5 bg-[#202B40] rounded-lg cursor-pointer"
-                  />
-                  <div className="flex justify-between text-[10px] text-[#A5ADBE]">
-                    <span>₹800 (Standard)</span>
-                    <span>₹3,500 (Executive)</span>
-                  </div>
-                </div>
-
-                {/* Fleet Class Chips */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] text-[#A5ADBE] uppercase font-semibold">Bus Specification</label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {['Volvo Multi-Axle Sleeper', 'BharatBenz Seater', 'Electric Luxury'].map((fleet) => (
+                    {/* Quick Boarding Pills */}
+                    <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                      <span className="text-[10px] text-[#E1BFB8]">Popular boarding:</span>
                       <button
                         type="button"
-                        key={fleet}
-                        onClick={() => setSelectedFleetClass(fleet)}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                          selectedFleetClass === fleet
-                            ? 'bg-[#FF8066] text-[#0B1020] font-bold shadow-md shadow-[#FF8066]/20'
-                            : 'bg-[#202B40] text-[#A5ADBE] hover:text-[#F5F5FA] border border-[#232F48]'
+                        onClick={() => setOrigin('Bengaluru (Silk Board)')}
+                        className="text-[10px] px-2 py-0.5 rounded bg-[#2F3543]/40 hover:bg-[#2F3543] text-[#DDE2F5] transition-colors"
+                      >
+                        Silk Board
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOrigin('Bengaluru (Koramangala)')}
+                        className="text-[10px] px-2 py-0.5 rounded bg-[#2F3543]/40 hover:bg-[#2F3543] text-[#DDE2F5] transition-colors"
+                      >
+                        Koramangala
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOrigin('Kolkata (Esplanade Terminal)')}
+                        className="text-[10px] px-2 py-0.5 rounded bg-[#2F3543]/40 hover:bg-[#2F3543] text-[#DDE2F5] transition-colors"
+                      >
+                        Kolkata Esplanade
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* SWAP BUTTON (Floating on Desktop, centered on Mobile) */}
+                  <button
+                    type="button"
+                    onClick={handleSwap}
+                    className="lg:absolute lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 z-20 self-center w-12 h-12 rounded-full bg-[#242A38] text-[#43EDCD] hover:text-[#080E1B] hover:bg-[#00D0B2] border border-[#2F3543] transition-all flex items-center justify-center shadow-lg group cursor-pointer"
+                    title="Swap Origin and Destination"
+                  >
+                    <span
+                      className={`material-symbols-outlined text-xl transition-transform duration-300 ${
+                        isSwapRotated ? 'rotate-180' : ''
+                      } group-hover:rotate-180`}
+                    >
+                      sync_alt
+                    </span>
+                  </button>
+
+                  {/* TO FIELD */}
+                  <div className="relative flex flex-col p-4 rounded-xl bg-[#080E1B] border border-[#2F3543]/60 focus-within:border-[#43EDCD] focus-within:bg-[#161B29] transition-all">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] text-[#43EDCD] flex items-center gap-1 uppercase tracking-wider font-semibold">
+                        <span className="material-symbols-outlined text-base">location_on</span>
+                        To / Arriving At
+                      </span>
+                      <span className="text-[10px] text-[#57FBDB] bg-[#43EDCD]/10 px-2 py-0.5 rounded-full font-medium">
+                        Destination
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <span className="material-symbols-outlined text-[#43EDCD] text-2xl">flag</span>
+                      <input
+                        type="text"
+                        value={destination}
+                        onChange={(e) => setDestination(e.target.value)}
+                        placeholder="Enter destination town or drop point"
+                        className="w-full bg-transparent text-[#DDE2F5] font-['Sora',sans-serif] text-sm sm:text-base font-semibold focus:outline-none placeholder:text-[#E1BFB8]/40"
+                      />
+                      {destination && (
+                        <button
+                          type="button"
+                          onClick={() => setDestination('')}
+                          className="text-[#E1BFB8] hover:text-[#DDE2F5] transition-colors p-1"
+                          title="Clear input"
+                        >
+                          <span className="material-symbols-outlined text-base">close</span>
+                        </button>
+                      )}
+                    </div>
+                    {/* Quick Drop-off Pills */}
+                    <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                      <span className="text-[10px] text-[#E1BFB8]">Top drop-offs:</span>
+                      <button
+                        type="button"
+                        onClick={() => setDestination('Goa (Mapusa Junction)')}
+                        className="text-[10px] px-2 py-0.5 rounded bg-[#2F3543]/40 hover:bg-[#2F3543] text-[#DDE2F5] transition-colors"
+                      >
+                        Mapusa
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDestination('Goa (Calangute Circle)')}
+                        className="text-[10px] px-2 py-0.5 rounded bg-[#2F3543]/40 hover:bg-[#2F3543] text-[#DDE2F5] transition-colors"
+                      >
+                        Calangute
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDestination('Siliguri (Tenzing Norgay)')}
+                        className="text-[10px] px-2 py-0.5 rounded bg-[#2F3543]/40 hover:bg-[#2F3543] text-[#DDE2F5] transition-colors"
+                      >
+                        Siliguri
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* QUICK DESTINATION PILLS / HOT ROUTES */}
+                <div className="flex items-center gap-2 flex-wrap pt-1">
+                  <span className="text-xs text-[#BBC6E6] uppercase tracking-wider flex items-center gap-1 font-semibold">
+                    <span className="material-symbols-outlined text-sm">trending_up</span> Hot Routes:
+                  </span>
+                  {['Mumbai', 'Hyderabad', 'Coimbatore', 'Chennai', 'Manali', 'Pune', 'Darjeeling'].map((city) => (
+                    <button
+                      key={city}
+                      type="button"
+                      onClick={() => setDestination(`${city} Terminal Hub`)}
+                      className="px-3 py-1 rounded-full bg-[#161B29] hover:bg-[#2F3543] text-[#DDE2F5] text-xs transition-colors border border-[#2F3543]/50"
+                    >
+                      {city}
+                    </button>
+                  ))}
+                </div>
+
+                {/* ROW 2: DEPARTURE & REACH-BY ARRIVAL REQUIREMENT */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* DEPARTURE SCHEDULE */}
+                  <div className="p-4 rounded-xl bg-[#080E1B] border border-[#2F3543]/60 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-[#DDE2F5] font-semibold flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[#FF6B4A]">directions_bus</span>
+                        Departure Schedule
+                      </span>
+                      <span className="text-[10px] text-[#E1BFB8]">Recommended: Evening</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="p-3 rounded-lg bg-[#161B29] border border-[#2F3543]/50 flex items-center gap-2.5">
+                        <span className="material-symbols-outlined text-[#E1BFB8] text-lg">calendar_today</span>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-[#E1BFB8]">Date</span>
+                          <input
+                            type="text"
+                            value={departDate}
+                            onChange={(e) => setDepartDate(e.target.value)}
+                            className="bg-transparent text-[#DDE2F5] text-xs font-semibold focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-lg bg-[#161B29] border border-[#2F3543]/50 flex items-center gap-2.5">
+                        <span className="material-symbols-outlined text-[#E1BFB8] text-lg">schedule</span>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-[#E1BFB8]">Time Window</span>
+                          <input
+                            type="text"
+                            value={departTimeWindow}
+                            onChange={(e) => setDepartTimeWindow(e.target.value)}
+                            className="bg-transparent text-[#DDE2F5] text-xs font-semibold focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* REACH-BY REQUIREMENT */}
+                  <div className="p-4 rounded-xl bg-[#080E1B] border border-[#2F3543]/60 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-[#43EDCD] font-semibold flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[#43EDCD]">alarm_on</span>
+                        Required Arrival (Reach-By)
+                      </span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#43EDCD]/15 text-[#57FBDB] flex items-center gap-1 font-semibold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#43EDCD]" /> Guaranteed On-Time Match
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="p-3 rounded-lg bg-[#161B29] border border-[#2F3543]/50 flex items-center gap-2.5">
+                        <span className="material-symbols-outlined text-[#E1BFB8] text-lg">event_available</span>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-[#E1BFB8]">Reach Date</span>
+                          <input
+                            type="text"
+                            value={reachDate}
+                            onChange={(e) => setReachDate(e.target.value)}
+                            className="bg-transparent text-[#DDE2F5] text-xs font-semibold focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-lg bg-[#161B29] border border-[#2F3543]/50 flex items-center gap-2.5">
+                        <span className="material-symbols-outlined text-[#43EDCD] text-lg">timer</span>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-[#57FBDB]">Before Morning Cutoff</span>
+                          <input
+                            type="text"
+                            value={reachCutoff}
+                            onChange={(e) => setReachCutoff(e.target.value)}
+                            className="bg-transparent text-[#DDE2F5] text-xs font-semibold focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ROW 3: BUDGET SELECTOR */}
+                <div className="p-4 sm:p-5 rounded-xl bg-[#080E1B] border border-[#2F3543]/60 flex flex-col gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex flex-col">
+                      <span className="font-['Sora',sans-serif] text-sm sm:text-base text-[#DDE2F5] font-semibold flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[#FF6B4A]">currency_rupee</span>
+                        Your Maximum Travel Budget
+                      </span>
+                      <span className="text-xs text-[#BBC6E6]">
+                        Strictly filters verified coaches &amp; berths within your price limit
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                      <span className="text-xs text-[#E1BFB8]">Max Cap:</span>
+                      <div className="px-3.5 py-1.5 rounded-full bg-[#FF6B4A]/20 border border-[#FF6B4A]/40 flex items-center gap-1 shadow-[0_0_16px_-4px_rgba(255,107,74,0.4)]">
+                        <span className="font-['Sora',sans-serif] text-sm sm:text-base font-bold text-[#FFB4A3]">₹</span>
+                        <span className="font-['Sora',sans-serif] text-sm sm:text-base font-bold text-[#FFB4A3]">
+                          {budget.toLocaleString('en-IN')}
+                        </span>
+                        <span className="text-[11px] text-[#BBC6E6] ml-1">/ berth</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Interactive Slider */}
+                  <div className="flex flex-col gap-2 pt-1">
+                    <input
+                      type="range"
+                      min="500"
+                      max="3500"
+                      step="50"
+                      value={budget}
+                      onChange={(e) => setBudget(Number(e.target.value))}
+                      className="w-full accent-[#43EDCD] cursor-pointer h-2 bg-[#242A38] rounded-lg appearance-none"
+                    />
+                    {/* Scale Marks */}
+                    <div className="flex items-center justify-between text-[#E1BFB8] text-[11px] px-1">
+                      <span>Min ₹500</span>
+                      <span>₹800</span>
+                      <span>₹1,200</span>
+                      <span className="text-[#43EDCD] font-bold">₹1,500</span>
+                      <span>₹2,000</span>
+                      <span>Max ₹3,500</span>
+                    </div>
+                  </div>
+
+                  {/* Quick Preset Chips */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-[#E1BFB8]">Fast Presets:</span>
+                    {[
+                      { label: '₹800 Saver', val: 800 },
+                      { label: '₹1,200 Balanced', val: 1200 },
+                      { label: '₹1,500 Popular', val: 1500 },
+                      { label: '₹2,200 Luxury Sleeper', val: 2200 },
+                    ].map((preset) => (
+                      <button
+                        key={preset.val}
+                        type="button"
+                        onClick={() => setBudget(preset.val)}
+                        className={`px-3 py-1 rounded text-xs transition-colors ${
+                          budget === preset.val
+                            ? 'bg-[#43EDCD]/15 text-[#43EDCD] border border-[#43EDCD]/40 font-semibold'
+                            : 'bg-[#161B29] hover:bg-[#2F3543] text-[#DDE2F5] border border-[#2F3543]/50'
                         }`}
                       >
-                        {fleet}
+                        {preset.label}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Action CTA */}
-                <button
-                  type="submit"
-                  className="w-full mt-2 py-3 px-4 rounded-xl bg-[#FF8066] text-[#0B1020] font-['Sora',sans-serif] text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#FF8066]/20 hover:bg-[#ff947d] active:scale-[0.98] transition-all cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[18px]">route</span>
-                  <span>Find Smart Routes</span>
-                </button>
+                {/* ROW 4: TRAVEL PREFERENCES & AMENITIES CHIPS (MULTI-SELECT) */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs sm:text-sm text-[#DDE2F5] font-semibold flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#43EDCD]">tune</span>
+                      Travel Preferences &amp; Coach Configuration (Multi-select)
+                    </span>
+                    <span className="text-[11px] text-[#BBC6E6]">Real-time telematics filters</span>
+                  </div>
 
-                {/* Route Summary Helper */}
-                <div className="flex items-center justify-between text-[#A5ADBE] text-xs px-1 pt-1">
-                  <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px] text-[#19C6B5]">model_training</span>
-                    3 Routes Computed
-                  </span>
-                  <span className="text-[#19C6B5] font-semibold">99.2% Timetable Fit</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {[
+                      { name: 'Sleeper Berth', icon: 'airline_seat_flat', color: 'coral' },
+                      { name: 'Seater Recliner', icon: 'airline_seat_recline_extra', color: 'coral' },
+                      { name: 'Climate AC', icon: 'ac_unit', color: 'teal' },
+                      { name: 'Natural Air', icon: 'mode_fan', color: 'teal' },
+                      { name: 'Fastest Non-Stop', icon: 'bolt', color: 'teal', extra: 'Save 1h 40m' },
+                      { name: 'Budget Friendly', icon: 'savings', color: 'coral', extra: 'Under ₹1,500' },
+                      { name: 'Western Ghats Scenic', icon: 'landscape', color: 'teal' },
+                      { name: 'Single Women Reserved', icon: 'shield_person', color: 'teal' },
+                    ].map((pref) => {
+                      const isSelected = selectedPreferences.includes(pref.name);
+                      const isCoral = pref.color === 'coral';
+                      return (
+                        <button
+                          key={pref.name}
+                          type="button"
+                          onClick={() => handleTogglePreference(pref.name)}
+                          className={`px-3.5 py-2 rounded-full text-xs flex items-center gap-2 transition-all cursor-pointer ${
+                            isSelected
+                              ? isCoral
+                                ? 'bg-[#FF6B4A] text-[#080E1B] font-bold shadow-[0_0_16px_-4px_rgba(255,107,74,0.4)]'
+                                : 'bg-[#43EDCD] text-[#080E1B] font-bold shadow-[0_0_16px_-4px_rgba(67,237,205,0.4)]'
+                              : 'bg-[#161B29] text-[#E1BFB8] hover:text-[#DDE2F5] hover:bg-[#242A38] border border-[#2F3543]/50'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-base">{pref.icon}</span>
+                          <span>{pref.name}</span>
+                          {pref.extra && (
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                                isSelected
+                                  ? 'bg-[#080E1B]/30 text-[#080E1B]'
+                                  : 'bg-[#2F3543]/50 text-[#BBC6E6]'
+                              }`}
+                            >
+                              {pref.extra}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* PRIMARY CTA BUTTON & REAL-TIME MATCH BANNER */}
+                <div className="flex flex-col items-center gap-3 pt-2">
+                  <button
+                    type="submit"
+                    disabled={isSearching}
+                    className="w-full sm:w-auto min-w-[320px] px-8 py-4 rounded-xl bg-gradient-to-r from-[#FF6B4A] via-[#FF6B4A] to-[#43EDCD] text-[#080E1B] font-['Sora',sans-serif] text-base font-bold tracking-tight shadow-[0_0_30px_-5px_rgba(255,107,74,0.5)] hover:shadow-[0_0_40px_-2px_rgba(67,237,205,0.6)] hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-80"
+                  >
+                    {isSearching ? (
+                      <>
+                        <span className="material-symbols-outlined animate-spin text-xl">progress_activity</span>
+                        <span>Calculating Real-time Corridors...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Find My Smart Journey</span>
+                        <span className="material-symbols-outlined text-2xl group-hover:translate-x-1.5 transition-transform">
+                          arrow_forward
+                        </span>
+                      </>
+                    )}
+                  </button>
+
+                  <div className="flex items-center gap-2 text-[#57FBDB] text-xs bg-[#43EDCD]/10 px-4 py-1.5 rounded-full border border-[#43EDCD]/20 text-center">
+                    <span className="material-symbols-outlined text-base text-[#43EDCD]">verified</span>
+                    <span>
+                      48 verified luxury buses match your timing (
+                      <span className="font-bold text-[#DDE2F5]">Reach by {reachCutoff.split(' ')[0]}</span>) &amp; ₹
+                      {budget.toLocaleString('en-IN')} budget
+                    </span>
+                  </div>
                 </div>
               </form>
             </div>
+          </section>
 
-            {/* ── CENTRAL COLUMN: AI RECOMMENDED JOURNEY (lg:col-span-6) ── */}
-            <div className="lg:col-span-6 flex flex-col gap-4">
-              {/* Header Banner Pill */}
-              <div className="flex items-center justify-between bg-[#192235] border border-[#232F48] p-3.5 rounded-2xl shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#19C6B5]/15 flex items-center justify-center text-[#19C6B5]">
-                    <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
-                  </div>
-                  <div>
-                    <h3 className="font-['Sora',sans-serif] text-sm sm:text-base font-bold text-[#F5F5FA]">
-                      AI Recommended Journey
-                    </h3>
-                    <span className="text-xs text-[#A5ADBE]">Continuous telemetry rerouting active</span>
-                  </div>
+          {/* ─────────────────────────────────────────────────────────
+              SECTION 2: THE "JOURNEY LINE" LIVE TELEMETRICS VISUALIZATION
+              ───────────────────────────────────────────────────────── */}
+          <section id="live-tracker-section" className="w-full px-4 sm:px-6 lg:px-12 py-10">
+            <div className="w-full max-w-6xl mx-auto flex flex-col gap-6">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                <div>
+                  <span className="text-xs text-[#43EDCD] uppercase tracking-widest flex items-center gap-1 font-semibold">
+                    <span className="material-symbols-outlined text-base">satellite_alt</span>
+                    Live Waypoint Telemetry
+                  </span>
+                  <h2 className="font-['Sora',sans-serif] text-2xl sm:text-3xl font-bold text-[#DDE2F5] mt-1">
+                    Smart Route AI Progress Ribbon
+                  </h2>
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="px-3 py-1 rounded-full bg-[#19C6B5]/20 text-[#19C6B5] text-xs font-semibold tracking-wide border border-[#19C6B5]/30">
-                    98.4% Match Score
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 bg-[#161B29] px-3.5 py-1.5 rounded-full border border-[#2F3543]/50">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#43EDCD] animate-pulse" />
+                    <span className="text-xs text-[#DDE2F5]">Trip RL-409: In Transit</span>
+                  </div>
+                  <span className="text-xs text-[#FFB4A3] font-bold bg-[#FF6B4A]/10 border border-[#FF6B4A]/30 px-3 py-1 rounded-full">
+                    99.4% On-Time Index
                   </span>
                 </div>
               </div>
 
-              {/* Main Master Card */}
-              <div className="bg-[#161B2B] border border-[#232F48] p-5 sm:p-6 rounded-2xl shadow-xl flex flex-col gap-5 relative overflow-hidden">
-                {/* Glowing accent gradient */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[#19C6B5]/5 rounded-full blur-3xl pointer-events-none"></div>
+              {/* Main Journey Pathway Card */}
+              <div className="w-full bg-[#161B29] border border-[#2F3543]/60 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                {/* Live Route Metrics Bar */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-6 border-b border-[#2F3543]/40 mb-6">
+                  <div className="flex flex-col">
+                    <span className="text-[11px] text-[#BBC6E6]">Departed Origin</span>
+                    <span className="font-['Sora',sans-serif] text-base sm:text-lg font-semibold text-[#DDE2F5]">
+                      10:15 PM
+                    </span>
+                    <span className="text-[11px] text-[#E1BFB8]">Bengaluru Majestic Terminal</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[11px] text-[#BBC6E6]">Current Speed &amp; Cabin</span>
+                    <span className="font-['Sora',sans-serif] text-base sm:text-lg font-semibold text-[#43EDCD] flex items-center gap-1">
+                      74 km/h <span className="text-xs text-[#E1BFB8] font-normal">| 22.5°C</span>
+                    </span>
+                    <span className="text-[11px] text-[#E1BFB8]">Optimal cruising trajectory</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[11px] text-[#BBC6E6]">Smart Rest Stop</span>
+                    <span className="font-['Sora',sans-serif] text-base sm:text-lg font-semibold text-[#DDE2F5]">
+                      Hubballi Food Plaza
+                    </span>
+                    <span className="text-[11px] text-[#57FBDB]">25 min bio-break concluded</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[11px] text-[#BBC6E6]">Predicted Arrival (ETA)</span>
+                    <span className="font-['Sora',sans-serif] text-base sm:text-lg font-bold text-[#FF6B4A]">
+                      06:48 AM
+                    </span>
+                    <span className="text-[11px] text-[#57FBDB]">12 min ahead of schedule</span>
+                  </div>
+                </div>
 
-                {/* Operator Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-12 h-12 rounded-xl bg-[#202B40] border border-[#232F48] flex items-center justify-center text-[#FF8066] shadow-inner">
-                      <span className="material-symbols-outlined text-[26px]">directions_bus</span>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="font-['Sora',sans-serif] text-base sm:text-lg font-bold text-[#F5F5FA]">
-                          Greenline Volvo B11R 9600
-                        </h4>
-                        <span className="material-symbols-outlined text-[#19C6B5] text-[18px]" title="Verified Operator">
-                          verified
-                        </span>
+                {/* SVG Journey Ribbon Visualizer */}
+                <div className="relative py-8">
+                  {/* Timeline Track Background */}
+                  <div className="relative flex items-center justify-between w-full">
+                    {/* Background line */}
+                    <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1.5 bg-[#2F3543]/50 rounded-full" />
+                    {/* Completed portion fill (65%) */}
+                    <div className="absolute left-6 w-[65%] top-1/2 -translate-y-1/2 h-1.5 bg-gradient-to-r from-[#00D0B2] via-[#43EDCD] to-[#FF6B4A] rounded-full shadow-[0_0_12px_rgba(67,237,205,0.6)]" />
+
+                    {/* NODE 1: BENGALURU */}
+                    <div className="relative z-10 flex flex-col items-center text-center">
+                      <div className="w-10 h-10 rounded-full bg-[#43EDCD] flex items-center justify-center text-[#080E1B] shadow-lg">
+                        <span className="material-symbols-outlined text-lg">check</span>
                       </div>
-                      <span className="text-xs text-[#A5ADBE]">
-                        Multi-Axle Ultra Luxury Sleeper (2+1 Berth configuration)
+                      <span className="text-xs sm:text-sm font-semibold text-[#DDE2F5] mt-2">Bengaluru</span>
+                      <span className="text-[10px] text-[#E1BFB8]">10:15 PM Dep</span>
+                    </div>
+
+                    {/* NODE 2: TUMAKURU */}
+                    <div className="relative z-10 flex flex-col items-center text-center hidden sm:flex">
+                      <div className="w-7 h-7 rounded-full bg-[#00D0B2] flex items-center justify-center text-[#080E1B] shadow-md">
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#080E1B]" />
+                      </div>
+                      <span className="text-xs sm:text-sm font-semibold text-[#DDE2F5] mt-2">Tumakuru</span>
+                      <span className="text-[10px] text-[#E1BFB8]">11:32 PM</span>
+                    </div>
+
+                    {/* NODE 3: HUBBALLI */}
+                    <div className="relative z-10 flex flex-col items-center text-center">
+                      <div className="w-8 h-8 rounded-full bg-[#43EDCD] flex items-center justify-center text-[#080E1B] shadow-lg">
+                        <span className="material-symbols-outlined text-sm">restaurant</span>
+                      </div>
+                      <span className="text-xs sm:text-sm font-semibold text-[#DDE2F5] mt-2">Hubballi Hub</span>
+                      <span className="text-[10px] text-[#57FBDB]">03:40 AM (Rest)</span>
+                    </div>
+
+                    {/* LIVE BUS POSITION PULSE */}
+                    <div className="relative z-20 flex flex-col items-center text-center -mt-6">
+                      <div className="relative flex items-center justify-center">
+                        <span className="absolute w-12 h-12 rounded-full bg-[#FF6B4A]/30 animate-ping" />
+                        <div className="w-10 h-10 rounded-full bg-[#FF6B4A] flex items-center justify-center text-[#080E1B] shadow-[0_0_20px_rgba(255,107,74,0.7)]">
+                          <span className="material-symbols-outlined text-xl">directions_bus</span>
+                        </div>
+                      </div>
+                      <span className="text-xs sm:text-sm font-bold text-[#FF6B4A] mt-2">Belagavi Bypass</span>
+                      <span className="text-[10px] text-[#FFB4A3] font-mono">Current 05:10 AM</span>
+                    </div>
+
+                    {/* NODE 4: GOA */}
+                    <div className="relative z-10 flex flex-col items-center text-center">
+                      <div className="w-10 h-10 rounded-full bg-[#242A38] border-2 border-[#43EDCD]/60 flex items-center justify-center text-[#43EDCD] shadow-lg">
+                        <span className="material-symbols-outlined text-lg">flag</span>
+                      </div>
+                      <span className="text-xs sm:text-sm font-semibold text-[#DDE2F5] mt-2">Goa (Panaji)</span>
+                      <span className="text-[10px] text-[#BBC6E6]">Est. 06:48 AM</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Telematics Weather & Road Sensor Strip */}
+                <div className="flex items-center justify-between flex-wrap gap-3 pt-4 border-t border-[#2F3543]/30 mt-4 text-xs">
+                  <div className="flex items-center gap-4 text-[#E1BFB8] flex-wrap">
+                    <span className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm text-[#43EDCD]">thermostat</span> Dry, 21°C Road Surface
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm text-[#43EDCD]">shield</span> Twin-driver rest switch verified
+                    </span>
+                    <span className="flex items-center gap-1 hidden md:flex">
+                      <span className="material-symbols-outlined text-sm text-[#43EDCD]">wifi</span> High-throughput 5G Active
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/results')}
+                    className="text-[#43EDCD] hover:text-[#57FBDB] flex items-center gap-1 font-semibold transition-colors cursor-pointer"
+                  >
+                    <span>Open High-Res Satellite Telematics</span>
+                    <span className="material-symbols-outlined text-sm">open_in_new</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ─────────────────────────────────────────────────────────
+              SECTION 3: "JOURNEYS PEOPLE LOVE" SECTION
+              ───────────────────────────────────────────────────────── */}
+          <section id="journeys-love-section" className="w-full px-4 sm:px-6 lg:px-12 py-12 bg-[#080E1B]/60">
+            <div className="w-full max-w-6xl mx-auto flex flex-col gap-6">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                <div>
+                  <span className="text-xs text-[#FF6B4A] uppercase tracking-widest flex items-center gap-1 font-semibold">
+                    <span className="material-symbols-outlined text-base">favorite</span>
+                    Top Rated Nocturnal Cruises
+                  </span>
+                  <h2 className="font-['Sora',sans-serif] text-2xl sm:text-3xl font-bold text-[#DDE2F5] mt-1">
+                    Journeys People Love
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate('/results')}
+                  className="text-xs sm:text-sm text-[#43EDCD] hover:text-[#57FBDB] flex items-center gap-1 transition-colors self-start sm:self-auto cursor-pointer"
+                >
+                  <span>View all 120+ active routes</span>
+                  <span className="material-symbols-outlined text-base">chevron_right</span>
+                </button>
+              </div>
+
+              {/* 4 Route Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* CARD 1: Bengaluru to Goa */}
+                <div className="flex flex-col bg-[#1A1F2D] border border-[#2F3543]/60 rounded-2xl p-4 hover:-translate-y-1.5 transition-all shadow-md group">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="px-2 py-0.5 rounded-full bg-[#FF6B4A]/20 text-[#FF6B4A] text-[10px] font-semibold">
+                      Overnight Sleeper
+                    </span>
+                    <div className="flex items-center gap-1 text-[#43EDCD] text-xs font-bold">
+                      <span className="material-symbols-outlined text-sm text-[#43EDCD]">star</span>
+                      <span>4.9</span>
+                      <span className="text-[#E1BFB8] font-normal text-[10px]">(1.4k)</span>
+                    </div>
+                  </div>
+                  <div className="h-32 rounded-xl mb-3 relative overflow-hidden bg-[#242A38]">
+                    <div className="w-full h-full bg-gradient-to-tr from-[#161B29] to-[#242A38] flex items-center justify-center">
+                      <span className="material-symbols-outlined text-4xl text-[#FF6B4A]/40">directions_bus</span>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1A1F2D] via-transparent to-transparent" />
+                    <span className="absolute bottom-2 left-2 text-[10px] text-[#DDE2F5] bg-[#080E1B]/80 px-2 py-0.5 rounded backdrop-blur-md">
+                      Scania Multiaxle
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1 mb-3">
+                    <h3 className="font-['Sora',sans-serif] text-base font-bold text-[#DDE2F5]">
+                      Bengaluru → Goa
+                    </h3>
+                    <span className="text-xs text-[#BBC6E6]">Dep: 09:30 PM • Reach 06:45 AM</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-[#2F3543]/40 mt-auto">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-[#E1BFB8]">Fares from</span>
+                      <span className="font-['Sora',sans-serif] text-base font-bold text-[#FF6B4A]">₹1,299</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleBookFeaturedRoute('Bengaluru', 'Goa', 1299)}
+                      className="px-3.5 py-1.5 rounded-lg bg-[#242A38] hover:bg-[#43EDCD] hover:text-[#080E1B] text-[#DDE2F5] text-xs font-semibold transition-all cursor-pointer"
+                    >
+                      Book Seat
+                    </button>
+                  </div>
+                </div>
+
+                {/* CARD 2: Mumbai to Pune */}
+                <div className="flex flex-col bg-[#1A1F2D] border border-[#2F3543]/60 rounded-2xl p-4 hover:-translate-y-1.5 transition-all shadow-md group">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="px-2 py-0.5 rounded-full bg-[#43EDCD]/15 text-[#43EDCD] text-[10px] font-semibold">
+                      Express Hyperlink
+                    </span>
+                    <div className="flex items-center gap-1 text-[#43EDCD] text-xs font-bold">
+                      <span className="material-symbols-outlined text-sm text-[#43EDCD]">star</span>
+                      <span>4.8</span>
+                      <span className="text-[#E1BFB8] font-normal text-[10px]">(3.1k)</span>
+                    </div>
+                  </div>
+                  <div className="h-32 rounded-xl mb-3 relative overflow-hidden bg-[#242A38]">
+                    <div className="w-full h-full bg-gradient-to-tr from-[#161B29] to-[#242A38] flex items-center justify-center">
+                      <span className="material-symbols-outlined text-4xl text-[#43EDCD]/40">bolt</span>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1A1F2D] via-transparent to-transparent" />
+                    <span className="absolute bottom-2 left-2 text-[10px] text-[#DDE2F5] bg-[#080E1B]/80 px-2 py-0.5 rounded backdrop-blur-md">
+                      Electric Volvo
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1 mb-3">
+                    <h3 className="font-['Sora',sans-serif] text-base font-bold text-[#DDE2F5]">
+                      Mumbai → Pune
+                    </h3>
+                    <span className="text-xs text-[#BBC6E6]">Hourly departures • 3h 15m</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-[#2F3543]/40 mt-auto">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-[#E1BFB8]">Fares from</span>
+                      <span className="font-['Sora',sans-serif] text-base font-bold text-[#43EDCD]">₹649</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleBookFeaturedRoute('Mumbai', 'Pune', 649)}
+                      className="px-3.5 py-1.5 rounded-lg bg-[#242A38] hover:bg-[#43EDCD] hover:text-[#080E1B] text-[#DDE2F5] text-xs font-semibold transition-all cursor-pointer"
+                    >
+                      Book Seat
+                    </button>
+                  </div>
+                </div>
+
+                {/* CARD 3: Delhi to Manali */}
+                <div className="flex flex-col bg-[#1A1F2D] border border-[#2F3543]/60 rounded-2xl p-4 hover:-translate-y-1.5 transition-all shadow-md group">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="px-2 py-0.5 rounded-full bg-[#FF6B4A]/20 text-[#FF6B4A] text-[10px] font-semibold">
+                      Nordic Sleeper
+                    </span>
+                    <div className="flex items-center gap-1 text-[#43EDCD] text-xs font-bold">
+                      <span className="material-symbols-outlined text-sm text-[#43EDCD]">star</span>
+                      <span>4.9</span>
+                      <span className="text-[#E1BFB8] font-normal text-[10px]">(980)</span>
+                    </div>
+                  </div>
+                  <div className="h-32 rounded-xl mb-3 relative overflow-hidden bg-[#242A38]">
+                    <div className="w-full h-full bg-gradient-to-tr from-[#161B29] to-[#242A38] flex items-center justify-center">
+                      <span className="material-symbols-outlined text-4xl text-[#FF6B4A]/40">ac_unit</span>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1A1F2D] via-transparent to-transparent" />
+                    <span className="absolute bottom-2 left-2 text-[10px] text-[#DDE2F5] bg-[#080E1B]/80 px-2 py-0.5 rounded backdrop-blur-md">
+                      Heated Berths
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1 mb-3">
+                    <h3 className="font-['Sora',sans-serif] text-base font-bold text-[#DDE2F5]">
+                      Delhi → Manali
+                    </h3>
+                    <span className="text-xs text-[#BBC6E6]">Dep: 06:00 PM • Reach 07:30 AM</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-[#2F3543]/40 mt-auto">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-[#E1BFB8]">Fares from</span>
+                      <span className="font-['Sora',sans-serif] text-base font-bold text-[#FF6B4A]">₹1,450</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleBookFeaturedRoute('Delhi', 'Manali', 1450)}
+                      className="px-3.5 py-1.5 rounded-lg bg-[#242A38] hover:bg-[#43EDCD] hover:text-[#080E1B] text-[#DDE2F5] text-xs font-semibold transition-all cursor-pointer"
+                    >
+                      Book Seat
+                    </button>
+                  </div>
+                </div>
+
+                {/* CARD 4: Hyderabad to Bengaluru */}
+                <div className="flex flex-col bg-[#1A1F2D] border border-[#2F3543]/60 rounded-2xl p-4 hover:-translate-y-1.5 transition-all shadow-md group">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="px-2 py-0.5 rounded-full bg-[#43EDCD]/15 text-[#43EDCD] text-[10px] font-semibold">
+                      Night Glider
+                    </span>
+                    <div className="flex items-center gap-1 text-[#43EDCD] text-xs font-bold">
+                      <span className="material-symbols-outlined text-sm text-[#43EDCD]">star</span>
+                      <span>4.8</span>
+                      <span className="text-[#E1BFB8] font-normal text-[10px]">(2.2k)</span>
+                    </div>
+                  </div>
+                  <div className="h-32 rounded-xl mb-3 relative overflow-hidden bg-[#242A38]">
+                    <div className="w-full h-full bg-gradient-to-tr from-[#161B29] to-[#242A38] flex items-center justify-center">
+                      <span className="material-symbols-outlined text-4xl text-[#43EDCD]/40">nightlight</span>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1A1F2D] via-transparent to-transparent" />
+                    <span className="absolute bottom-2 left-2 text-[10px] text-[#DDE2F5] bg-[#080E1B]/80 px-2 py-0.5 rounded backdrop-blur-md">
+                      Twin Axle AC
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1 mb-3">
+                    <h3 className="font-['Sora',sans-serif] text-base font-bold text-[#DDE2F5]">
+                      Hyderabad → BLR
+                    </h3>
+                    <span className="text-xs text-[#BBC6E6]">Dep: 10:00 PM • Reach 06:15 AM</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-[#2F3543]/40 mt-auto">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-[#E1BFB8]">Fares from</span>
+                      <span className="font-['Sora',sans-serif] text-base font-bold text-[#43EDCD]">₹1,199</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleBookFeaturedRoute('Hyderabad', 'Bengaluru', 1199)}
+                      className="px-3.5 py-1.5 rounded-lg bg-[#242A38] hover:bg-[#43EDCD] hover:text-[#080E1B] text-[#DDE2F5] text-xs font-semibold transition-all cursor-pointer"
+                    >
+                      Book Seat
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ─────────────────────────────────────────────────────────
+              SECTION 4: DESTINATION RECOMMENDATIONS & SMART TRAVEL INSIGHTS
+              ───────────────────────────────────────────────────────── */}
+          <section className="w-full px-4 sm:px-6 lg:px-12 py-12">
+            <div className="w-full max-w-6xl mx-auto flex flex-col gap-6">
+              <div className="flex flex-col">
+                <span className="text-xs text-[#43EDCD] uppercase tracking-widest flex items-center gap-1 font-semibold">
+                  <span className="material-symbols-outlined text-base">explore</span>
+                  Weekend Escapes &amp; Curated Getaways
+                </span>
+                <h2 className="font-['Sora',sans-serif] text-2xl sm:text-3xl font-bold text-[#DDE2F5] mt-1">
+                  Smart Travel Recommendations
+                </h2>
+                <p className="text-xs sm:text-sm text-[#BBC6E6]">
+                  Optimized routes paired with weather reports and early morning drop points.
+                </p>
+              </div>
+
+              {/* Bento-style Getaway Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* ITEM 1: Ooty */}
+                <div className="flex flex-col rounded-2xl bg-[#161B29] border border-[#2F3543]/60 p-6 relative overflow-hidden group hover:bg-[#1A1F2D] transition-colors">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-[#FF6B4A] font-semibold flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">forest</span> Nilgiri Hills
+                    </span>
+                    <span className="text-xs text-[#43EDCD] font-mono">6h 45m Direct</span>
+                  </div>
+                  <h3 className="font-['Sora',sans-serif] text-lg font-bold text-[#DDE2F5] mb-1">
+                    Ooty &amp; Nilgiri Heights
+                  </h3>
+                  <p className="text-xs text-[#BBC6E6] mb-4 leading-relaxed">
+                    Crisp mountain morning arrivals. Enjoy botanical misty strolls with zero check-in waiting time.
+                  </p>
+                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-[#2F3543]/40">
+                    <span className="text-[11px] text-[#E1BFB8]">Best window: Thu - Sun</span>
+                    <span className="text-xs font-semibold text-[#43EDCD]">From ₹899</span>
+                  </div>
+                </div>
+
+                {/* ITEM 2: Gokarna */}
+                <div className="flex flex-col rounded-2xl bg-[#161B29] border border-[#2F3543]/60 p-6 relative overflow-hidden group hover:bg-[#1A1F2D] transition-colors">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-[#43EDCD] font-semibold flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">waves</span> Arabian Coastline
+                    </span>
+                    <span className="text-xs text-[#43EDCD] font-mono">8h 15m Overnight</span>
+                  </div>
+                  <h3 className="font-['Sora',sans-serif] text-lg font-bold text-[#DDE2F5] mb-1">
+                    Gokarna Quiet Shores
+                  </h3>
+                  <p className="text-xs text-[#BBC6E6] mb-4 leading-relaxed">
+                    Pristine beach trekking and serene cafes. Bus drops you steps away from Kudle beach trailheads.
+                  </p>
+                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-[#2F3543]/40">
+                    <span className="text-[11px] text-[#E1BFB8]">Best window: Fri night dep</span>
+                    <span className="text-xs font-semibold text-[#43EDCD]">From ₹1,120</span>
+                  </div>
+                </div>
+
+                {/* ITEM 3: Hampi */}
+                <div className="flex flex-col rounded-2xl bg-[#161B29] border border-[#2F3543]/60 p-6 relative overflow-hidden group hover:bg-[#1A1F2D] transition-colors">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-[#FF6B4A] font-semibold flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">temple_hindu</span> Heritage Boulders
+                    </span>
+                    <span className="text-xs text-[#43EDCD] font-mono">7h 00m Direct</span>
+                  </div>
+                  <h3 className="font-['Sora',sans-serif] text-lg font-bold text-[#DDE2F5] mb-1">
+                    Hampi Ruins &amp; River
+                  </h3>
+                  <p className="text-xs text-[#BBC6E6] mb-4 leading-relaxed">
+                    Sunrise over Matanga Hill. Direct night sleepers ensure you wake up recharged right at the temple ruins.
+                  </p>
+                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-[#2F3543]/40">
+                    <span className="text-[11px] text-[#E1BFB8]">Best window: Oct - Feb</span>
+                    <span className="text-xs font-semibold text-[#43EDCD]">From ₹950</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ─────────────────────────────────────────────────────────
+              SECTION 5: "AI TRAVEL ASSISTANT" (ROAMLY COPILOT WIDGET)
+              ───────────────────────────────────────────────────────── */}
+          <section id="copilot-section" className="w-full px-4 sm:px-6 lg:px-12 py-10 mb-4">
+            <div className="w-full max-w-4xl mx-auto rounded-3xl bg-gradient-to-br from-[#242A38] via-[#1A1F2D] to-[#080E1B] border border-[#2F3543]/70 p-6 sm:p-8 shadow-2xl relative">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#43EDCD] to-[#FF6B4A] flex items-center justify-center text-[#080E1B] shadow-lg">
+                    <span className="material-symbols-outlined text-2xl">neurology</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-['Sora',sans-serif] text-lg sm:text-xl font-bold text-[#DDE2F5]">
+                        Roamly Copilot AI
+                      </h3>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#43EDCD]/15 text-[#43EDCD] font-semibold border border-[#43EDCD]/30">
+                        Natural Query
                       </span>
                     </div>
-                  </div>
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between">
-                    <div className="flex items-center gap-1 text-[#FF8066]">
-                      <span className="material-symbols-outlined text-[16px]">star</span>
-                      <span className="font-['Sora',sans-serif] text-sm font-bold">4.9</span>
-                      <span className="text-xs text-[#A5ADBE]">(842)</span>
-                    </div>
-                    <span className="text-[11px] text-[#19C6B5] uppercase font-bold tracking-wider">
-                      Tier-1 Fleet
-                    </span>
-                  </div>
-                </div>
-
-                {/* Origin -> Destination Nodes with Metrics */}
-                <div className="bg-[#192235] border border-[#232F48] p-4 rounded-xl flex flex-col gap-3.5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[11px] text-[#FF8066] uppercase font-bold">Departs Kolkata</span>
-                      <div className="font-['Sora',sans-serif] text-2xl font-bold text-[#F5F5FA] tracking-tight">
-                        07:45 PM
-                      </div>
-                      <span className="text-xs text-[#A5ADBE]">Esplanade Central (Bay 04)</span>
-                    </div>
-                    <div className="flex flex-col items-center px-2 text-center">
-                      <span className="text-[11px] text-[#19C6B5] font-semibold">11 hrs 45 mins</span>
-                      <div className="flex items-center gap-1 my-1">
-                        <span className="w-2 h-2 rounded-full bg-[#FF8066]"></span>
-                        <span className="w-16 sm:w-24 h-0.5 bg-gradient-to-r from-[#FF8066] via-[#19C6B5] to-[#75E5D0]"></span>
-                        <span className="w-2 h-2 rounded-full bg-[#75E5D0]"></span>
-                      </div>
-                      <span className="text-[11px] text-[#A5ADBE]">584 km via NH12 Bypass</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[11px] text-[#19C6B5] uppercase font-bold">Arrives Siliguri</span>
-                      <div className="font-['Sora',sans-serif] text-2xl font-bold text-[#F5F5FA] tracking-tight">
-                        07:30 AM
-                      </div>
-                      <span className="text-xs text-[#A5ADBE]">Tenzing Norgay Junction</span>
-                    </div>
-                  </div>
-
-                  {/* Route Timeline Node Bar */}
-                  <div className="bg-[#202B40] border border-[#232F48] p-2.5 rounded-lg flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#FF8066] ring-2 ring-[#FF8066]/20"></span>
-                      <span className="text-[#F5F5FA] font-medium">Esplanade (07:45 PM)</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[#A5ADBE] text-[11px] bg-[#192235] px-2.5 py-1 rounded border border-[#232F48]">
-                      <span className="material-symbols-outlined text-[14px] text-[#75E5D0]">restaurant</span>
-                      <span>Malda Midnight Hub (01:15 AM - 30m break)</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#19C6B5] ring-2 ring-[#19C6B5]/20"></span>
-                      <span className="text-[#F5F5FA] font-medium">Siliguri (07:30 AM)</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Pricing & Seat Availability */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#192235]/60 border border-[#232F48] p-3.5 rounded-xl">
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-['Sora',sans-serif] text-3xl font-bold text-[#F5F5FA]">₹1,450</span>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-[#19C6B5] font-bold uppercase">Best Value</span>
-                      <span className="text-xs text-[#A5ADBE] line-through">₹1,700 avg</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#FF8066] animate-pulse"></div>
-                      <span className="text-xs text-[#FF8066] font-bold">7 Lower Berths Left</span>
-                    </div>
-                    <div className="h-5 w-px bg-[#232F48]"></div>
-                    <div className="flex items-center gap-1 text-[#A5ADBE] text-xs">
-                      <span className="material-symbols-outlined text-[16px] text-[#19C6B5]">power</span>
-                      <span>AC • Wi-Fi • Charging</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* AI Validation Badges */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <div className="bg-[#192235] border border-[#232F48] p-2.5 rounded-lg flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[#19C6B5] text-[18px]">verified</span>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-[#F5F5FA]">99.1% On-Time</span>
-                      <span className="text-[10px] text-[#A5ADBE]">Historic adherence</span>
-                    </div>
-                  </div>
-                  <div className="bg-[#192235] border border-[#232F48] p-2.5 rounded-lg flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[#19C6B5] text-[18px]">savings</span>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-[#F5F5FA]">19% Savings</span>
-                      <span className="text-[10px] text-[#A5ADBE]">Inside ₹1,800 limit</span>
-                    </div>
-                  </div>
-                  <div className="bg-[#192235] border border-[#232F48] p-2.5 rounded-lg flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[#19C6B5] text-[18px]">av_timer</span>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-[#F5F5FA]">+60m Headroom</span>
-                      <span className="text-[10px] text-[#A5ADBE]">Ahead of 08:30 AM</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* AI Recommendation Explanation Box */}
-                <div className="bg-[#202B40] border border-[#232F48] p-3.5 rounded-xl flex gap-3 items-start shadow-sm">
-                  <div className="mt-0.5 text-[#19C6B5]">
-                    <span className="material-symbols-outlined text-[22px]">psychology</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] uppercase tracking-wide text-[#19C6B5] font-bold">
-                      AI Synthesis Reasoning
-                    </span>
-                    <p className="text-xs text-[#F5F5FA] leading-relaxed">
-                      NH12 road expansion completed between Farakka and Raiganj saves 45 minutes of idling.
-                      Greenline operates newest BS6 Euro-6 chassis with certified dual-driver midnight
-                      rotation, eliminating midnight fatigue risk on the Malda corridor.
+                    <p className="text-xs text-[#BBC6E6]">
+                      Describe your journey in everyday words, our agent structures the schedule.
                     </p>
                   </div>
                 </div>
+                <span className="text-[11px] text-[#E1BFB8] flex items-center gap-1.5 self-start md:self-auto">
+                  <span className="w-2 h-2 rounded-full bg-[#43EDCD]" /> 24/7 Telemetry Assistant
+                </span>
+              </div>
 
-                {/* Primary CTA Button */}
+              {/* Natural Search Input Field */}
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-[#080E1B] border border-[#2F3543]/60 shadow-inner mb-3">
+                <span className="material-symbols-outlined text-[#43EDCD] text-2xl pl-2">auto_awesome</span>
+                <input
+                  type="text"
+                  value={aiPromptInput}
+                  onChange={(e) => setAiPromptInput(e.target.value)}
+                  placeholder="Describe your journey in natural words..."
+                  className="w-full bg-transparent text-[#DDE2F5] text-xs sm:text-sm focus:outline-none placeholder:text-[#E1BFB8]/40"
+                />
                 <button
                   type="button"
-                  onClick={handleSelectRecommendedJourney}
-                  className="w-full py-3.5 px-6 rounded-xl bg-[#FF8066] text-[#0B1020] font-['Sora',sans-serif] text-sm sm:text-base font-bold flex items-center justify-center gap-2 shadow-xl shadow-[#FF8066]/25 hover:shadow-[#FF8066]/40 hover:bg-[#ff947d] active:scale-[0.99] transition-all cursor-pointer"
+                  onClick={() => handleRunAiPrompt()}
+                  className="px-4 py-2.5 rounded-lg bg-[#43EDCD] text-[#080E1B] text-xs sm:text-sm font-semibold hover:bg-[#57FBDB] transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
                 >
-                  <span className="material-symbols-outlined text-[20px]">airline_seat_individual_suite</span>
-                  <span>View Journey &amp; Select Berths</span>
-                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                  <span>Search</span>
+                  <span className="material-symbols-outlined text-base">send</span>
                 </button>
               </div>
-            </div>
 
-            {/* ── RIGHT COLUMN: TRAVEL INTELLIGENCE PANEL (lg:col-span-3) ── */}
-            <div id="travel-intelligence-section" className="lg:col-span-3 flex flex-col gap-3.5">
-              {/* Radar Header */}
-              <div className="flex items-center justify-between bg-[#192235] border border-[#232F48] p-3.5 rounded-2xl">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#19C6B5] text-[20px]">radar</span>
-                  <h3 className="font-['Sora',sans-serif] text-sm font-bold text-[#F5F5FA]">
-                    Travel Intelligence
-                  </h3>
-                </div>
-                <div className="flex items-center gap-1.5 bg-[#202B40] border border-[#232F48] px-2.5 py-1 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#19C6B5] animate-pulse"></span>
-                  <span className="text-[10px] text-[#19C6B5] font-bold uppercase">Live Telemetry</span>
-                </div>
+              {/* Quick AI Suggestion Chips */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] text-[#BBC6E6]">Try asking:</span>
+                <button
+                  type="button"
+                  onClick={() => handleRunAiPrompt('Solo female quiet sleeper to Hyderabad under ₹1,200')}
+                  className="text-[11px] px-3 py-1 rounded-full bg-[#1A1F2D] hover:bg-[#242A38] text-[#E1BFB8] hover:text-[#DDE2F5] transition-colors border border-[#2F3543]/40 cursor-pointer"
+                >
+                  "Solo female quiet sleeper to Hyderabad under ₹1,200"
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRunAiPrompt('Fastest AC bus from Mumbai to Pune departing after 6 PM')}
+                  className="text-[11px] px-3 py-1 rounded-full bg-[#1A1F2D] hover:bg-[#242A38] text-[#E1BFB8] hover:text-[#DDE2F5] transition-colors border border-[#2F3543]/40 cursor-pointer"
+                >
+                  "Fastest AC bus Mumbai to Pune after 6 PM"
+                </button>
               </div>
 
-              {/* Widget Stack */}
-              <div className="flex flex-col gap-3">
-                {/* 1. En Route Micro-Climates */}
-                <div className="bg-[#111827] border border-[#232F48] p-3.5 rounded-xl flex flex-col gap-2.5 shadow-md">
+              {/* Dynamic Response Box */}
+              {aiResponse && (
+                <div className="mt-4 p-4 rounded-xl bg-[#080E1B]/90 border border-[#43EDCD]/30 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-[#A5ADBE] uppercase font-bold flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[15px] text-[#75E5D0]">partly_cloudy_day</span>
-                      En Route Micro-Climates
+                    <span className="text-xs text-[#43EDCD] flex items-center gap-1 font-semibold">
+                      <span className="material-symbols-outlined text-sm">check_circle</span> Copilot Parsed Parameters
                     </span>
-                    <span className="text-[10px] text-[#19C6B5] font-semibold">Dry Tarmac</span>
+                    <span className="text-[10px] text-[#BBC6E6]">Query ID #CP-892</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-1 bg-[#192235] p-2 rounded-lg text-center border border-[#232F48]">
-                    <div className="flex flex-col py-0.5">
-                      <span className="text-[10px] text-[#A5ADBE]">Kolkata</span>
-                      <span className="font-['Sora',sans-serif] text-sm font-bold text-[#F5F5FA]">28°C</span>
-                      <span className="text-[10px] text-[#A5ADBE]/80">Clear</span>
-                    </div>
-                    <div className="flex flex-col py-0.5 border-x border-[#232F48]">
-                      <span className="text-[10px] text-[#A5ADBE]">Farakka</span>
-                      <span className="font-['Sora',sans-serif] text-sm font-bold text-[#F5F5FA]">24°C</span>
-                      <span className="text-[10px] text-[#A5ADBE]/80">Mist 800m</span>
-                    </div>
-                    <div className="flex flex-col py-0.5">
-                      <span className="text-[10px] text-[#A5ADBE]">Siliguri</span>
-                      <span className="font-['Sora',sans-serif] text-sm font-bold text-[#F5F5FA]">21°C</span>
-                      <span className="text-[10px] text-[#A5ADBE]/80">Crisp</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[#A5ADBE] text-[11px]">
-                    <span className="material-symbols-outlined text-[14px] text-[#19C6B5]">check_circle</span>
-                    <span>Zero precipitation risk along entire corridor.</span>
-                  </div>
+                  <p className="text-xs text-[#DDE2F5] leading-relaxed">{aiResponse}</p>
                 </div>
-
-                {/* 2. Route Disruption Radar */}
-                <div className="bg-[#111827] border border-[#232F48] p-3.5 rounded-xl flex flex-col gap-2.5 shadow-md">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-[#A5ADBE] uppercase font-bold flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[15px] text-[#FF8066]">traffic</span>
-                      Route Disruption Radar
-                    </span>
-                    <span className="text-[10px] text-[#F5B95F] font-bold bg-[#F5B95F]/15 px-2 py-0.5 rounded border border-[#F5B95F]/30">
-                      1 Warning
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <div className="bg-[#192235] p-2.5 rounded-lg border border-[#232F48] flex items-start gap-2">
-                      <span className="material-symbols-outlined text-[#F5B95F] text-[16px] mt-0.5">warning</span>
-                      <div className="flex flex-col">
-                        <span className="text-xs font-semibold text-[#F5F5FA]">NH12 Dalkhola Bypass</span>
-                        <span className="text-[11px] text-[#FF8066]">+14m delay factored in AI timetable</span>
-                      </div>
-                    </div>
-                    <div className="bg-[#192235] p-2.5 rounded-lg border border-[#232F48] flex items-start gap-2">
-                      <span className="material-symbols-outlined text-[#19C6B5] text-[16px] mt-0.5">verified_user</span>
-                      <div className="flex flex-col">
-                        <span className="text-xs font-semibold text-[#F5F5FA]">Farakka Barrage Crossing</span>
-                        <span className="text-[11px] text-[#19C6B5]">Smooth flow • Avg 48 km/h</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3. Operator Telemetry Index */}
-                <div className="bg-[#111827] border border-[#232F48] p-3.5 rounded-xl flex flex-col gap-2.5 shadow-md">
-                  <span className="text-[11px] text-[#A5ADBE] uppercase font-bold flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[15px] text-[#19C6B5]">shield</span>
-                    Operator Telemetry Index
-                  </span>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-[#192235] p-2 rounded-lg text-center border border-[#232F48]">
-                      <span className="text-[10px] text-[#A5ADBE] block">Safety</span>
-                      <span className="font-['Sora',sans-serif] text-sm font-bold text-[#19C6B5]">
-                        9.8<span className="text-[10px] font-normal text-[#A5ADBE]">/10</span>
-                      </span>
-                    </div>
-                    <div className="bg-[#192235] p-2 rounded-lg text-center border border-[#232F48]">
-                      <span className="text-[10px] text-[#A5ADBE] block">Fleet Age</span>
-                      <span className="font-['Sora',sans-serif] text-sm font-bold text-[#F5F5FA]">
-                        1.2<span className="text-[10px] font-normal text-[#A5ADBE]"> yr</span>
-                      </span>
-                    </div>
-                    <div className="bg-[#192235] p-2 rounded-lg text-center border border-[#232F48]">
-                      <span className="text-[10px] text-[#A5ADBE] block">Punctual</span>
-                      <span className="font-['Sora',sans-serif] text-sm font-bold text-[#19C6B5]">96.8%</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 4. Quality & Security Checklist */}
-                <div className="bg-[#111827] border border-[#232F48] p-3.5 rounded-xl flex flex-col gap-2 shadow-md">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[#A5ADBE] flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[15px] text-[#19C6B5]">local_police</span>
-                      Highway Security Patrol
-                    </span>
-                    <span className="text-[11px] text-[#19C6B5] font-semibold">Active 24/7</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[#A5ADBE] flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[15px] text-[#19C6B5]">sanitizer</span>
-                      Rest Stop Hygiene
-                    </span>
-                    <span className="text-[11px] text-[#19C6B5] font-semibold">Grade A+ Certified</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[#A5ADBE] flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[15px] text-[#19C6B5]">speed</span>
-                      Road Surface Quality
-                    </span>
-                    <span className="text-[11px] text-[#19C6B5] font-semibold">94% Smooth Asphalt</span>
-                  </div>
-                </div>
-
-                {/* Terminal Advisory Notice */}
-                <div className="bg-[#202B40] border border-[#232F48] p-2.5 rounded-xl flex items-center gap-2 text-[#A5ADBE] text-xs">
-                  <span className="material-symbols-outlined text-[18px] text-[#FF8066]">info</span>
-                  <span>Friday exodus peak clears by 08:15 PM. Board at Gate 03.</span>
-                </div>
-              </div>
+              )}
             </div>
-          </div>
-
-          {/* ─────────────────────────────────────────────────────────
-              SECTION 2: FULL-WIDTH INTERACTIVE GEOGRAPHICAL ROUTE MAP
-              ───────────────────────────────────────────────────────── */}
-          <div className="mt-8 flex flex-col gap-4">
-            {/* Map Control / Header Bar */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-[#111827] border border-[#232F48] p-4 rounded-2xl shadow-md">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#19C6B5]/15 flex items-center justify-center text-[#19C6B5]">
-                  <span className="material-symbols-outlined text-[22px]">map</span>
-                </div>
-                <div>
-                  <h3 className="font-['Sora',sans-serif] text-sm sm:text-base font-bold text-[#F5F5FA]">
-                    Interactive Route Map — West Bengal Regional Transit Corridors
-                  </h3>
-                  <span className="text-xs text-[#A5ADBE]">
-                    Live vehicle telemetry, radar overlays &amp; corridor topology
-                  </span>
-                </div>
-              </div>
-
-              {/* Legend & Filter Controls */}
-              <div className="flex flex-wrap items-center gap-3">
-                {/* Legend Chips */}
-                <div className="flex items-center gap-3 bg-[#192235] px-3 py-1.5 rounded-xl border border-[#232F48]">
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#FF8066]"></span>
-                    <span className="text-[#A5ADBE]">Primary Active</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#19C6B5]"></span>
-                    <span className="text-[#A5ADBE]">Express Highway</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#F5B95F]"></span>
-                    <span className="text-[#A5ADBE]">Slow Corridor</span>
-                  </div>
-                </div>
-
-                {/* Filter Tabs */}
-                <div className="flex items-center gap-1 bg-[#192235] p-1 rounded-xl border border-[#232F48]">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedMapFilter('all')}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                      selectedMapFilter === 'all'
-                        ? 'bg-[#202B40] text-[#F5F5FA] font-bold border border-[#232F48]'
-                        : 'text-[#A5ADBE] hover:text-[#F5F5FA]'
-                    }`}
-                  >
-                    All Corridors
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedMapFilter('fleet')}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                      selectedMapFilter === 'fleet'
-                        ? 'bg-[#202B40] text-[#F5F5FA] font-bold border border-[#232F48]'
-                        : 'text-[#A5ADBE] hover:text-[#F5F5FA]'
-                    }`}
-                  >
-                    Live Fleet (42)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedMapFilter('risk')}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                      selectedMapFilter === 'risk'
-                        ? 'bg-[#202B40] text-[#F5F5FA] font-bold border border-[#232F48]'
-                        : 'text-[#A5ADBE] hover:text-[#F5F5FA]'
-                    }`}
-                  >
-                    Risk Hotspots
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Map Canvas Container */}
-            <div className="w-full h-[460px] bg-[#080D1D] border border-[#232F48] rounded-2xl relative overflow-hidden shadow-2xl flex items-center justify-center">
-              {/* Scalable SVG Map Representation */}
-              <div
-                className="w-full h-full transition-transform duration-300 origin-center flex items-center justify-center"
-                style={{ transform: `scale(${mapZoom})` }}
-              >
-                <svg
-                  className="w-full h-full object-cover"
-                  fill="none"
-                  viewBox="0 0 1200 460"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <defs>
-                    <linearGradient id="primaryRouteGrad" x1="0%" x2="100%" y1="0%" y2="100%">
-                      <stop offset="0%" stopColor="#FF8066" />
-                      <stop offset="50%" stopColor="#42DCCA" />
-                      <stop offset="100%" stopColor="#19C6B5" />
-                    </linearGradient>
-                    <linearGradient id="dighaGrad" x1="0%" x2="100%" y1="0%" y2="100%">
-                      <stop offset="0%" stopColor="#FF8066" />
-                      <stop offset="100%" stopColor="#42B7A3" />
-                    </linearGradient>
-                    <radialGradient cx="50%" cy="50%" id="hubGlow" r="50%">
-                      <stop offset="0%" stopColor="#FF8066" stopOpacity="0.6" />
-                      <stop offset="100%" stopColor="#FF8066" stopOpacity="0" />
-                    </radialGradient>
-                    <radialGradient cx="50%" cy="50%" id="tealGlow" r="50%">
-                      <stop offset="0%" stopColor="#42DCCA" stopOpacity="0.6" />
-                      <stop offset="100%" stopColor="#42DCCA" stopOpacity="0" />
-                    </radialGradient>
-                    <pattern height="40" id="gridPattern" patternUnits="userSpaceOnUse" width="40">
-                      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#161B2B" strokeWidth="0.8" />
-                    </pattern>
-                  </defs>
-
-                  {/* Subtle Topographic Grid */}
-                  <rect fill="url(#gridPattern)" height="460" width="1200" />
-
-                  {/* River Paths (Hooghly / Ganges) */}
-                  <path
-                    d="M 580 460 C 560 380, 570 310, 610 260 C 640 220, 620 180, 590 140 C 580 120, 610 60, 630 0"
-                    stroke="#1A253E"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="6"
-                  />
-                  <path
-                    d="M 610 260 C 680 270, 750 250, 840 270"
-                    stroke="#162035"
-                    strokeLinecap="round"
-                    strokeWidth="3"
-                  />
-
-                  {/* Western Secondary Corridor (NH19: Kolkata -> Durgapur -> Asansol) */}
-                  <path
-                    d="M 590 350 L 450 310 L 370 290"
-                    stroke="#25293A"
-                    strokeLinecap="round"
-                    strokeWidth="4"
-                  />
-                  <path
-                    d="M 590 350 L 450 310 L 370 290"
-                    stroke="#42DCCA"
-                    strokeDasharray="4 4"
-                    strokeWidth="1.5"
-                  />
-
-                  {/* Coastal Corridor (NH114A: Kolkata -> Digha) */}
-                  <path
-                    d="M 590 350 L 530 420"
-                    stroke="url(#dighaGrad)"
-                    strokeLinecap="round"
-                    strokeWidth="3"
-                  />
-
-                  {/* Primary Active North-South Highway (NH12: Kolkata -> Malda -> Dalkhola -> Siliguri -> Darjeeling) */}
-                  <path
-                    d="M 590 350 C 600 300, 620 230, 630 190 C 640 150, 660 120, 680 75 L 670 35"
-                    stroke="url(#primaryRouteGrad)"
-                    strokeLinecap="round"
-                    strokeWidth="4.5"
-                  />
-
-                  {/* Active Bus Particle */}
-                  <circle cx="625" cy="210" fill="#FF8066" r="4">
-                    <animate attributeName="opacity" dur="2s" repeatCount="indefinite" values="1;0.4;1" />
-                  </circle>
-
-                  {/* Node 1: Kolkata (Origin) */}
-                  <circle cx="590" cy="350" fill="url(#hubGlow)" r="22" />
-                  <circle cx="590" cy="350" fill="#FF8066" r="6" />
-                  <circle cx="590" cy="350" r="10" stroke="#FF8066" strokeDasharray="3 3" strokeWidth="1.5">
-                    <animateTransform
-                      attributeName="transform"
-                      dur="8s"
-                      from="0 590 350"
-                      repeatCount="indefinite"
-                      to="360 590 350"
-                      type="rotate"
-                    />
-                  </circle>
-                  <text fill="#F5F5FA" fontFamily="Sora" fontSize="12" fontWeight="600" x="608" y="355">
-                    KOLKATA (Esplanade)
-                  </text>
-
-                  {/* Node 2: Digha */}
-                  <circle cx="530" cy="420" fill="#42B7A3" r="5" />
-                  <text fill="#A5ADBE" fontFamily="Inter" fontSize="11" fontWeight="500" x="475" y="425">
-                    DIGHA
-                  </text>
-
-                  {/* Node 3: Durgapur */}
-                  <circle cx="450" cy="310" fill="#42DCCA" r="4.5" />
-                  <text fill="#A5ADBE" fontFamily="Inter" fontSize="11" x="430" y="332">
-                    Durgapur
-                  </text>
-
-                  {/* Node 4: Asansol */}
-                  <circle cx="370" cy="290" fill="#42DCCA" r="5" />
-                  <text fill="#A5ADBE" fontFamily="Inter" fontSize="11" fontWeight="500" x="310" y="295">
-                    ASANSOL
-                  </text>
-
-                  {/* Node 5: Malda Hub */}
-                  <circle cx="630" cy="190" fill="#FF8066" r="5" />
-                  <text fill="#F5F5FA" fontFamily="Inter" fontSize="11" fontWeight="600" x="645" y="195">
-                    Malda (Hub)
-                  </text>
-
-                  {/* Node 6: Siliguri (Northern Terminus) */}
-                  <circle cx="680" cy="75" fill="url(#tealGlow)" r="24" />
-                  <circle cx="680" cy="75" fill="#42DCCA" r="7" />
-                  <circle cx="680" cy="75" r="12" stroke="#42DCCA" strokeDasharray="4 4" strokeWidth="1.5">
-                    <animateTransform
-                      attributeName="transform"
-                      dur="10s"
-                      from="360 680 75"
-                      repeatCount="indefinite"
-                      to="0 680 75"
-                      type="rotate"
-                    />
-                  </circle>
-                  <text fill="#F5F5FA" fontFamily="Sora" fontSize="13" fontWeight="700" x="702" y="80">
-                    SILIGURI (Junction)
-                  </text>
-
-                  {/* Node 7: Darjeeling */}
-                  <circle cx="670" cy="35" fill="#69D9C5" r="5" />
-                  <text fill="#A5ADBE" fontFamily="Inter" fontSize="11" fontWeight="500" x="686" y="38">
-                    DARJEELING
-                  </text>
-                </svg>
-              </div>
-
-              {/* Floating Dynamic Node Card: Siliguri Hub */}
-              <div className="absolute top-8 right-12 hidden md:flex items-center gap-3 bg-[#192235]/90 backdrop-blur-md p-3.5 rounded-xl border border-[#232F48] shadow-2xl max-w-xs">
-                <div className="w-10 h-10 rounded-lg bg-[#19C6B5]/15 flex items-center justify-center text-[#19C6B5]">
-                  <span className="material-symbols-outlined text-[22px]">navigation</span>
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-['Sora',sans-serif] text-xs font-bold text-[#F5F5FA]">
-                      Siliguri Gateway Hub
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded bg-[#19C6B5]/20 text-[#19C6B5] text-[10px] font-semibold">
-                      21°C
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-[#A5ADBE]">
-                    ETA: 07:30 AM • On Timetable • NH10 Open
-                  </span>
-                </div>
-              </div>
-
-              {/* Floating Dynamic Node Card: Kolkata Origin */}
-              <div className="absolute bottom-8 left-12 hidden md:flex items-center gap-3 bg-[#192235]/90 backdrop-blur-md p-3.5 rounded-xl border border-[#232F48] shadow-2xl max-w-xs">
-                <div className="w-10 h-10 rounded-lg bg-[#FF8066]/20 flex items-center justify-center text-[#FF8066]">
-                  <span className="material-symbols-outlined text-[22px]">departure_board</span>
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-['Sora',sans-serif] text-xs font-bold text-[#F5F5FA]">
-                      Esplanade Central
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded bg-[#FF8066]/20 text-[#FF8066] text-[10px] font-semibold">
-                      Gate 03
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-[#A5ADBE]">
-                    Boarding scheduled in 2h 15m • Platform Clear
-                  </span>
-                </div>
-              </div>
-
-              {/* On-Map Floating Controls */}
-              <div className="absolute top-4 left-4 flex flex-col gap-1 bg-[#192235]/90 backdrop-blur-md p-1 rounded-xl border border-[#232F48] shadow-lg">
-                <button
-                  type="button"
-                  onClick={() => setMapZoom((prev) => Math.min(prev + 0.2, 1.8))}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[#F5F5FA] hover:bg-[#202B40] transition-colors"
-                  title="Zoom In"
-                >
-                  <span className="material-symbols-outlined text-[18px]">add</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMapZoom((prev) => Math.max(prev - 0.2, 0.8))}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[#F5F5FA] hover:bg-[#202B40] transition-colors"
-                  title="Zoom Out"
-                >
-                  <span className="material-symbols-outlined text-[18px]">remove</span>
-                </button>
-                <div className="w-6 h-px bg-[#232F48] mx-auto my-0.5"></div>
-                <button
-                  type="button"
-                  onClick={() => setMapZoom(1)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[#F5F5FA] hover:bg-[#202B40] transition-colors"
-                  title="Center Map"
-                >
-                  <span className="material-symbols-outlined text-[18px]">my_location</span>
-                </button>
-              </div>
-
-              {/* Telemetry Watermark Info */}
-              <div className="absolute bottom-4 right-4 bg-[#080D1D]/80 backdrop-blur-sm px-3 py-1 rounded-full text-[#A5ADBE] text-[10px] flex items-center gap-1.5 border border-[#232F48]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#19C6B5]"></span>
-                <span>Geodetic Datum: WGS 84 • Corridor NH12/19 Real-Time Feed</span>
-              </div>
-            </div>
-          </div>
+          </section>
         </div>
       </main>
 
       {/* ─────────────────────────────────────────────────────────────
-          FLOATING AI COPILOT BUTTON ("Ask ROAMLY")
+          FOOTER
           ───────────────────────────────────────────────────────────── */}
-      <aside className="fixed bottom-6 right-6 z-40">
-        <button
-          type="button"
-          onClick={() => setIsAiChatOpen(!isAiChatOpen)}
-          className="group relative flex items-center gap-2.5 px-5 py-3 rounded-full bg-[#FF8066] text-[#0B1020] shadow-[0_8px_30px_-4px_rgba(255,128,102,0.35)] hover:shadow-[0_0_24px_rgba(255,128,102,0.5)] active:scale-95 transition-all font-['Sora',sans-serif] font-bold text-xs sm:text-sm tracking-wide uppercase cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-[22px]">smart_toy</span>
-          <span>Ask ROAMLY</span>
-        </button>
-
-        {/* AI Copilot Chat Drawer */}
-        {isAiChatOpen && (
-          <div className="absolute bottom-16 right-0 w-88 sm:w-96 bg-[#192235] border border-[#232F48] rounded-2xl shadow-2xl p-4 flex flex-col z-50 text-left">
-            <div className="flex items-center justify-between pb-3 border-b border-[#232F48]">
+      <footer className="w-full bg-[#080E1B] border-t border-[#2F3543]/40 pt-12 pb-8">
+        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 border-b border-[#2F3543]/30">
+            {/* Column 1 */}
+            <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#19C6B5]/15 flex items-center justify-center text-[#19C6B5]">
-                  <span className="material-symbols-outlined text-[18px]">psychology</span>
-                </div>
-                <div>
-                  <span className="font-['Sora',sans-serif] text-sm font-bold text-[#F5F5FA]">
-                    ROAMLY Copilot
-                  </span>
-                  <span className="text-[10px] text-[#19C6B5] block">Bengal Transit Expert</span>
-                </div>
+                <span className="material-symbols-outlined text-[#43EDCD]">route</span>
+                <h4 className="font-['Sora',sans-serif] text-sm font-semibold text-[#DDE2F5]">
+                  Popular Highline Routes
+                </h4>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsAiChatOpen(false)}
-                className="text-[#A5ADBE] hover:text-[#F5F5FA] p-1"
-              >
-                <span className="material-symbols-outlined text-[18px]">close</span>
-              </button>
-            </div>
-
-            {/* Chat Messages */}
-            <div className="h-60 overflow-y-auto my-3 space-y-2.5 pr-1 text-xs">
-              {aiChatMessages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`p-2.5 rounded-xl ${
-                    msg.sender === 'ai'
-                      ? 'bg-[#202B40] text-[#F5F5FA] border border-[#232F48]'
-                      : 'bg-[#FF8066] text-[#0B1020] font-medium ml-6'
-                  }`}
+              <p className="text-xs text-[#E1BFB8]">
+                Curated nocturnal expressways engineered for uninterrupted comfort.
+              </p>
+              <div className="flex flex-col gap-2 mt-1">
+                <button
+                  type="button"
+                  onClick={() => handleBookFeaturedRoute('Bengaluru', 'Goa', 1299)}
+                  className="text-xs text-[#E1BFB8] hover:text-[#43EDCD] flex items-center justify-between py-1 transition-colors text-left"
                 >
-                  {msg.text}
-                </div>
-              ))}
+                  <span>Bengaluru → Goa Night Cruise</span>
+                  <span className="text-[11px] text-[#00D0B2]">From ₹1,299</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleBookFeaturedRoute('Mumbai', 'Pune', 449)}
+                  className="text-xs text-[#E1BFB8] hover:text-[#43EDCD] flex items-center justify-between py-1 transition-colors text-left"
+                >
+                  <span>Mumbai → Pune Hyperlink</span>
+                  <span className="text-[11px] text-[#00D0B2]">From ₹449</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleBookFeaturedRoute('Delhi', 'Manali', 1850)}
+                  className="text-xs text-[#E1BFB8] hover:text-[#43EDCD] flex items-center justify-between py-1 transition-colors text-left"
+                >
+                  <span>Delhi → Manali Nordic Sleeper</span>
+                  <span className="text-[11px] text-[#00D0B2]">From ₹1,850</span>
+                </button>
+              </div>
             </div>
 
-            {/* Chat Input */}
-            <form onSubmit={handleSendAiMessage} className="flex items-center gap-1.5 pt-1">
-              <input
-                type="text"
-                value={aiChatInput}
-                onChange={(e) => setAiChatInput(e.target.value)}
-                placeholder="Ask about sleeper berths, delays, stops..."
-                className="flex-1 bg-[#202B40] border border-[#232F48] rounded-xl px-3 py-2 text-xs text-[#F5F5FA] focus:outline-none focus:border-[#FF8066]"
-              />
-              <button
-                type="submit"
-                className="w-8 h-8 rounded-xl bg-[#FF8066] text-[#0B1020] flex items-center justify-center hover:bg-[#ff947d] transition-colors"
-              >
-                <span className="material-symbols-outlined text-[16px]">send</span>
-              </button>
-            </form>
-          </div>
-        )}
-      </aside>
+            {/* Column 2 */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#43EDCD]">verified_user</span>
+                <h4 className="font-['Sora',sans-serif] text-sm font-semibold text-[#DDE2F5]">
+                  Smart Route AI Guarantee
+                </h4>
+              </div>
+              <p className="text-xs text-[#E1BFB8]">
+                Dynamic telematics rerouting algorithms predict bottlenecks before departure.
+              </p>
+              <ul className="flex flex-col gap-2 text-xs text-[#E1BFB8] mt-1">
+                <li className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#43EDCD] text-sm">check_circle</span>
+                  <span>Sub-second GPS waypoint verification</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#43EDCD] text-sm">check_circle</span>
+                  <span>Automated ETA compensation shield</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#43EDCD] text-sm">check_circle</span>
+                  <span>Real-time cabin air &amp; telemetry feeds</span>
+                </li>
+              </ul>
+            </div>
 
-      {/* ─────────────────────────────────────────────────────────────
-          FOOTER STATUS BAR
-          ───────────────────────────────────────────────────────────── */}
-      <footer className="w-full bg-[#080D1D] border-t border-[#1E293B] py-6 mt-12">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-[#A5ADBE] text-xs">
-          <div className="flex items-center gap-2">
-            <span className="font-['Sora',sans-serif] text-xs font-semibold text-[#F5F5FA] uppercase tracking-wider">
-              ROAMLY
-            </span>
-            <span>•</span>
-            <span>AI Predictive Travel Telemetry</span>
+            {/* Column 3 */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#43EDCD]">shield_with_heart</span>
+                <h4 className="font-['Sora',sans-serif] text-sm font-semibold text-[#DDE2F5]">
+                  Safety Protocols
+                </h4>
+              </div>
+              <p className="text-xs text-[#E1BFB8]">
+                Strict bio-rest cycles and twin-driver telemetry protocols on routes over 5 hours.
+              </p>
+              <div className="p-3 rounded-lg bg-[#161B29] border border-[#2F3543]/40 mt-1">
+                <div className="text-xs text-[#DDE2F5] font-semibold">ISO 39001 Road Traffic Certified</div>
+                <div className="text-[10px] text-[#E1BFB8] mt-0.5">Telematics audit verified every 24 hours</div>
+              </div>
+            </div>
+
+            {/* Column 4 */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#43EDCD]">phonelink</span>
+                <h4 className="font-['Sora',sans-serif] text-sm font-semibold text-[#DDE2F5]">
+                  Roamly Mobile Suite
+                </h4>
+              </div>
+              <p className="text-xs text-[#E1BFB8]">
+                Live vehicle telemetry, boarding pass passkeys, and silent coach controls.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2 mt-1">
+                <button
+                  type="button"
+                  className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg bg-[#161B29] border border-[#2F3543]/40 hover:border-[#43EDCD]/50 transition-colors text-left"
+                >
+                  <span className="material-symbols-outlined text-[#DDE2F5]">android</span>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] text-[#E1BFB8] leading-none">Download on</span>
+                    <span className="text-xs text-[#DDE2F5] font-semibold leading-tight">Google Play</span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg bg-[#161B29] border border-[#2F3543]/40 hover:border-[#43EDCD]/50 transition-colors text-left"
+                >
+                  <span className="material-symbols-outlined text-[#DDE2F5]">phone_iphone</span>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] text-[#E1BFB8] leading-none">Download on</span>
+                    <span className="text-xs text-[#DDE2F5] font-semibold leading-tight">Apple Store</span>
+                  </div>
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-6">
-            <span>Global Radar Node #402-A</span>
-            <span className="text-[#19C6B5]">Precision 99.8%</span>
-            <span>© 2025 ROAMLY Inc.</span>
+
+          <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#E1BFB8]">
+            <div className="flex items-center gap-2 text-center md:text-left">
+              <span className="font-['Sora',sans-serif] text-xs font-bold text-[#DDE2F5] tracking-tight">
+                ROAMLY
+              </span>
+              <span>•</span>
+              <span>© 2025 Roamly Mobility Technologies India Pvt. Ltd. All rights reserved.</span>
+            </div>
+            <div className="flex items-center gap-4 sm:gap-6 flex-wrap justify-center">
+              <button type="button" className="hover:text-[#DDE2F5] transition-colors">
+                Privacy Policy
+              </button>
+              <button type="button" className="hover:text-[#DDE2F5] transition-colors">
+                Terms of Carriage
+              </button>
+              <button type="button" className="hover:text-[#DDE2F5] transition-colors">
+                Fleet Telematics API
+              </button>
+              <button type="button" className="hover:text-[#DDE2F5] transition-colors">
+                Security Operations
+              </button>
+            </div>
           </div>
         </div>
       </footer>
