@@ -39,3 +39,4 @@ export const tokenStorage = {
     return Boolean(this.getToken());
   },
 };
+

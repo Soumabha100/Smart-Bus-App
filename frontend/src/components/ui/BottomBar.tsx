@@ -20,8 +20,12 @@ export const BottomBar: React.FC<BottomBarProps> = ({ onGo }) => {
   const isHome = location.pathname === '/home';
 
   return (
-    <nav aria-label="Bottom Navigation" className="fixed bottom-4 inset-x-0 max-w-md mx-auto px-4 z-40 pointer-events-none">
-      <div className="h-16 rounded-full bg-[#19202E]/90 backdrop-blur-xl border border-white/15 px-6 flex items-center justify-between shadow-[0_12px_32px_rgba(0,0,0,0.5)] pointer-events-auto">
+    // Strictly hidden on tablet & desktop (md:hidden), active only on mobile viewports (<768px)
+    <nav
+      aria-label="Mobile Navigation"
+      className="md:hidden fixed bottom-4 inset-x-0 max-w-md mx-auto px-4 z-40 pointer-events-none"
+    >
+      <div className="h-16 rounded-full bg-[#19202E]/95 backdrop-blur-2xl border border-white/15 px-6 flex items-center justify-between shadow-[0_12px_32px_rgba(0,0,0,0.6)] pointer-events-auto">
         <button
           type="button"
           onClick={() => navigate('/home')}
@@ -45,7 +49,7 @@ export const BottomBar: React.FC<BottomBarProps> = ({ onGo }) => {
 
         <button
           type="button"
-          onClick={() => alert('Saved Journeys feature coming in next chronicle update!')}
+          onClick={() => navigate('/results')}
           className="flex flex-col items-center gap-0.5 text-xs font-medium text-gray-400 hover:text-gray-200 transition-colors"
         >
           <span className="material-symbols-outlined text-[20px]">bookmark</span>

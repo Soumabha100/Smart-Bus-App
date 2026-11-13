@@ -39,8 +39,6 @@
 - **Decisions & Why**:
   - Configured tokens in both `tailwind.config.js` and `@theme` in `index.css` to ensure full interoperability across Tailwind v4 build tooling.
   - Implemented `PerforatedTicket` using physical circular cutout notches (`-ml-3` and `-mr-3`) combined with dashed border styling for guaranteed cross-browser consistency without clipping box-shadows.
-- **Problems & Fixes**:
-  - Initial `npm install` encountered peer dependency conflict on React 19; resolved cleanly via `--legacy-peer-deps` without breaking React 19 compatibility.
 
 ## Phase 2 - Routing Skeleton (2026-11-13)
 - **Files Changed**:
@@ -55,32 +53,36 @@
   - `frontend/src/pages/SystemStatusPage.tsx`: Preserved Sprint 0 walking skeleton health check at `/system-status`.
   - `frontend/src/pages/index.ts`: Central barrel exports for all page views.
   - `frontend/src/App.tsx`: Wired `BrowserRouter`, `Routes`, and route guards.
-- **Decisions & Why**:
-  - Preserved the existing system status verification UI at `/system-status` so that backend/Neon health checks remain fully accessible.
-  - Wrapped `/home` and `/results` in `ProtectedRoute` to enforce authentication boundaries as specified.
-- **Problems & Fixes**:
-  - TypeScript `verbatimModuleSyntax` flagged type-only import for `BusTicketData`; adjusted to `import type`.
-  - Synchronized `SystemStatusPage` property names to match `SystemStatus` interface in `types/system.ts`.
 
 ## Phase 3 - Screens 1 & 2 High-Fidelity Conversion (2026-11-13)
 - **Files Changed**:
-  - `frontend/src/pages/OnboardingPage.tsx`: Built full high-fidelity Onboarding screen faithful to `01-onboarding.html`. Includes atmospheric sunrise gradient, multi-layered tea hill silhouettes, glowing Journey Line ribbon, animated waypoint beads, silhouetted travel bus on hilltop, waypoint note pill (`Siliguri ⟿ Darjeeling • 3h 15m • Twilight express`), Chapter I badge, poetic typography, feature mosaic chips, and glowing pill CTA.
-  - `frontend/src/pages/LoginPage.tsx`: Built complete Traveler Login screen matching `02-login.html`. Includes top app header with back button and brand mark, lyrical journey line SVG illustration with wanderer tram carriage, Traveler Vault badge, ambient parchment card, friendly toggleable error banner (*"That password doesn’t match. Try again?"*), email input with `local_post_office` icon and saved traveler indicator, password input with `lock_open` and eye toggle, Continue button with glowing dot, social sign-in buttons, *"New here? Join us"* prompt, travel diary snippet tile (*"Kyoto Express · Car 4"*), and offline pass security badge.
-- **Decisions & Why**:
-  - Encapsulated mobile viewports inside `max-w-[480px]` with desktop ambient centering to guarantee identical pixel-perfect geometry at both 390px and 1440px.
-  - Added interactive password reveal and friendly error preview banner to demonstrate realistic travel diary authentication states.
-- **Problems & Fixes**:
-  - Ensured all SVG paths match the original Stitch coordinates (`M 45 285 C 90 275...` and `M 28 68 C 45 45...`) for visual continuity.
+  - `frontend/src/pages/OnboardingPage.tsx`: High-fidelity Onboarding screen faithful to `01-onboarding.html`.
+  - `frontend/src/pages/LoginPage.tsx`: Complete Traveler Login screen matching `02-login.html`.
 
 ## Phase 4 - Screen 3: Progressive Form with RHF & Zod (2026-11-13)
 - **Files Changed**:
-  - `frontend/src/schemas/authSchema.ts`: Created strict validation schemas for registration and login (`name` min 2, `email` valid format, `password` min 8 with at least one letter and one number).
-  - `frontend/src/pages/RegisterPage.tsx`: Built interactive 3-step progressive account creation interface (Step 1: Name, Step 2: Email, Step 3: Password).
+  - `frontend/src/schemas/authSchema.ts`: Created validation schemas for registration and login.
+  - `frontend/src/pages/RegisterPage.tsx`: Built interactive 3-step progressive account creation interface.
+
+## Desktop-First Responsive Transformation (2026-11-13)
+- **Files Changed**:
+  - `frontend/src/components/layout/Navbar.tsx`: Created a sticky, full-width desktop navigation bar with brand emblem, route navigation links (`Explore Routes`, `Find Buses`, `System Health`), traveler profile with initials badge, and authentication action buttons.
+  - `frontend/src/components/ui/BottomBar.tsx`: Configured with `md:hidden` so that the mobile floating capsule navigation bar is hidden on tablet and desktop viewports, appearing only on mobile (<768px).
+  - `frontend/src/pages/HomePage.tsx`:
+    - Replaced narrow mobile wrapper with responsive `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8`.
+    - Transformed "Plan your line" into a wide horizontal booking control card: Origin circle card (KOL / Kolkata), JourneyLine connector with swap button, Destination circle card (DAR / Darjeeling), date selector chips, travel mood chips, and primary "Find Buses" button.
+    - Converted "Journeys people love" into a multi-column desktop grid (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`).
+  - `frontend/src/pages/ResultsPage.tsx`:
+    - Integrated `<Navbar />` and structured into a desktop 2-column layout (sidebar filters + results timeline feed).
+    - Added sorting (recommended, price low to high, rating, earliest departure) and live mood filtering.
+    - Added seat reservation confirmation modal with DPDP compliance details.
+  - `frontend/src/components/ui/PerforatedTicket.tsx`:
+    - Re-engineered into a physical boarding pass on desktop: horizontal layout (`md:flex`) with main ticket details on the left, vertical dashed perforation with top/bottom circular cutouts, and a dedicated stub on the right containing fare, seat availability dots, and reserve seat action.
+  - `frontend/src/pages/OnboardingPage.tsx`:
+    - Transformed into a majestic 12-column desktop hero layout (Left: brand story, typography, mosaic feature cards, CTAs; Right: scenic mountain landscape with glowing SVG Journey Line, hilltop bus marker, and live trail badge).
+  - `frontend/src/pages/LoginPage.tsx` & `frontend/src/pages/RegisterPage.tsx`:
+    - Transformed into balanced 2-column desktop layouts (`max-w-7xl mx-auto`, 12-column grid) with visual context on the left and form cards on the right.
 - **Decisions & Why**:
-  - Maintained single persistent `react-hook-form` instance across step transitions so travelers can navigate back (`handlePrev`) without losing entered data.
-  - Added visual indicator dots that reflect active step (coral pill) vs completed steps (teal dots).
-  - Added real-time password strength meter and contextual hints on Step 3 for friendly security guidance.
-- **Problems & Fixes**:
-  - Used explicit per-step validation triggers (`trigger('name')`, `trigger('email')`) before allowing transition to the next step.
-- **Next Steps**:
-  - Phase 5: Backend Auth & API Services (`com.smartbus.auth`, Flyway migration `V2__create_users.sql`, `POST /api/auth/register`, `POST /api/auth/login`, JWT filter, and frontend `httpClient.ts` / `authApi.ts`).
+  - Leveraged available desktop canvas (`1440px`, `1280px`, `1366px`) with `max-w-7xl` to prevent artificial mobile-width bottlenecks on desktop.
+  - Retained strict mobile responsiveness (`320px–767px`) with zero horizontal overflow via fluid flex/grid layouts.
+  - Fixed ESLint assignment warning in `Chip.tsx` and validated with `npm run lint` and `npm run build`.

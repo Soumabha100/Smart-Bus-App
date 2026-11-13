@@ -234,3 +234,4 @@ export const JourneyLine: React.FC<JourneyLineProps> = ({
     </div>
   );
 };
+
