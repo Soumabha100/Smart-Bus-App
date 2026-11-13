@@ -86,3 +86,20 @@
   - Leveraged available desktop canvas (`1440px`, `1280px`, `1366px`) with `max-w-7xl` to prevent artificial mobile-width bottlenecks on desktop.
   - Retained strict mobile responsiveness (`320px–767px`) with zero horizontal overflow via fluid flex/grid layouts.
   - Fixed ESLint assignment warning in `Chip.tsx` and validated with `npm run lint` and `npm run build`.
+
+
+## Collaboration Protocol - Two-Developer Architecture (2026-11-13)
+- **Status**: Formally Adopted
+- **Core Principles**:
+  1. Respect Existing Work: Never modify or delete another developer's work unnecessarily (e.g., preserving `com.smartbus.system`, `systemApi.ts`, `SystemStatusPage.tsx`).
+  2. Feature-Based Organization:
+     - Frontend: Features modularized into clean feature folders (`src/features/auth`, `src/features/booking`, `src/features/journey`, `src/features/system`, with shared primitives in `src/components/ui` and `src/components/layout`).
+     - Backend: Feature packages isolated (`com.smartbus.system`, `com.smartbus.auth`, etc.).
+  3. Strict Separation of Concerns: Clear API boundaries between frontend and backend.
+  4. Single Monorepo Root: No duplicate project structures or redundant application entry points.
+  5. Shared Component Reuse: Maximize reuse of UI kit (`JourneyLine`, `PillButton`, `GlassCard`, `Input`, `Chip`, `PerforatedTicket`, `BottomBar`).
+  6. Git & Branch Safety: Work confined to assigned feature branches; no branch overwrites, forced merges, or destructive git rebases without explicit agreement.
+  7. File Preservation: No files deleted without verifying imports and runtime dependencies.
+  8. Scoped Feature Work: Modifications limited strictly to the assigned feature scope.
+  9. Continuous Documentation: All changes, decisions, and problem resolutions logged in `docs/PROJECT_LOG.md`.
+  10. Integration Path: Changes integrated via Git branches and GitHub Pull Requests.
