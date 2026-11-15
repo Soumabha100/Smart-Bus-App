@@ -35,6 +35,28 @@
   --radius-24: 24px;
 }
 
+:root {
+  --canvas:#FBF9F5; --surface:#FFFFFF; --surface-2:#F5F3EF; --surface-3:#EFEEEA; --surface-4:#EAE8E4; --surface-5:#E4E2DE;
+  --line:#C4C6CE; --ink:#1B1C1A; --ink-strong:#000D21; --ink-muted:#44474E;
+  --brand:#0B2341; --brand-hover:#000D21; --on-brand:#FFFFFF;
+  --accent:#A04100; --accent-hover:#7A3000; --on-accent:#FFFFFF;
+  --accent-bright:#FC7728; /* dots and icon fills only, never behind white text */
+  --accent-tint:#FFDBCB; --on-accent-tint:#341000;
+  --success:#00522C; --success-tint:#E3F6EC;
+  --danger:#BA1A1A; --danger-tint:#FFDAD6; --on-danger-tint:#93000A;
+}
+@theme inline {
+  --color-canvas:var(--canvas); --color-surface:var(--surface); --color-surface-2:var(--surface-2);
+  --color-surface-3:var(--surface-3); --color-surface-4:var(--surface-4); --color-surface-5:var(--surface-5);
+  --color-line:var(--line); --color-ink:var(--ink); --color-ink-strong:var(--ink-strong); --color-ink-muted:var(--ink-muted);
+  --color-brand:var(--brand); --color-brand-hover:var(--brand-hover); --color-on-brand:var(--on-brand);
+  --color-accent:var(--accent); --color-accent-hover:var(--accent-hover); --color-on-accent:var(--on-accent);
+  --color-accent-bright:var(--accent-bright); --color-accent-tint:var(--accent-tint); --color-on-accent-tint:var(--on-accent-tint);
+  --color-success:var(--success); --color-success-tint:var(--success-tint);
+  --color-danger:var(--danger); --color-danger-tint:var(--danger-tint); --color-on-danger-tint:var(--on-danger-tint);
+  --font-sans:"Plus Jakarta Sans", system-ui, sans-serif;
+}
+
 /* Glass card styling */
 .glass-card {
   background: rgba(25, 32, 46, 0.7);
