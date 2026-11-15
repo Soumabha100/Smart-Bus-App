@@ -210,3 +210,27 @@
   - `npm run lint`: 0 errors.
   - Dev server verified returning HTTP 200 OK.
   - All existing routes, authentication, and backend APIs preserved.
+
+## Phase 7 - One Go Bus Light Theme & Stitch Auth UI (2026-11-15)
+- **Branch**: `feature/onego-theme-auth-ui`
+- **Branding**: Rebranded from obsolete names (Roamly/BusSathi) to **One Go Bus**.
+- **Stitch Project ID**: `9772835342865580419`
+- **Tokens Added**:
+  - `frontend/src/index.css`: Added complete light mode token dictionary in `:root` and `@theme inline` (`--canvas`, `--surface`, `--surface-2..5`, `--line`, `--ink`, `--ink-strong`, `--ink-muted`, `--brand`, `--accent`, `--accent-bright`, `--accent-tint`, `--success`, `--danger`, `--font-sans`).
+  - `frontend/index.html`: Loaded Google Fonts for `Plus Jakarta Sans` (weights 400-800) and updated `<title>` to "One Go Bus".
+- **Modular Components Created** (`frontend/src/features/auth/`):
+  - `AuthLayout.tsx` (151 lines): Fixed-viewport background architecture (`fixed inset-0 w-screen h-screen -z-10 object-cover object-bottom`) locking `Login_Hero.webp` strictly to viewport window bounds. Features the **Floating Sky Glass Pod** placed in the open right-leaning sky zone (`lg:pl-10 xl:pl-16`) away from tree leaves, completely uncovering the bus, temple spires, and bridge. Anchored with strict top alignment (`justify-start pt-2 lg:pt-6`) eliminating all jumping/shifting when switching between Sign In, Sign Up, Email/Password, and Phone OTP tabs.
+  - `AuthField.tsx` (68 lines): Compact accessible input wrapper with real `<label>`, leading icons, `aria-invalid`, `aria-describedby`, and error/hint states.
+  - `PasswordField.tsx` (74 lines): Secure password input with show/hide password toggle (44px min tap target) and 4-tier password strength meter.
+  - `AuthButton.tsx` (42 lines): High-contrast primary navy button with spinner loading state.
+  - `AuthSocialButtons.tsx` (29 lines): Minimal Apple ID and Google one-tap login buttons.
+  - `frontend/src/components/brand/Logo.tsx` (80 lines): Streamlined speed bus emblem matching reference artwork and "One Go Bus" wordmark.
+- **Pages Converted**:
+  - `frontend/src/pages/LoginPage.tsx` (183 lines): Full illustration view with narrative anchored cleanly in the open sky above the bus. Features segmented tab switcher (Sign In / Sign Up), auth mode tabs (Email & Password / Phone OTP), remember me checkbox, password recovery, and error banner.
+  - `frontend/src/pages/RegisterPage.tsx` (181 lines): Symmetrically balanced registration view with 2-column Name & Phone grid to prevent vertical card bloat. Internal scroll constraint (`max-h-[calc(100vh-90px)] overflow-y-auto`) prevents page stretching on smaller laptops.
+- **Verification**:
+  - `npm run build`: Bundled with 0 errors (`tsc -b && vite build` in 337ms).
+  - `npm run lint`: 0 errors, 0 warnings across all project files.
+  - Zero raw hex colors in all new files (strictly mapped to design tokens).
+  - All new files kept modular and under 85 lines (pages under 185 lines).
+  - No changes to backend, routing, or existing dark theme components on other pages.
