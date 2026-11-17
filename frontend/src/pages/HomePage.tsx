@@ -13,13 +13,13 @@ interface BengalCity {
   terminal: string;
   region: string;
   icon: string;
-}~
+}
 
-  interface ChatMessage {
+interface ChatMessage {
   id: string;
   sender: 'bot' | 'user';
-  text ?: string;
-  isDeal ?: boolean;
+  text?: string;
+  isDeal?: boolean;
 }
 
 const BENGAL_CITIES: BengalCity[] = [
@@ -654,8 +654,8 @@ export const HomePage: React.FC = () => {
                       setTimeDropdownOpen(false);
                     }}
                     className={`h-[48px] sm:h-[50px] lg:h-[52px] bg-[#FBFCFF] border-[1.4px] transition-all rounded-[11px] sm:rounded-[12px] px-3 py-1 flex items-center justify-between shadow-xs cursor-pointer select-none ${fromDropdownOpen
-                        ? 'border-[#0B3D92] ring-2 ring-[#0B3D92]/20 bg-white'
-                        : 'border-[#D4E0EE] hover:border-[#0B3D92]'
+                      ? 'border-[#0B3D92] ring-2 ring-[#0B3D92]/20 bg-white'
+                      : 'border-[#D4E0EE] hover:border-[#0B3D92]'
                       }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -773,8 +773,8 @@ export const HomePage: React.FC = () => {
                       setTimeDropdownOpen(false);
                     }}
                     className={`h-[48px] sm:h-[50px] lg:h-[52px] bg-[#FBFCFF] border-[1.4px] transition-all rounded-[11px] sm:rounded-[12px] px-3 py-1 flex items-center justify-between shadow-xs cursor-pointer select-none ${toDropdownOpen
-                        ? 'border-[#0B3D92] ring-2 ring-[#0B3D92]/20 bg-white'
-                        : 'border-[#D4E0EE] hover:border-[#0B3D92]'
+                      ? 'border-[#0B3D92] ring-2 ring-[#0B3D92]/20 bg-white'
+                      : 'border-[#D4E0EE] hover:border-[#0B3D92]'
                       }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -879,8 +879,8 @@ export const HomePage: React.FC = () => {
                       setTimeDropdownOpen(false);
                     }}
                     className={`h-[42px] sm:h-[44px] lg:h-[46px] bg-[#FBFCFF] border-[1.4px] transition-all rounded-[11px] sm:rounded-[12px] px-3 py-1 flex items-center justify-between shadow-xs cursor-pointer select-none ${calendarOpen
-                        ? 'border-[#0B3D92] ring-2 ring-[#0B3D92]/20 bg-white'
-                        : 'border-[#D4E0EE] hover:border-[#0B3D92]'
+                      ? 'border-[#0B3D92] ring-2 ring-[#0B3D92]/20 bg-white'
+                      : 'border-[#D4E0EE] hover:border-[#0B3D92]'
                       }`}
                   >
                     <div className="flex items-center gap-2.5">
@@ -1004,9 +1004,9 @@ export const HomePage: React.FC = () => {
                                 setCalendarOpen(false);
                               }}
                               className={`h-11 rounded-xl font-medium flex flex-col items-center justify-center relative transition-all cursor-pointer ${isSelected
-                                  ? 'bg-[#001A50] text-white font-bold shadow-md scale-105 z-10'
-                                  : `hover:bg-[#EAF3FF] hover:border hover:border-[#D0E4FF] text-[#001B3E] ${isWeekend ? 'bg-[#FAFCFF]' : ''
-                                  }`
+                                ? 'bg-[#001A50] text-white font-bold shadow-md scale-105 z-10'
+                                : `hover:bg-[#EAF3FF] hover:border hover:border-[#D0E4FF] text-[#001B3E] ${isWeekend ? 'bg-[#FAFCFF]' : ''
+                                }`
                                 }`}
                             >
                               <span className={`text-xs leading-none ${isSelected ? 'font-bold' : ''}`}>
@@ -1014,10 +1014,10 @@ export const HomePage: React.FC = () => {
                               </span>
                               <span
                                 className={`text-[9px] mt-0.5 leading-none ${isSelected
-                                    ? 'text-[#FF7900] font-bold'
-                                    : isBestFare
-                                      ? 'text-[#059669] font-bold'
-                                      : 'text-[#64748B]'
+                                  ? 'text-[#FF7900] font-bold'
+                                  : isBestFare
+                                    ? 'text-[#059669] font-bold'
+                                    : 'text-[#64748B]'
                                   }`}
                               >
                                 {fare}
@@ -1066,8 +1066,8 @@ export const HomePage: React.FC = () => {
                       setCalendarOpen(false);
                     }}
                     className={`h-[42px] sm:h-[44px] lg:h-[46px] bg-[#FBFCFF] border-[1.4px] transition-all rounded-[11px] sm:rounded-[12px] px-3 py-1 flex items-center justify-between shadow-xs cursor-pointer select-none ${timeDropdownOpen
-                        ? 'border-[#0B3D92] ring-2 ring-[#0B3D92]/20 bg-white'
-                        : 'border-[#D4E0EE] hover:border-[#0B3D92]'
+                      ? 'border-[#0B3D92] ring-2 ring-[#0B3D92]/20 bg-white'
+                      : 'border-[#D4E0EE] hover:border-[#0B3D92]'
                       }`}
                   >
                     <div className="flex items-center gap-2.5">
@@ -1098,8 +1098,8 @@ export const HomePage: React.FC = () => {
                             setTimeDropdownOpen(false);
                           }}
                           className={`text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${selectedTime === slot
-                              ? 'bg-[#082E78] text-white'
-                              : 'text-slate-700 hover:bg-[#EAF3FF] hover:text-[#082E78]'
+                            ? 'bg-[#082E78] text-white'
+                            : 'text-slate-700 hover:bg-[#EAF3FF] hover:text-[#082E78]'
                             }`}
                         >
                           {slot}

@@ -415,3 +415,10 @@
 - **Verification**:
   - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
   - `npm --prefix frontend run build`: Built successfully in 2.50s.
+
+## BusSathi ChatMessage Type Safety Fix (2026-11-17)
+- **Problem**: In `frontend/src/pages/HomePage.tsx`, `ChatMessage` interface fields `text` and `isDeal` were defined as required (`text: string; isDeal: boolean;`), triggering TypeScript errors TS2741 and TS2345 on initial copilot chat messages (`msg-1` missing `isDeal`, `msg-2` missing `text`) and in message send/clear handlers.
+- **Solution**:
+  - Made `text` and `isDeal` optional in `ChatMessage` interface (`text?: string; isDeal?: boolean;`).
+- **Verification**:
+  - `npm --prefix frontend run build`: Succeeded with zero TypeScript or Vite errors.
