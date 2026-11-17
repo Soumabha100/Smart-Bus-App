@@ -1,1441 +1,2095 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { tokenStorage } from '../utils/tokenStorage';
+import heroBg from '../assets/hero_bussathi_compact.webp';
+import exploreBus from '../assets/explore_bus.webp';
+import exploreVoucher from '../assets/explore_voucher.webp';
+import exploreStop from '../assets/explore_stop.webp';
+import exploreQr from '../assets/explore_qr.webp';
+import exploreStudents from '../assets/explore_students.webp';
+
+interface BengalCity {
+  city: string;
+  terminal: string;
+  region: string;
+  icon: string;
+}
+
+interface ChatMessage {
+  id: string;
+  sender: 'bot' | 'user';
+  text?: string;
+  isDeal?: boolean;
+}
+
+const BENGAL_CITIES: BengalCity[] = [
+  { city: 'Kolkata', terminal: 'Esplanade / Babughat / Karunamoyee', region: 'Kolkata Metro', icon: 'directions_bus' },
+  { city: 'Howrah', terminal: 'Howrah Station / Nabanna Terminus', region: 'Howrah', icon: 'train' },
+  { city: 'Durgapur', terminal: 'City Centre Bus Terminus / Muchipara', region: 'P. Bardhaman', icon: 'location_city' },
+  { city: 'Asansol', terminal: 'SBSTC Bus Stand / Chelidanga', region: 'P. Bardhaman', icon: 'commute' },
+  { city: 'Siliguri', terminal: 'Tenzing Norgay Bus Terminus / Junction', region: 'North Bengal', icon: 'landscape' },
+  { city: 'Digha', terminal: 'Digha Old Bus Stand / New Digha', region: 'Coastal', icon: 'beach_access' },
+  { city: 'Malda', terminal: 'Rathbari Terminus / English Bazar', region: 'Central Bengal', icon: 'history_edu' },
+  { city: 'Bolpur / Santiniketan', terminal: 'Prantik Bus Stop / Jamboni', region: 'Birbhum', icon: 'palette' },
+  { city: 'Haldia', terminal: 'City Centre Bus Terminal / Durgachak', region: 'Purba Medinipur', icon: 'anchor' },
+];
+
+const TIME_OPTIONS = [
+  'Anytime',
+  'Morning (06:00 - 12:00)',
+  'Afternoon (12:00 - 17:00)',
+  'Evening (17:00 - 21:00)',
+  'Night (21:00 - 06:00)',
+];
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+const MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const DAY_NAMES_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const user = tokenStorage.getUser();
 
   // ─────────────────────────────────────────────────────────────
-  // 1. JOURNEY PLANNER FORM STATES
+  // 1. SEARCH FORM STATES
   // ─────────────────────────────────────────────────────────────
-  const [origin, setOrigin] = useState('Bengaluru, Majestic & Indiranagar');
-  const [destination, setDestination] = useState('Goa (Panaji & Madgaon)');
-  const [departDate, setDepartDate] = useState('Fri, 24 Oct 2025');
-  const [departTimeWindow, setDepartTimeWindow] = useState('09:30 PM (Night Cruise)');
-  const [reachDate, setReachDate] = useState('Sat, 25 Oct 2025');
-  const [reachCutoff, setReachCutoff] = useState('07:00 AM (Early Fresh)');
-  const [budget, setBudget] = useState(1500);
+  const [fromCity, setFromCity] = useState('Kolkata');
+  const [fromSub, setFromSub] = useState('Esplanade / Babughat');
+  const [toCity, setToCity] = useState('Siliguri');
+  const [toSub, setToSub] = useState('Old Bus Stand');
 
-  // Multi-Select Preference Chips
-  const [selectedPreferences, setSelectedPreferences] = useState<string[]>([
-    'Sleeper Berth',
-    'Climate AC',
-    'Fastest Non-Stop',
-    'Budget Friendly',
+  const [fromDropdownOpen, setFromDropdownOpen] = useState(false);
+  const [toDropdownOpen, setToDropdownOpen] = useState(false);
+  const [fromSearch, setFromSearch] = useState('');
+  const [toSearch, setToSearch] = useState('');
+  const [isSwapping, setIsSwapping] = useState(false);
+
+  // Calendar states (17 Nov 2026 as per finalized Stitch design)
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date(2026, 10, 17));
+  const [displayedYear, setDisplayedYear] = useState(2026);
+  const [displayedMonth, setDisplayedMonth] = useState(10); // November
+
+  // Time & Budget
+  const [selectedTime, setSelectedTime] = useState('Anytime');
+  const [timeDropdownOpen, setTimeDropdownOpen] = useState(false);
+  const [budget, setBudget] = useState(800);
+
+  // ─────────────────────────────────────────────────────────────
+  // 2. UI NAVIGATION & COPILOT DRAWER STATES
+  // ─────────────────────────────────────────────────────────────
+  const [copilotOpen, setCopilotOpen] = useState(false);
+  const [copilotChat, setCopilotChat] = useState<ChatMessage[]>([
+    {
+      id: 'msg-1',
+      sender: 'bot',
+      text: 'নমস্কার! Welcome to BusSathi 🙏\nI am your smart Bengal transit copilot. Need assistance discovering fast routes, applying student passes, or finding buses below your budget?',
+    },
+    {
+      id: 'msg-2',
+      sender: 'bot',
+      isDeal: true,
+    },
   ]);
-
-  // UI Interactive States
-  const [isSearching, setIsSearching] = useState(false);
-  const [isSwapRotated, setIsSwapRotated] = useState(false);
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [copilotInput, setCopilotInput] = useState('');
+  const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  // AI Copilot States
-  const [aiPromptInput, setAiPromptInput] = useState(
-    'Find a sleeper bus reaching Panaji before 8 AM with charging ports under ₹1,400'
-  );
-  const [aiResponse, setAiResponse] = useState<string | null>(null);
+  // Refs for click outside
+  const fromContainerRef = useRef<HTMLDivElement>(null);
+  const toContainerRef = useRef<HTMLDivElement>(null);
+  const dateContainerRef = useRef<HTMLDivElement>(null);
+  const timeContainerRef = useRef<HTMLDivElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+  const chatStreamRef = useRef<HTMLDivElement>(null);
+  const searchSectionRef = useRef<HTMLDivElement>(null);
 
-  // ─────────────────────────────────────────────────────────────
-  // 2. HANDLERS
-  // ─────────────────────────────────────────────────────────────
-  const handleSwap = () => {
-    setIsSwapRotated(!isSwapRotated);
-    const temp = origin;
-    setOrigin(destination);
-    setDestination(temp);
-  };
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (fromContainerRef.current && !fromContainerRef.current.contains(target)) {
+        setFromDropdownOpen(false);
+      }
+      if (toContainerRef.current && !toContainerRef.current.contains(target)) {
+        setToDropdownOpen(false);
+      }
+      if (dateContainerRef.current && !dateContainerRef.current.contains(target)) {
+        setCalendarOpen(false);
+      }
+      if (timeContainerRef.current && !timeContainerRef.current.contains(target)) {
+        setTimeDropdownOpen(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-  const handleTogglePreference = (prefName: string) => {
-    if (selectedPreferences.includes(prefName)) {
-      setSelectedPreferences(selectedPreferences.filter((p) => p !== prefName));
-    } else {
-      setSelectedPreferences([...selectedPreferences, prefName]);
+  // Scroll chat stream when new messages arrive
+  useEffect(() => {
+    if (chatStreamRef.current) {
+      chatStreamRef.current.scrollTop = chatStreamRef.current.scrollHeight;
     }
+  }, [copilotChat]);
+
+  // ─────────────────────────────────────────────────────────────
+  // 3. SEARCH & ROUTE HANDLERS
+  // ─────────────────────────────────────────────────────────────
+  const formatDateForDisplay = (d: Date): string => {
+    const day = d.getDate();
+    const monthStr = MONTH_NAMES_SHORT[d.getMonth()];
+    const weekdayStr = DAY_NAMES_SHORT[d.getDay()];
+    return `${day} ${monthStr}, ${weekdayStr}`;
   };
 
-  const handleSearchJourneys = (e?: React.FormEvent) => {
+  const formatDateDDMMYYYY = (d: Date): string => {
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
+  const handleSwap = () => {
+    setIsSwapping(true);
+    const tempCity = fromCity;
+    const tempSub = fromSub;
+    setFromCity(toCity);
+    setFromSub(toSub);
+    setToCity(tempCity);
+    setToSub(tempSub);
+    setFromDropdownOpen(false);
+    setToDropdownOpen(false);
+    setTimeout(() => setIsSwapping(false), 300);
+  };
+
+  const handleTriggerSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setIsSearching(true);
-    setTimeout(() => {
-      setIsSearching(false);
-      navigate('/results', {
-        state: {
-          from: origin.split(',')[0].trim(),
-          to: destination.split('(')[0].trim(),
-          date: departDate,
-          budget: budget,
-          preferences: selectedPreferences,
-          mood: selectedPreferences.includes('Fastest Non-Stop')
-            ? 'Fastest'
-            : selectedPreferences.includes('Sleeper Berth')
-            ? 'Sleep well'
-            : 'Recommended',
-        },
-      });
-    }, 400);
-  };
-
-  const handleBookFeaturedRoute = (routeFrom: string, routeTo: string, routePrice: number) => {
     navigate('/results', {
       state: {
-        from: routeFrom,
-        to: routeTo,
-        date: departDate,
-        budget: routePrice,
+        from: fromCity,
+        to: toCity,
+        date: formatDateForDisplay(selectedDate),
+        budget,
+        time: selectedTime,
         mood: 'Recommended',
       },
     });
   };
 
-  const handleRunAiPrompt = (overridePrompt?: string) => {
-    const promptText = overridePrompt || aiPromptInput;
-    if (overridePrompt) setAiPromptInput(overridePrompt);
-
-    if (promptText.toLowerCase().includes('hyderabad')) {
-      setAiResponse(
-        'Found 8 Verified Single-Women Sleeper Coaches matching Bengaluru → Hyderabad, Arrival < 07:30 AM, Budget Cap ₹1,200, CCTV & Emergency Alert Shield.'
-      );
-    } else if (promptText.toLowerCase().includes('pune')) {
-      setAiResponse(
-        'Found 12 Superfast Multi-Axle AC Coaches matching Mumbai → Pune, Departures after 06:00 PM, Highway Express Priority Lane, ₹449.'
-      );
-    } else {
-      setAiResponse(
-        'Found 14 Luxury Sleeper Coaches matching Bengaluru → Panaji, Arrival < 08:00 AM, Price Cap ₹1,400, Guaranteed Type-C Charging Ports.'
-      );
+  const handleSetQuickRoute = (from: string, fromT: string, to: string, toT: string) => {
+    setFromCity(from);
+    setFromSub(fromT);
+    setToCity(to);
+    setToSub(toT);
+    if (searchSectionRef.current) {
+      searchSectionRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  const handleSignOut = () => {
+  // Calendar logic
+  const handleDatePreset = (preset: 'today' | 'tomorrow' | 'plus2' | 'weekend') => {
+    const base = new Date(2026, 10, 17); // 17 Nov 2026 demo base
+    const target = new Date(base);
+    if (preset === 'tomorrow') {
+      target.setDate(base.getDate() + 1);
+    } else if (preset === 'plus2') {
+      target.setDate(base.getDate() + 2);
+    } else if (preset === 'weekend') {
+      const day = base.getDay();
+      let diff = 6 - day;
+      if (diff <= 0) diff += 7;
+      target.setDate(base.getDate() + diff);
+    }
+    setDisplayedYear(target.getFullYear());
+    setDisplayedMonth(target.getMonth());
+    setSelectedDate(target);
+    setCalendarOpen(false);
+  };
+
+  const handlePrevMonth = () => {
+    if (displayedMonth === 0) {
+      setDisplayedMonth(11);
+      setDisplayedYear((y) => y - 1);
+    } else {
+      setDisplayedMonth((m) => m - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (displayedMonth === 11) {
+      setDisplayedMonth(0);
+      setDisplayedYear((y) => y + 1);
+    } else {
+      setDisplayedMonth((m) => m + 1);
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  // 4. COPILOT HANDLERS
+  // ─────────────────────────────────────────────────────────────
+  const handleCopilotSend = (customText?: string) => {
+    const textToSend = customText || copilotInput.trim();
+    if (!textToSend) return;
+
+    const userMessage: ChatMessage = {
+      id: `usr-${Date.now()}`,
+      sender: 'user',
+      text: textToSend,
+    };
+    setCopilotChat((prev) => [...prev, userMessage]);
+    if (!customText) setCopilotInput('');
+
+    setTimeout(() => {
+      const lower = textToSend.toLowerCase();
+      let botResponse = '';
+      if (lower.includes('ac') || lower.includes('non-ac')) {
+        botResponse = 'Volvo Multi-axle AC buses offer temperature control, charging ports, and pushback sleeper berths (avg fare ₹750). Non-AC express coaches run every 20-30 mins at budget fares starting from ₹180-₹220.';
+      } else if (lower.includes('student') || lower.includes('pass')) {
+        botResponse = 'Students receive up to 40% monthly concessions! Use promo code CAMPUSCOMMUTE at checkout and keep your valid college ID handy during boarding.';
+      } else if (lower.includes('luggage') || lower.includes('bag')) {
+        botResponse = 'Each passenger is allowed 1 main baggage (up to 20kg in the under-deck cargo) and 1 laptop/hand carry bag in the overhead rack for free.';
+      } else if (lower.includes('cheapest') || lower.includes('300')) {
+        botResponse = 'Top budget routes under ₹300:\n• Kolkata → Digha: from ₹220\n• Kolkata → Durgapur: from ₹180\n• Kolkata → Haldia: from ₹160\nSet your budget slider to match!';
+      } else {
+        botResponse = `Found 28 verified buses matching your query across WBSTC, SBSTC, and private luxury operators. Would you like me to prefill departure and destination on your search card?`;
+      }
+
+      setCopilotChat((prev) => [
+        ...prev,
+        {
+          id: `bot-${Date.now()}`,
+          sender: 'bot',
+          text: botResponse,
+        },
+      ]);
+    }, 400);
+  };
+
+  const handleVoiceToggle = () => {
+    setIsVoiceActive(!isVoiceActive);
+    if (!isVoiceActive) {
+      setTimeout(() => {
+        setIsVoiceActive(false);
+      }, 2500);
+    }
+  };
+
+  const handleLogout = () => {
     tokenStorage.clear();
     navigate('/login');
   };
 
-  return (
-    <div className="bg-[#0D1320] font-['Inter',sans-serif] text-[#DDE2F5] min-h-screen selection:bg-[#00D0B2]/30 selection:text-[#00D0B2] overflow-x-hidden relative">
-      {/* ─────────────────────────────────────────────────────────────
-          AMBIENT CANVAS BACKGROUND REFRACTIONS
-          ───────────────────────────────────────────────────────────── */}
-      <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[1100px] h-[550px] bg-gradient-to-b from-[#FF6B4A]/15 via-[#43EDCD]/10 to-transparent blur-[140px] pointer-events-none -z-10" />
-      <div className="absolute top-[800px] -left-64 w-[600px] h-[600px] bg-[#43EDCD]/5 blur-[160px] pointer-events-none -z-10" />
-      <div className="absolute top-[1600px] -right-64 w-[700px] h-[700px] bg-[#FFB4A3]/5 blur-[180px] pointer-events-none -z-10" />
+  // Calendar Day Grid Computation
+  const firstDayOfWeek = new Date(displayedYear, displayedMonth, 1).getDay();
+  const daysInCurrentMonth = new Date(displayedYear, displayedMonth + 1, 0).getDate();
+  const daysInPreviousMonth = new Date(displayedYear, displayedMonth, 0).getDate();
+  const totalCells = firstDayOfWeek + daysInCurrentMonth;
+  const trailingCells = (7 - (totalCells % 7)) % 7;
 
-      {/* ─────────────────────────────────────────────────────────────
-          HEADER: FIXED DESKTOP & MOBILE NAVIGATION
-          ───────────────────────────────────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#080E1B]/85 backdrop-blur-2xl border-b border-[#2F3543]/40 shadow-[0_4px_30px_-4px_rgba(0,0,0,0.5)]">
-        <div className="h-20 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between gap-4">
-          {/* Brand Logo & Tagline */}
-          <div className="flex items-center gap-6 lg:gap-10">
+  // Filtered Cities
+  const filteredFromCities = BENGAL_CITIES.filter(
+    (c) =>
+      c.city.toLowerCase().includes(fromSearch.toLowerCase()) ||
+      c.terminal.toLowerCase().includes(fromSearch.toLowerCase()) ||
+      c.region.toLowerCase().includes(fromSearch.toLowerCase())
+  );
+
+  const filteredToCities = BENGAL_CITIES.filter(
+    (c) =>
+      c.city.toLowerCase().includes(toSearch.toLowerCase()) ||
+      c.terminal.toLowerCase().includes(toSearch.toLowerCase()) ||
+      c.region.toLowerCase().includes(toSearch.toLowerCase())
+  );
+
+  return (
+    <div className="min-h-screen bg-[#F9F9FF] font-['Plus_Jakarta_Sans',sans-serif] text-[#001B3E] antialiased flex flex-col">
+      {/* ==========================================
+          HEADER (FLOATING PILL NAVBAR, max-w-[1520px])
+          ========================================== */}
+      <header className="sticky top-1 sm:top-2 z-40 w-full px-3 sm:px-[22px]">
+        <div className="max-w-[1520px] mx-auto h-[50px] sm:h-[54px] lg:h-[58px] rounded-full bg-[#FCFEFF]/95 backdrop-blur-[18px] border border-[#CEDDF3] shadow-[0_4px_20px_rgba(11,61,146,0.06)] px-3 sm:px-5 lg:px-6 flex items-center justify-between">
+          {/* LEFT: BRAND */}
+          <div className="flex items-center">
             <button
-              type="button"
-              onClick={() => navigate('/home')}
-              className="flex items-center gap-3 group text-left cursor-pointer focus:outline-none"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="flex items-center gap-2 group focus:outline-hidden text-left cursor-pointer"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FF6B4A] to-[#43EDCD] p-0.5 flex items-center justify-center shadow-lg shadow-[#FF6B4A]/25 transition-transform duration-300 group-hover:scale-105">
-                <div className="w-full h-full bg-[#080E1B] rounded-[10px] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[#FF6B4A] text-[22px]">directions_bus</span>
-                </div>
+              <div className="w-[34px] h-[34px] sm:w-[38px] sm:h-[38px] rounded-[10px] sm:rounded-[12px] bg-[#0B3D92] flex items-center justify-center text-white shadow-xs shrink-0 group-hover:scale-105 transition-transform duration-200">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <rect height="13" rx="3" width="18" x="3" y="6" />
+                  <path d="M3 11h18" />
+                  <circle cx="7" cy="15" fill="#FF7900" r="1.5" stroke="none" />
+                  <circle cx="17" cy="15" fill="#FF7900" r="1.5" stroke="none" />
+                  <path d="M6 19v2" />
+                  <path d="M18 19v2" />
+                </svg>
               </div>
-              <div className="flex flex-col">
-                <span className="font-['Sora',sans-serif] text-xl font-bold tracking-tight text-[#DDE2F5] leading-none">
-                  Roamly
+              <div className="flex flex-col justify-center leading-none">
+                <span className="text-[20px] sm:text-[22px] font-black tracking-tight leading-none text-[#082E78]">
+                  Bus<span className="text-[#FF7900]">Sathi</span>
                 </span>
-                <span className="text-[10px] text-[#43EDCD] tracking-widest uppercase font-semibold mt-1">
-                  Voyage Systems
-                </span>
+                <span className="text-[9.5px] sm:text-[10px] font-medium text-[#4B6584] tracking-wide mt-0.5">Travel Smart. Pay Less.</span>
               </div>
             </button>
-
-            {/* Desktop Navigation Links */}
-            <nav className="hidden xl:flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => navigate('/home')}
-                className="px-4 py-2 rounded-lg font-['Inter',sans-serif] text-sm font-semibold transition-all duration-200 bg-[#242A38] text-[#57FBDB] shadow-[0_0_16px_-4px_rgba(67,237,205,0.25)] border border-[#2F3543]/50"
-              >
-                Book Journeys
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const el = document.getElementById('live-tracker-section');
-                  el?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="px-4 py-2 rounded-lg font-['Inter',sans-serif] text-sm text-[#E1BFB8] hover:text-[#DDE2F5] hover:bg-[#1A1F2D] transition-all duration-200"
-              >
-                Live Tracker
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const el = document.getElementById('journeys-love-section');
-                  el?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="px-4 py-2 rounded-lg font-['Inter',sans-serif] text-sm text-[#E1BFB8] hover:text-[#DDE2F5] hover:bg-[#1A1F2D] transition-all duration-200"
-              >
-                Explore Routes
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/results')}
-                className="px-4 py-2 rounded-lg font-['Inter',sans-serif] text-sm text-[#E1BFB8] hover:text-[#DDE2F5] hover:bg-[#1A1F2D] transition-all duration-200"
-              >
-                My Bookings
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const el = document.getElementById('copilot-section');
-                  el?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="px-4 py-2 rounded-lg font-['Inter',sans-serif] text-sm text-[#E1BFB8] hover:text-[#DDE2F5] hover:bg-[#1A1F2D] transition-all duration-200"
-              >
-                AI Assistant
-              </button>
-            </nav>
           </div>
 
-          {/* Right Header Controls */}
-          <div className="flex items-center gap-3 sm:gap-4">
-            {/* 24/7 Telematics Support Pill */}
-            <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#161B29] border border-[#2F3543]/60 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-[#43EDCD] animate-pulse" />
-              <span className="text-[11px] text-[#57FBDB] uppercase tracking-wider font-semibold">
-                24/7 Telematics Support
+          {/* CENTER: DESKTOP NAVIGATION LINKS */}
+          <nav className="hidden lg:flex items-center gap-1.5 xl:gap-2.5">
+            <a
+              href="#home"
+              onClick={(e) => {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="h-[34px] sm:h-[36px] px-3.5 rounded-[25px] bg-gradient-to-r from-[#104FBD] to-[#082E78] text-white font-bold text-[13px] sm:text-[13.5px] flex items-center gap-1.5 shadow-sm transition-all duration-200"
+            >
+              <span className="material-symbols-outlined text-[17px]">home</span>
+              <span>Home</span>
+            </a>
+            <a
+              href="#routes"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('popular-journeys')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="text-[#2D3F58] hover:text-[#0B4DBB] font-bold text-[13px] sm:text-[13.5px] px-2.5 py-1 flex items-center gap-1 transition-colors duration-200"
+            >
+              <span className="material-symbols-outlined text-[17px]">explore</span>
+              <span>Routes</span>
+            </a>
+            <a
+              href="#offers"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('student-special')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="text-[#2D3F58] hover:text-[#0B4DBB] font-bold text-[13px] sm:text-[13.5px] px-2.5 py-1 flex items-center gap-1 transition-colors duration-200"
+            >
+              <span className="material-symbols-outlined text-[17px]">local_offer</span>
+              <span>Offers</span>
+            </a>
+            <a
+              href="#bus-pass"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('student-special')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="text-[#2D3F58] hover:text-[#0B4DBB] font-bold text-[13px] sm:text-[13.5px] px-2.5 py-1 flex items-center gap-1 transition-colors duration-200"
+            >
+              <span className="material-symbols-outlined text-[17px]">badge</span>
+              <span>Bus Pass</span>
+            </a>
+            <a
+              href="#faq"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('faq-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="text-[#2D3F58] hover:text-[#0B4DBB] font-bold text-[13px] sm:text-[13.5px] px-2.5 py-1 flex items-center gap-1 transition-colors duration-200"
+            >
+              <span className="material-symbols-outlined text-[17px]">headset_mic</span>
+              <span>Help &amp; Support</span>
+            </a>
+          </nav>
+
+          {/* RIGHT: ACTIONS & USER PROFILE */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Sathi Copilot Trigger Button */}
+            <button
+              type="button"
+              aria-label="Open Sathi Copilot AI Concierge"
+              onClick={() => setCopilotOpen(true)}
+              className="h-[34px] sm:h-[36px] px-3 rounded-full bg-[#082454] hover:bg-[#0C3270] text-white font-bold text-[12.5px] sm:text-[13px] flex items-center gap-1.5 shadow-xs transition-all cursor-pointer select-none"
+            >
+              <span className="text-amber-400 text-xs sm:text-sm">✦</span>
+              <span>Sathi Copilot</span>
+              <span className="bg-[#FF7900] text-white text-[9.5px] font-black px-1.5 py-0.2 rounded-full leading-none">
+                AI
               </span>
-            </div>
+            </button>
 
-            {/* Currency Selector */}
-            <div className="flex items-center justify-center h-8 px-2.5 rounded-lg bg-[#161B29] border border-[#2F3543]/50 text-[#DDE2F5] text-xs font-semibold">
-              <span className="text-[#BBC6E6]">₹</span>
-              <span className="ml-1 text-[11px] text-[#E1BFB8]">INR</span>
-            </div>
+            {/* Notification Bell Button */}
+            <button
+              type="button"
+              aria-label="Notifications"
+              onClick={() => alert('No new notifications right now.')}
+              className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full flex items-center justify-center hover:bg-slate-100 relative transition-colors duration-200 text-[#2D3F58] cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[20px]">notifications</span>
+              <span className="w-1.5 h-1.5 bg-[#FF7900] rounded-full ring-2 ring-white absolute top-1.5 right-1.5" />
+            </button>
 
-            <div className="h-6 w-px bg-[#2F3543]/60 hidden sm:block" />
-
-            {/* Profile Avatar & Menu */}
-            <div className="relative">
+            {/* Profile Avatar Button with Dropdown */}
+            <div className="relative" ref={profileMenuRef}>
               <button
                 type="button"
-                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-2.5 p-1 rounded-full hover:bg-[#1A1F2D] transition-colors focus:outline-none"
+                aria-label="My Account Profile"
+                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#EBF3FC] border border-[#CEDDF3] flex items-center justify-center text-[#082E78] hover:border-[#082E78] transition-colors duration-200 cursor-pointer font-bold text-[13px]"
               >
-                <div className="flex flex-col text-right hidden sm:flex">
-                  <span className="text-xs font-semibold text-[#DDE2F5] leading-tight">
-                    {user?.name || 'Anya S.'}
-                  </span>
-                  <span className="text-[10px] text-[#FFB4A3] flex items-center justify-end gap-1 font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B4A] inline-block" />
-                    Roamly Club
-                  </span>
-                </div>
-                <div className="relative">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FF6B4A] to-[#43EDCD] p-0.5 flex items-center justify-center">
-                    <div className="w-full h-full bg-[#1A1F2D] rounded-full flex items-center justify-center text-xs font-bold text-[#DDE2F5]">
-                      {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
-                    </div>
-                  </div>
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#43EDCD] ring-2 ring-[#080E1B]" />
-                </div>
+                {user?.name ? (
+                  <span>{user.name.charAt(0).toUpperCase()}</span>
+                ) : (
+                  <span className="material-symbols-outlined text-[18px]">person</span>
+                )}
               </button>
 
-              {/* Profile Dropdown */}
-              {isProfileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-[#1A1F2D] border border-[#2F3543] rounded-xl shadow-2xl p-2 z-50 text-left">
-                  <div className="px-3 py-2 border-b border-[#2F3543] mb-1">
-                    <p className="text-sm font-semibold text-[#DDE2F5] truncate">
-                      {user?.name || 'Anya S.'}
-                    </p>
-                    <p className="text-xs text-[#E1BFB8] truncate">
-                      {user?.email || 'anya.traveler@roamly.com'}
-                    </p>
+              {profileMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-[#D0E4FF] py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                  <div className="px-4 py-2 border-b border-slate-100">
+                    <p className="text-xs text-slate-500">Signed in as</p>
+                    <p className="text-sm font-bold text-[#082E78] truncate">{user?.name || user?.email || 'Commuter'}</p>
+                    <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E3F8F5] text-[#0A5832]">
+                      Verified Rider
+                    </span>
                   </div>
                   <button
-                    type="button"
                     onClick={() => {
-                      setIsProfileMenuOpen(false);
+                      setProfileMenuOpen(false);
                       navigate('/results');
                     }}
-                    className="w-full text-left px-3 py-2 text-xs text-[#DDE2F5] hover:bg-[#242A38] rounded-lg transition-colors flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-[#EAF3FF] hover:text-[#082E78] transition-colors"
                   >
-                    <span className="material-symbols-outlined text-[16px] text-[#43EDCD]">confirmation_number</span>
                     My Bookings
                   </button>
                   <button
-                    type="button"
                     onClick={() => {
-                      setIsProfileMenuOpen(false);
-                      navigate('/system-status');
+                      setProfileMenuOpen(false);
+                      setCopilotOpen(true);
                     }}
-                    className="w-full text-left px-3 py-2 text-xs text-[#DDE2F5] hover:bg-[#242A38] rounded-lg transition-colors flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-[#EAF3FF] hover:text-[#082E78] transition-colors flex items-center justify-between"
                   >
-                    <span className="material-symbols-outlined text-[16px] text-[#BBC6E6]">health_and_safety</span>
-                    System Status
+                    <span>Sathi Copilot AI</span>
+                    <span className="text-[10px] bg-[#FF7900] text-white px-1.5 py-0.2 rounded font-bold">AI</span>
                   </button>
-                  <div className="border-t border-[#2F3543] my-1" />
                   <button
-                    type="button"
-                    onClick={handleSignOut}
-                    className="w-full text-left px-3 py-2 text-xs text-[#FF6B4A] hover:bg-[#242A38] rounded-lg transition-colors flex items-center gap-2 font-medium"
+                    onClick={() => {
+                      setProfileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors border-t border-slate-100"
                   >
-                    <span className="material-symbols-outlined text-[16px]">logout</span>
-                    Sign Out
+                    Log Out
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Mobile Hamburger Button */}
+            {/* Mobile Menu Hamburger (lg:hidden) */}
             <button
               type="button"
+              aria-label="Toggle Mobile Menu"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="xl:hidden p-2 rounded-lg text-[#E1BFB8] hover:text-[#DDE2F5] hover:bg-[#1A1F2D] transition-colors"
-              aria-label="Toggle Navigation"
+              className="lg:hidden w-9 h-9 rounded-full flex items-center justify-center hover:bg-slate-100 text-[#082E78] transition-colors duration-200 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[24px]">
-                {mobileMenuOpen ? 'close' : 'menu'}
-              </span>
+              <span className="material-symbols-outlined text-[22px]">{mobileMenuOpen ? 'close' : 'menu'}</span>
             </button>
           </div>
         </div>
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="xl:hidden bg-[#080E1B] border-b border-[#2F3543] px-4 py-3 space-y-2">
-            <button
-              type="button"
+          <div className="lg:hidden mt-2 max-w-[1520px] mx-auto bg-white rounded-2xl border border-[#CEDDF3] px-6 py-4 flex flex-col gap-3 shadow-xl">
+            <a
+              href="#home"
+              onClick={() => setMobileMenuOpen(false)}
+              className="font-bold text-[#082E78] text-base py-1"
+            >
+              Home
+            </a>
+            <a
+              href="#routes"
               onClick={() => {
                 setMobileMenuOpen(false);
-                navigate('/home');
+                document.getElementById('popular-journeys')?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="w-full text-left px-3 py-2 rounded-lg text-sm font-semibold bg-[#242A38] text-[#57FBDB]"
+              className="font-medium text-slate-700 text-base py-1 hover:text-[#082E78]"
             >
-              Book Journeys
-            </button>
-            <button
-              type="button"
+              Routes
+            </a>
+            <a
+              href="#offers"
               onClick={() => {
                 setMobileMenuOpen(false);
-                document.getElementById('live-tracker-section')?.scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('student-special')?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="w-full text-left px-3 py-2 rounded-lg text-sm text-[#E1BFB8] hover:bg-[#1A1F2D]"
+              className="font-medium text-slate-700 text-base py-1 hover:text-[#082E78]"
             >
-              Live Tracker
-            </button>
-            <button
-              type="button"
+              Offers &amp; Deals
+            </a>
+            <a
+              href="#bus-pass"
               onClick={() => {
                 setMobileMenuOpen(false);
-                document.getElementById('journeys-love-section')?.scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('student-special')?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="w-full text-left px-3 py-2 rounded-lg text-sm text-[#E1BFB8] hover:bg-[#1A1F2D]"
+              className="font-medium text-slate-700 text-base py-1 hover:text-[#082E78]"
             >
-              Explore Routes
-            </button>
-            <button
-              type="button"
+              Student Bus Pass
+            </a>
+            <a
+              href="#faq"
               onClick={() => {
                 setMobileMenuOpen(false);
-                navigate('/results');
+                document.getElementById('faq-section')?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="w-full text-left px-3 py-2 rounded-lg text-sm text-[#E1BFB8] hover:bg-[#1A1F2D]"
+              className="font-medium text-slate-700 text-base py-1 hover:text-[#082E78]"
             >
-              My Bookings
-            </button>
+              Help &amp; Support
+            </a>
           </div>
         )}
       </header>
 
-      {/* ─────────────────────────────────────────────────────────────
-          MAIN CONTENT
-          ───────────────────────────────────────────────────────────── */}
-      <main className="w-full pt-24 sm:pt-28 pb-16 bg-[#0D1320] min-h-[calc(100vh-20rem)]">
-        <div className="flex flex-col w-full relative">
-          {/* ─────────────────────────────────────────────────────────
-              SECTION 1: HERO & SMART JOURNEY PLANNER
-              ───────────────────────────────────────────────────────── */}
-          <section className="w-full px-4 sm:px-6 lg:px-12 pt-4 pb-12 flex flex-col items-center">
-            {/* Header Callout & Title */}
-            <div className="max-w-4xl text-center flex flex-col items-center gap-3 mb-8">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#161B29] border border-[#2F3543]/60 shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-[#43EDCD] animate-ping" />
-                <span className="text-xs text-[#57FBDB] uppercase tracking-widest font-semibold">
-                  AI-Powered Route Optimization • Live Bus Tracking
-                </span>
-              </div>
-              <h1 className="font-['Sora',sans-serif] text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#DDE2F5] leading-tight">
-                Where would you like to{' '}
-                <span className="bg-gradient-to-r from-[#FF6B4A] via-[#FFB4A3] to-[#43EDCD] bg-clip-text text-transparent">
-                  travel today?
-                </span>
-              </h1>
-              <p className="font-['Inter',sans-serif] text-sm sm:text-base text-[#BBC6E6] max-w-2xl font-light">
-                Plan your journey. We'll find the right bus for you with precision arrival telemetry and instant fare matching.
-              </p>
+      {/* ==========================================
+          MAIN CONTENT CONTAINER
+          ========================================== */}
+      <main className="w-full grow bg-[#F9F9FF]">
+        {/* ==========================================
+            SECTION 1: HERO SECTION & KOLKATA BANNER
+            ========================================== */}
+        <section className="w-full max-w-[1560px] mx-auto px-3 sm:px-[22px] mt-2 sm:mt-2.5">
+          <div className="relative w-full overflow-hidden h-[210px] sm:h-[230px] lg:h-[250px] rounded-[20px] sm:rounded-[24px] bg-[#FCFDFE] border border-[#E2ECF8] shadow-xs flex items-center">
+            {/* Kolkata Transit Illustration: One Continuous Full-Width Background Layer */}
+            <div className="absolute inset-0 z-0 w-full h-full pointer-events-none select-none overflow-hidden">
+              <img
+                src={heroBg}
+                alt="Kolkata Bengal transit panorama with riverside trees, Howrah Bridge, ferry, Victoria Memorial, and modern bus"
+                className="w-full h-full object-cover object-[center_80%] sm:object-[center_82%] md:object-[center_83%]"
+              />
             </div>
 
-            {/* PRIMARY INTERACTIVE JOURNEY PLANNER CARD */}
-            <div className="w-full max-w-6xl bg-[#1A1F2D]/90 backdrop-blur-2xl rounded-[1.75rem] border border-[#2F3543]/60 p-5 sm:p-8 md:p-10 shadow-2xl relative">
-              {/* Top Accent Line */}
-              <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-[#43EDCD]/40 to-transparent" />
+            {/* Smooth Horizontal Gradient Scrim for Text Readability without hard vertical boundaries */}
+            <div className="absolute inset-0 z-1 pointer-events-none bg-gradient-to-r from-white via-white/90 via-28% md:via-white/75 md:via-42% lg:via-white/55 lg:via-50% to-transparent w-full md:w-[70%] lg:w-[62%]" />
 
-              <form onSubmit={handleSearchJourneys} className="flex flex-col gap-6">
-                {/* ROW 1: ORIGIN & DESTINATION WITH FLOATING SWAP */}
-                <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
-                  {/* FROM FIELD */}
-                  <div className="relative flex flex-col p-4 rounded-xl bg-[#080E1B] border border-[#2F3543]/60 focus-within:border-[#FF6B4A] focus-within:bg-[#161B29] transition-all">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] text-[#FF6B4A] flex items-center gap-1 uppercase tracking-wider font-semibold">
-                        <span className="material-symbols-outlined text-base">near_me</span>
-                        From / Departing From
-                      </span>
-                      <span className="text-[10px] text-[#BBC6E6] bg-[#2F3543]/40 px-2 py-0.5 rounded-full font-medium">
-                        Origin Hub
-                      </span>
+            {/* Hero Left Content: Heading Over Background */}
+            <div className="relative z-10 h-full flex flex-col justify-center px-5 sm:px-8 lg:px-10 py-3 sm:py-3.5">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-[28px] bg-white border border-[#CEDDF3] shadow-[0_2px_8px_rgba(11,61,146,0.04)] mb-1 sm:mb-1.5 w-fit">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FF7900]" />
+                <span className="text-[9.5px] sm:text-[10px] text-[#082E78] uppercase tracking-[0.12em] font-extrabold">
+                  BENGAL&apos;S SMARTEST TRANSIT NETWORK
+                </span>
+              </div>
+
+              {/* Heading with arc curve on single line */}
+              <div className="relative inline-block z-10">
+                <h1 className="text-[26px] sm:text-[30px] lg:text-[34px] leading-tight font-[900] text-[#082454] tracking-tight drop-shadow-xs whitespace-nowrap">
+                  Where to{' '}
+                  <span className="text-[#FF7900] font-black relative inline-block pb-0.5 tracking-tight">
+                    next?
+                    <svg
+                      className="absolute -bottom-1 left-0 w-full pointer-events-none"
+                      fill="none"
+                      viewBox="0 0 100 20"
+                      preserveAspectRatio="none"
+                    >
+                      <path d="M2 14C30 2 70 2 98 14" stroke="#FF7900" strokeWidth="4" strokeLinecap="round" />
+                    </svg>
+                  </span>
+                </h1>
+              </div>
+
+              {/* Subtitle */}
+              <p className="text-[12px] sm:text-[13px] text-[#334D6E] font-medium mt-0.5 flex items-center gap-1">
+                <span>Find affordable buses for your journey</span>
+                <span className="text-sm">😊</span>
+              </p>
+
+              {/* Popular Route Pills */}
+              <div className="flex items-center gap-1.5 mt-1.5 sm:mt-2 flex-wrap">
+                <span className="text-[10px] sm:text-[10.5px] font-bold text-[#556987]">Popular:</span>
+                <button
+                  type="button"
+                  onClick={() => handleSetQuickRoute('Kolkata', 'Esplanade / Babughat', 'Digha', 'Old Bus Stand')}
+                  className="px-2 py-0.5 rounded-full bg-white/95 border border-[#CEDDF3] text-[10px] sm:text-[10.5px] font-bold text-[#082E78] hover:bg-[#EAF3FF] hover:border-[#104FBD] transition-all cursor-pointer shadow-xs"
+                >
+                  Kolkata → Digha
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSetQuickRoute('Kolkata', 'Esplanade / Babughat', 'Siliguri', 'Old Bus Stand')}
+                  className="px-2 py-0.5 rounded-full bg-white/95 border border-[#CEDDF3] text-[10px] sm:text-[10.5px] font-bold text-[#082E78] hover:bg-[#EAF3FF] hover:border-[#104FBD] transition-all cursor-pointer shadow-xs"
+                >
+                  Kolkata → Siliguri
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSetQuickRoute('Kolkata', 'Esplanade / Babughat', 'Durgapur', 'City Centre')}
+                  className="px-2 py-0.5 rounded-full bg-white/95 border border-[#CEDDF3] text-[10px] sm:text-[10.5px] font-bold text-[#082E78] hover:bg-[#EAF3FF] hover:border-[#104FBD] transition-all cursor-pointer shadow-xs"
+                >
+                  Kolkata → Durgapur
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ==========================================
+            SECTION 2: MAIN 4-ROW BUS SEARCH CARD
+            ========================================== */}
+        <section
+          ref={searchSectionRef}
+          className="w-full relative z-30 px-4 sm:px-5 lg:px-[20px] -mt-[23px] mb-10"
+        >
+          <div className="max-w-[1220px] w-full mx-auto bg-white rounded-[23px] shadow-[0_10px_28px_rgba(11,61,146,0.08)] px-4 sm:px-5 pt-3.5 sm:pt-4 pb-3.5 sm:pb-4 border-[1.4px] border-[#D4E0EE]">
+            <form onSubmit={handleTriggerSearch} className="flex flex-col gap-1.5 sm:gap-2">
+              {/* Row 1: Origin and Destination with Searchable Dropdowns & Center Swap */}
+              <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-2.5 items-center">
+                {/* FROM Container */}
+                <div className="relative w-full" ref={fromContainerRef}>
+                  <div
+                    onClick={() => {
+                      setFromDropdownOpen(!fromDropdownOpen);
+                      setToDropdownOpen(false);
+                      setCalendarOpen(false);
+                      setTimeDropdownOpen(false);
+                    }}
+                    className={`h-[48px] sm:h-[50px] lg:h-[52px] bg-[#FBFCFF] border-[1.4px] transition-all rounded-[11px] sm:rounded-[12px] px-3 py-1 flex items-center justify-between shadow-xs cursor-pointer select-none ${fromDropdownOpen
+                      ? 'border-[#0B3D92] ring-2 ring-[#0B3D92]/20 bg-white'
+                      : 'border-[#D4E0EE] hover:border-[#0B3D92]'
+                      }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-[30px] h-[30px] sm:w-[32px] sm:h-[32px] rounded-[8px] sm:rounded-[9px] bg-[#E8F1FC] text-[#0B3D92] flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[18px]">location_on</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="block text-[8.5px] sm:text-[9px] text-[#556987] font-bold uppercase tracking-wider leading-tight">FROM</span>
+                        <p className="text-[13.5px] sm:text-[14px] text-[#001B3E] font-extrabold truncate leading-tight">{fromCity}</p>
+                        <p className="text-[9.5px] sm:text-[10px] text-[#64748B] font-medium truncate leading-tight">{fromSub}</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="material-symbols-outlined text-[#FF6B4A] text-2xl">pin_drop</span>
-                      <input
-                        type="text"
-                        value={origin}
-                        onChange={(e) => setOrigin(e.target.value)}
-                        placeholder="Enter departure city or terminal"
-                        className="w-full bg-transparent text-[#DDE2F5] font-['Sora',sans-serif] text-sm sm:text-base font-semibold focus:outline-none placeholder:text-[#E1BFB8]/40"
-                      />
-                      {origin && (
-                        <button
-                          type="button"
-                          onClick={() => setOrigin('')}
-                          className="text-[#E1BFB8] hover:text-[#DDE2F5] transition-colors p-1"
-                          title="Clear input"
-                        >
-                          <span className="material-symbols-outlined text-base">close</span>
-                        </button>
-                      )}
-                    </div>
-                    {/* Quick Boarding Pills */}
-                    <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                      <span className="text-[10px] text-[#E1BFB8]">Popular boarding:</span>
-                      <button
-                        type="button"
-                        onClick={() => setOrigin('Bengaluru (Silk Board)')}
-                        className="text-[10px] px-2 py-0.5 rounded bg-[#2F3543]/40 hover:bg-[#2F3543] text-[#DDE2F5] transition-colors"
-                      >
-                        Silk Board
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setOrigin('Bengaluru (Koramangala)')}
-                        className="text-[10px] px-2 py-0.5 rounded bg-[#2F3543]/40 hover:bg-[#2F3543] text-[#DDE2F5] transition-colors"
-                      >
-                        Koramangala
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setOrigin('Kolkata (Esplanade Terminal)')}
-                        className="text-[10px] px-2 py-0.5 rounded bg-[#2F3543]/40 hover:bg-[#2F3543] text-[#DDE2F5] transition-colors"
-                      >
-                        Kolkata Esplanade
-                      </button>
-                    </div>
+                    <span
+                      className={`material-symbols-outlined text-[#556987] text-[18px] shrink-0 transition-transform duration-200 ${fromDropdownOpen ? 'rotate-180 text-[#0B3D92]' : ''
+                        }`}
+                    >
+                      expand_more
+                    </span>
                   </div>
 
-                  {/* SWAP BUTTON (Floating on Desktop, centered on Mobile) */}
+                  {/* FROM Floating Dropdown */}
+                  {fromDropdownOpen && (
+                    <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 bg-white rounded-2xl shadow-2xl border-2 border-[#D0E4FF] p-4 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2">
+                      <div className="relative flex items-center">
+                        <span className="material-symbols-outlined absolute left-3 text-[#64748B] text-[20px]">
+                          search
+                        </span>
+                        <input
+                          type="text"
+                          value={fromSearch}
+                          onChange={(e) => setFromSearch(e.target.value)}
+                          placeholder="Search Bengal departure city or stop..."
+                          className="w-full pl-9 pr-4 py-2 text-sm bg-[#F1F5F9] rounded-xl border border-transparent focus:border-[#2058C5] focus:bg-white focus:outline-hidden text-[#001B3E] placeholder-[#64748B] font-medium"
+                          autoFocus
+                        />
+                      </div>
+
+                      {/* Popular Tags */}
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1 pb-1 border-b border-[#E2E8F0]">
+                        <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider mr-1">Popular:</span>
+                        {['Kolkata', 'Durgapur', 'Siliguri', 'Asansol'].map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => {
+                              const found = BENGAL_CITIES.find((x) => x.city === c);
+                              setFromCity(c);
+                              if (found) setFromSub(found.terminal);
+                              setFromDropdownOpen(false);
+                            }}
+                            className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-[#EAF3FF] text-[#2058C5] hover:bg-[#2058C5] hover:text-white transition-colors cursor-pointer"
+                          >
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* City List */}
+                      <div className="max-h-60 overflow-y-auto flex flex-col gap-1 pr-1">
+                        {filteredFromCities.map((item) => (
+                          <div
+                            key={item.city}
+                            onClick={() => {
+                              setFromCity(item.city);
+                              setFromSub(item.terminal);
+                              setFromDropdownOpen(false);
+                            }}
+                            className="flex items-center justify-between p-2.5 rounded-xl hover:bg-[#F0F3FF] cursor-pointer transition-colors group"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-8 h-8 rounded-lg bg-[#EAF3FF] group-hover:bg-[#082E78] group-hover:text-white text-[#2058C5] flex items-center justify-center transition-colors shrink-0">
+                                <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                              </div>
+                              <div className="truncate text-left">
+                                <span className="block font-bold text-sm text-[#001B3E] group-hover:text-[#082E78]">
+                                  {item.city}
+                                </span>
+                                <span className="block text-xs text-[#64748B] truncate">{item.terminal}</span>
+                              </div>
+                            </div>
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#EAF3FF] text-[#2058C5] group-hover:bg-[#2058C5] group-hover:text-white shrink-0 ml-2">
+                              {item.region}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Center Swap Button */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 hidden md:flex items-center justify-center">
                   <button
                     type="button"
                     onClick={handleSwap}
-                    className="lg:absolute lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 z-20 self-center w-12 h-12 rounded-full bg-[#242A38] text-[#43EDCD] hover:text-[#080E1B] hover:bg-[#00D0B2] border border-[#2F3543] transition-all flex items-center justify-center shadow-lg group cursor-pointer"
-                    title="Swap Origin and Destination"
+                    title="Swap departure and destination"
+                    className="w-[34px] h-[34px] sm:w-[36px] sm:h-[36px] rounded-full bg-white border-[1.4px] border-[#CEDDF3] shadow-[0_2px_8px_rgba(11,61,146,0.12)] text-[#0B3D92] hover:bg-[#F2F7FD] hover:border-[#0B3D92] hover:shadow-[0_4px_12px_rgba(11,61,146,0.18)] active:scale-95 transition-all flex items-center justify-center cursor-pointer"
                   >
                     <span
-                      className={`material-symbols-outlined text-xl transition-transform duration-300 ${
-                        isSwapRotated ? 'rotate-180' : ''
-                      } group-hover:rotate-180`}
+                      className={`material-symbols-outlined text-[18px] sm:text-[19px] transition-transform duration-300 ${isSwapping ? 'rotate-180' : ''
+                        }`}
                     >
                       sync_alt
                     </span>
                   </button>
+                </div>
 
-                  {/* TO FIELD */}
-                  <div className="relative flex flex-col p-4 rounded-xl bg-[#080E1B] border border-[#2F3543]/60 focus-within:border-[#43EDCD] focus-within:bg-[#161B29] transition-all">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] text-[#43EDCD] flex items-center gap-1 uppercase tracking-wider font-semibold">
-                        <span className="material-symbols-outlined text-base">location_on</span>
-                        To / Arriving At
-                      </span>
-                      <span className="text-[10px] text-[#57FBDB] bg-[#43EDCD]/10 px-2 py-0.5 rounded-full font-medium">
-                        Destination
-                      </span>
+                {/* TO Container */}
+                <div className="relative w-full" ref={toContainerRef}>
+                  <div
+                    onClick={() => {
+                      setToDropdownOpen(!toDropdownOpen);
+                      setFromDropdownOpen(false);
+                      setCalendarOpen(false);
+                      setTimeDropdownOpen(false);
+                    }}
+                    className={`h-[48px] sm:h-[50px] lg:h-[52px] bg-[#FBFCFF] border-[1.4px] transition-all rounded-[11px] sm:rounded-[12px] px-3 py-1 flex items-center justify-between shadow-xs cursor-pointer select-none ${toDropdownOpen
+                      ? 'border-[#0B3D92] ring-2 ring-[#0B3D92]/20 bg-white'
+                      : 'border-[#D4E0EE] hover:border-[#0B3D92]'
+                      }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-[30px] h-[30px] sm:w-[32px] sm:h-[32px] rounded-[8px] sm:rounded-[9px] bg-[#FFF2E2] text-[#FF7900] flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[18px]">location_on</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="block text-[8.5px] sm:text-[9px] text-[#556987] font-bold uppercase tracking-wider leading-tight">TO</span>
+                        <p className="text-[13.5px] sm:text-[14px] text-[#001B3E] font-extrabold truncate leading-tight">{toCity}</p>
+                        <p className="text-[9.5px] sm:text-[10px] text-[#64748B] font-medium truncate leading-tight">{toSub}</p>
+                      </div>
                     </div>
+                    <span
+                      className={`material-symbols-outlined text-[#556987] text-[18px] shrink-0 transition-transform duration-200 ${toDropdownOpen ? 'rotate-180 text-[#0B3D92]' : ''
+                        }`}
+                    >
+                      expand_more
+                    </span>
+                  </div>
+
+                  {/* TO Floating Dropdown */}
+                  {toDropdownOpen && (
+                    <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 bg-white rounded-2xl shadow-2xl border-2 border-[#D0E4FF] p-4 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2">
+                      <div className="relative flex items-center">
+                        <span className="material-symbols-outlined absolute left-3 text-[#64748B] text-[20px]">
+                          search
+                        </span>
+                        <input
+                          type="text"
+                          value={toSearch}
+                          onChange={(e) => setToSearch(e.target.value)}
+                          placeholder="Search Bengal destination city or stop..."
+                          className="w-full pl-9 pr-4 py-2 text-sm bg-[#F1F5F9] rounded-xl border border-transparent focus:border-[#FF7900] focus:bg-white focus:outline-hidden text-[#001B3E] placeholder-[#64748B] font-medium"
+                          autoFocus
+                        />
+                      </div>
+
+                      {/* Popular Tags */}
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1 pb-1 border-b border-[#E2E8F0]">
+                        <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider mr-1">Popular:</span>
+                        {['Siliguri', 'Digha', 'Malda', 'Santiniketan'].map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => {
+                              const targetCity = c === 'Santiniketan' ? 'Bolpur / Santiniketan' : c;
+                              const found = BENGAL_CITIES.find((x) => x.city.includes(targetCity));
+                              setToCity(targetCity);
+                              if (found) setToSub(found.terminal);
+                              setToDropdownOpen(false);
+                            }}
+                            className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-[#FFF0DF] text-[#FF7900] hover:bg-[#FF7900] hover:text-white transition-colors cursor-pointer"
+                          >
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* City List */}
+                      <div className="max-h-60 overflow-y-auto flex flex-col gap-1 pr-1">
+                        {filteredToCities.map((item) => (
+                          <div
+                            key={item.city}
+                            onClick={() => {
+                              setToCity(item.city);
+                              setToSub(item.terminal);
+                              setToDropdownOpen(false);
+                            }}
+                            className="flex items-center justify-between p-2.5 rounded-xl hover:bg-[#FFF8F2] cursor-pointer transition-colors group"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-8 h-8 rounded-lg bg-[#FFF0DF] group-hover:bg-[#FF7900] group-hover:text-white text-[#FF7900] flex items-center justify-center transition-colors shrink-0">
+                                <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                              </div>
+                              <div className="truncate text-left">
+                                <span className="block font-bold text-sm text-[#001B3E] group-hover:text-[#FF7900]">
+                                  {item.city}
+                                </span>
+                                <span className="block text-xs text-[#64748B] truncate">{item.terminal}</span>
+                              </div>
+                            </div>
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#FFF0DF] text-[#FF7900] group-hover:bg-[#FF7900] group-hover:text-white shrink-0 ml-2">
+                              {item.region}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Row 2: Date and Time Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-2.5 items-center">
+                {/* DATE CONTAINER & POPOVER */}
+                <div className="relative w-full" ref={dateContainerRef}>
+                  <div
+                    onClick={() => {
+                      setCalendarOpen(!calendarOpen);
+                      setFromDropdownOpen(false);
+                      setToDropdownOpen(false);
+                      setTimeDropdownOpen(false);
+                    }}
+                    className={`h-[42px] sm:h-[44px] lg:h-[46px] bg-[#FBFCFF] border-[1.4px] transition-all rounded-[11px] sm:rounded-[12px] px-3 py-1 flex items-center justify-between shadow-xs cursor-pointer select-none ${calendarOpen
+                      ? 'border-[#0B3D92] ring-2 ring-[#0B3D92]/20 bg-white'
+                      : 'border-[#D4E0EE] hover:border-[#0B3D92]'
+                      }`}
+                  >
                     <div className="flex items-center gap-2.5">
-                      <span className="material-symbols-outlined text-[#43EDCD] text-2xl">flag</span>
-                      <input
-                        type="text"
-                        value={destination}
-                        onChange={(e) => setDestination(e.target.value)}
-                        placeholder="Enter destination town or drop point"
-                        className="w-full bg-transparent text-[#DDE2F5] font-['Sora',sans-serif] text-sm sm:text-base font-semibold focus:outline-none placeholder:text-[#E1BFB8]/40"
-                      />
-                      {destination && (
+                      <div className="w-[26px] h-[26px] sm:w-[28px] sm:h-[28px] rounded-[7px] bg-[#E8F1FC] text-[#0B3D92] flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[16px]">calendar_month</span>
+                      </div>
+                      <div>
+                        <span className="block text-[8px] sm:text-[8.5px] font-bold text-[#556987] uppercase tracking-wider leading-none">Date</span>
+                        <span className="text-[12.5px] sm:text-[13px] font-extrabold text-[#001B3E] leading-tight">{formatDateDDMMYYYY(selectedDate)}</span>
+                      </div>
+                    </div>
+                    <span className="material-symbols-outlined text-[#7A8EA8] text-[16px]">calendar_today</span>
+                  </div>
+
+                  {/* CALENDAR POPOVER */}
+                  {calendarOpen && (
+                    <div className="absolute left-0 top-[calc(100%+8px)] z-50 w-full sm:w-[360px] md:w-[380px] bg-white rounded-2xl shadow-2xl border-2 border-[#D0E4FF] p-4 flex flex-col gap-3.5 animate-in fade-in slide-in-from-top-2">
+                      {/* Presets */}
+                      <div className="flex items-center gap-1.5 pb-2.5 border-b border-[#E2E8F0] overflow-x-auto no-scrollbar">
                         <button
                           type="button"
-                          onClick={() => setDestination('')}
-                          className="text-[#E1BFB8] hover:text-[#DDE2F5] transition-colors p-1"
-                          title="Clear input"
+                          onClick={() => handleDatePreset('today')}
+                          className="px-2.5 py-1 text-xs font-bold rounded-lg bg-[#EAF3FF] text-[#2058C5] hover:bg-[#2058C5] hover:text-white transition-colors shrink-0 cursor-pointer"
                         >
-                          <span className="material-symbols-outlined text-base">close</span>
+                          Today
                         </button>
-                      )}
-                    </div>
-                    {/* Quick Drop-off Pills */}
-                    <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                      <span className="text-[10px] text-[#E1BFB8]">Top drop-offs:</span>
-                      <button
-                        type="button"
-                        onClick={() => setDestination('Goa (Mapusa Junction)')}
-                        className="text-[10px] px-2 py-0.5 rounded bg-[#2F3543]/40 hover:bg-[#2F3543] text-[#DDE2F5] transition-colors"
-                      >
-                        Mapusa
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDestination('Goa (Calangute Circle)')}
-                        className="text-[10px] px-2 py-0.5 rounded bg-[#2F3543]/40 hover:bg-[#2F3543] text-[#DDE2F5] transition-colors"
-                      >
-                        Calangute
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDestination('Siliguri (Tenzing Norgay)')}
-                        className="text-[10px] px-2 py-0.5 rounded bg-[#2F3543]/40 hover:bg-[#2F3543] text-[#DDE2F5] transition-colors"
-                      >
-                        Siliguri
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDatePreset('tomorrow')}
+                          className="px-2.5 py-1 text-xs font-bold rounded-lg bg-[#EAF3FF] text-[#2058C5] hover:bg-[#2058C5] hover:text-white transition-colors shrink-0 cursor-pointer"
+                        >
+                          Tomorrow
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDatePreset('plus2')}
+                          className="px-2.5 py-1 text-xs font-bold rounded-lg bg-[#EAF3FF] text-[#2058C5] hover:bg-[#2058C5] hover:text-white transition-colors shrink-0 cursor-pointer"
+                        >
+                          +2 Days
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDatePreset('weekend')}
+                          className="px-2.5 py-1 text-xs font-bold rounded-lg bg-[#FFF0DF] text-[#FF7900] hover:bg-[#FF7900] hover:text-white transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">weekend</span> Weekend
+                        </button>
+                      </div>
 
-                {/* QUICK DESTINATION PILLS / HOT ROUTES */}
-                <div className="flex items-center gap-2 flex-wrap pt-1">
-                  <span className="text-xs text-[#BBC6E6] uppercase tracking-wider flex items-center gap-1 font-semibold">
-                    <span className="material-symbols-outlined text-sm">trending_up</span> Hot Routes:
-                  </span>
-                  {['Mumbai', 'Hyderabad', 'Coimbatore', 'Chennai', 'Manali', 'Pune', 'Darjeeling'].map((city) => (
-                    <button
-                      key={city}
-                      type="button"
-                      onClick={() => setDestination(`${city} Terminal Hub`)}
-                      className="px-3 py-1 rounded-full bg-[#161B29] hover:bg-[#2F3543] text-[#DDE2F5] text-xs transition-colors border border-[#2F3543]/50"
-                    >
-                      {city}
-                    </button>
-                  ))}
-                </div>
-
-                {/* ROW 2: DEPARTURE & REACH-BY ARRIVAL REQUIREMENT */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* DEPARTURE SCHEDULE */}
-                  <div className="p-4 rounded-xl bg-[#080E1B] border border-[#2F3543]/60 flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-[#DDE2F5] font-semibold flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#FF6B4A]">directions_bus</span>
-                        Departure Schedule
-                      </span>
-                      <span className="text-[10px] text-[#E1BFB8]">Recommended: Evening</span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="p-3 rounded-lg bg-[#161B29] border border-[#2F3543]/50 flex items-center gap-2.5">
-                        <span className="material-symbols-outlined text-[#E1BFB8] text-lg">calendar_today</span>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-[#E1BFB8]">Date</span>
-                          <input
-                            type="text"
-                            value={departDate}
-                            onChange={(e) => setDepartDate(e.target.value)}
-                            className="bg-transparent text-[#DDE2F5] text-xs font-semibold focus:outline-none"
-                          />
+                      {/* Month Header */}
+                      <div className="flex items-center justify-between px-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-extrabold text-[#001B3E]">
+                            {MONTH_NAMES[displayedMonth]} {displayedYear}
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E3F8F5] text-[#0A5832]">
+                            Fares from ₹180
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            aria-label="Previous Month"
+                            onClick={handlePrevMonth}
+                            className="w-8 h-8 rounded-lg hover:bg-[#F0F3FF] text-[#001B3E] flex items-center justify-center transition-colors cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Next Month"
+                            onClick={handleNextMonth}
+                            className="w-8 h-8 rounded-lg hover:bg-[#F0F3FF] text-[#001B3E] flex items-center justify-center transition-colors cursor-pointer"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                          </button>
                         </div>
                       </div>
-                      <div className="p-3 rounded-lg bg-[#161B29] border border-[#2F3543]/50 flex items-center gap-2.5">
-                        <span className="material-symbols-outlined text-[#E1BFB8] text-lg">schedule</span>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-[#E1BFB8]">Time Window</span>
-                          <input
-                            type="text"
-                            value={departTimeWindow}
-                            onChange={(e) => setDepartTimeWindow(e.target.value)}
-                            className="bg-transparent text-[#DDE2F5] text-xs font-semibold focus:outline-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* REACH-BY REQUIREMENT */}
-                  <div className="p-4 rounded-xl bg-[#080E1B] border border-[#2F3543]/60 flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-[#43EDCD] font-semibold flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#43EDCD]">alarm_on</span>
-                        Required Arrival (Reach-By)
-                      </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#43EDCD]/15 text-[#57FBDB] flex items-center gap-1 font-semibold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#43EDCD]" /> Guaranteed On-Time Match
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="p-3 rounded-lg bg-[#161B29] border border-[#2F3543]/50 flex items-center gap-2.5">
-                        <span className="material-symbols-outlined text-[#E1BFB8] text-lg">event_available</span>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-[#E1BFB8]">Reach Date</span>
-                          <input
-                            type="text"
-                            value={reachDate}
-                            onChange={(e) => setReachDate(e.target.value)}
-                            className="bg-transparent text-[#DDE2F5] text-xs font-semibold focus:outline-none"
-                          />
-                        </div>
+                      {/* Day Names */}
+                      <div className="grid grid-cols-7 text-center text-[11px] font-bold text-[#64748B] pt-1">
+                        <span>Su</span>
+                        <span>Mo</span>
+                        <span>Tu</span>
+                        <span>We</span>
+                        <span>Th</span>
+                        <span>Fr</span>
+                        <span>Sa</span>
                       </div>
-                      <div className="p-3 rounded-lg bg-[#161B29] border border-[#2F3543]/50 flex items-center gap-2.5">
-                        <span className="material-symbols-outlined text-[#43EDCD] text-lg">timer</span>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-[#57FBDB]">Before Morning Cutoff</span>
-                          <input
-                            type="text"
-                            value={reachCutoff}
-                            onChange={(e) => setReachCutoff(e.target.value)}
-                            className="bg-transparent text-[#DDE2F5] text-xs font-semibold focus:outline-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
-                {/* ROW 3: BUDGET SELECTOR */}
-                <div className="p-4 sm:p-5 rounded-xl bg-[#080E1B] border border-[#2F3543]/60 flex flex-col gap-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex flex-col">
-                      <span className="font-['Sora',sans-serif] text-sm sm:text-base text-[#DDE2F5] font-semibold flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#FF6B4A]">currency_rupee</span>
-                        Your Maximum Travel Budget
-                      </span>
-                      <span className="text-xs text-[#BBC6E6]">
-                        Strictly filters verified coaches &amp; berths within your price limit
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 self-start sm:self-auto">
-                      <span className="text-xs text-[#E1BFB8]">Max Cap:</span>
-                      <div className="px-3.5 py-1.5 rounded-full bg-[#FF6B4A]/20 border border-[#FF6B4A]/40 flex items-center gap-1 shadow-[0_0_16px_-4px_rgba(255,107,74,0.4)]">
-                        <span className="font-['Sora',sans-serif] text-sm sm:text-base font-bold text-[#FFB4A3]">₹</span>
-                        <span className="font-['Sora',sans-serif] text-sm sm:text-base font-bold text-[#FFB4A3]">
-                          {budget.toLocaleString('en-IN')}
+                      {/* Dynamic Days Grid */}
+                      <div className="grid grid-cols-7 gap-1 text-center">
+                        {/* Leading padding */}
+                        {Array.from({ length: firstDayOfWeek }).map((_, idx) => (
+                          <div
+                            key={`lead-${idx}`}
+                            className="h-11 flex flex-col items-center justify-center text-xs text-[#CBD5E1] font-medium cursor-not-allowed select-none"
+                          >
+                            <span>{daysInPreviousMonth - firstDayOfWeek + idx + 1}</span>
+                          </div>
+                        ))}
+
+                        {/* Month Days */}
+                        {Array.from({ length: daysInCurrentMonth }).map((_, idx) => {
+                          const dayNum = idx + 1;
+                          const cellDate = new Date(displayedYear, displayedMonth, dayNum);
+                          const isSelected =
+                            selectedDate.getFullYear() === displayedYear &&
+                            selectedDate.getMonth() === displayedMonth &&
+                            selectedDate.getDate() === dayNum;
+                          const isWeekend = cellDate.getDay() === 0 || cellDate.getDay() === 6;
+                          const fare = dayNum % 3 === 0 ? '₹180' : dayNum % 2 === 0 ? '₹220' : '₹250';
+                          const isBestFare = fare === '₹180';
+
+                          return (
+                            <button
+                              key={`day-${dayNum}`}
+                              type="button"
+                              onClick={() => {
+                                setSelectedDate(cellDate);
+                                setCalendarOpen(false);
+                              }}
+                              className={`h-11 rounded-xl font-medium flex flex-col items-center justify-center relative transition-all cursor-pointer ${isSelected
+                                ? 'bg-[#001A50] text-white font-bold shadow-md scale-105 z-10'
+                                : `hover:bg-[#EAF3FF] hover:border hover:border-[#D0E4FF] text-[#001B3E] ${isWeekend ? 'bg-[#FAFCFF]' : ''
+                                }`
+                                }`}
+                            >
+                              <span className={`text-xs leading-none ${isSelected ? 'font-bold' : ''}`}>
+                                {dayNum}
+                              </span>
+                              <span
+                                className={`text-[9px] mt-0.5 leading-none ${isSelected
+                                  ? 'text-[#FF7900] font-bold'
+                                  : isBestFare
+                                    ? 'text-[#059669] font-bold'
+                                    : 'text-[#64748B]'
+                                  }`}
+                              >
+                                {fare}
+                              </span>
+                              {isBestFare && !isSelected && (
+                                <span className="absolute top-1 right-1.5 w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+                              )}
+                            </button>
+                          );
+                        })}
+
+                        {/* Trailing padding */}
+                        {Array.from({ length: trailingCells }).map((_, idx) => (
+                          <div
+                            key={`trail-${idx}`}
+                            className="h-11 flex flex-col items-center justify-center text-xs text-[#CBD5E1] font-medium cursor-not-allowed select-none"
+                          >
+                            <span>{idx + 1}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Footer Hint */}
+                      <div className="pt-2 border-t border-[#E2E8F0] flex items-center justify-between text-[11px] text-[#64748B]">
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <span className="w-2 h-2 rounded-full bg-[#10B981]" /> Lowest fares
                         </span>
-                        <span className="text-[11px] text-[#BBC6E6] ml-1">/ berth</span>
+                        <span
+                          onClick={() => handleDatePreset('today')}
+                          className="text-[#2058C5] font-semibold cursor-pointer hover:underline"
+                        >
+                          Jump to Today
+                        </span>
                       </div>
                     </div>
+                  )}
+                </div>
+
+                {/* TIME CONTAINER */}
+                <div className="relative w-full" ref={timeContainerRef}>
+                  <div
+                    onClick={() => {
+                      setTimeDropdownOpen(!timeDropdownOpen);
+                      setFromDropdownOpen(false);
+                      setToDropdownOpen(false);
+                      setCalendarOpen(false);
+                    }}
+                    className={`h-[42px] sm:h-[44px] lg:h-[46px] bg-[#FBFCFF] border-[1.4px] transition-all rounded-[11px] sm:rounded-[12px] px-3 py-1 flex items-center justify-between shadow-xs cursor-pointer select-none ${timeDropdownOpen
+                      ? 'border-[#0B3D92] ring-2 ring-[#0B3D92]/20 bg-white'
+                      : 'border-[#D4E0EE] hover:border-[#0B3D92]'
+                      }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-[26px] h-[26px] sm:w-[28px] sm:h-[28px] rounded-[7px] bg-[#FFF2E2] text-[#FF7900] flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[16px]">schedule</span>
+                      </div>
+                      <div>
+                        <span className="block text-[8px] sm:text-[8.5px] font-bold text-[#556987] uppercase tracking-wider leading-none">Time</span>
+                        <span className="text-[12.5px] sm:text-[13px] font-extrabold text-[#001B3E] leading-tight">{selectedTime}</span>
+                      </div>
+                    </div>
+                    <span
+                      className={`material-symbols-outlined text-[#556987] text-[18px] transition-transform duration-200 ${timeDropdownOpen ? 'rotate-180' : ''
+                        }`}
+                    >
+                      expand_more
+                    </span>
                   </div>
 
-                  {/* Interactive Slider */}
-                  <div className="flex flex-col gap-2 pt-1">
+                  {timeDropdownOpen && (
+                    <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 bg-white rounded-2xl shadow-xl border-2 border-[#D0E4FF] p-2 flex flex-col gap-1 animate-in fade-in slide-in-from-top-2">
+                      {TIME_OPTIONS.map((slot) => (
+                        <button
+                          key={slot}
+                          type="button"
+                          onClick={() => {
+                            setSelectedTime(slot);
+                            setTimeDropdownOpen(false);
+                          }}
+                          className={`text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${selectedTime === slot
+                            ? 'bg-[#082E78] text-white'
+                            : 'text-slate-700 hover:bg-[#EAF3FF] hover:text-[#082E78]'
+                            }`}
+                        >
+                          {slot}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Row 3: Max Budget Full-Width Horizontal Panel */}
+              <div className="h-[38px] sm:h-[40px] lg:h-[42px] rounded-[10px] sm:rounded-[11px] bg-[#E7F7F3] border-[1.2px] border-[#B8E5D9] px-3 sm:px-4 flex items-center justify-between gap-2.5 sm:gap-4 shadow-xs">
+                {/* Left: Label & Current Value */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="w-[24px] h-[24px] rounded-[6px] bg-[#2BB673]/20 text-[#0F6155] flex items-center justify-center font-black text-[13px] shadow-xs">
+                    ₹
+                  </div>
+                  <div>
+                    <span className="block text-[7.5px] sm:text-[8px] font-extrabold text-[#0F6155] uppercase tracking-wider leading-none">
+                      MAX BUDGET
+                    </span>
+                    <div className="flex items-baseline gap-1 mt-0.5">
+                      <span className="text-[14px] sm:text-[15px] text-[#082E78] font-[900] tracking-tight leading-none">
+                        ₹{budget.toLocaleString('en-IN')}
+                      </span>
+                      <span className="text-[9px] sm:text-[9.5px] text-[#0F6155] font-semibold leading-none">per seat</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Center: Interactive Slider */}
+                <div className="flex-1 flex items-center gap-2 max-w-xl">
+                  <span className="text-[10px] sm:text-[10.5px] font-bold text-[#145A4C] shrink-0">₹200</span>
+                  <div className="relative flex-1 flex items-center">
                     <input
                       type="range"
-                      min="500"
-                      max="3500"
+                      min="200"
+                      max="2500"
                       step="50"
                       value={budget}
                       onChange={(e) => setBudget(Number(e.target.value))}
-                      className="w-full accent-[#43EDCD] cursor-pointer h-2 bg-[#242A38] rounded-lg appearance-none"
+                      style={{
+                        background: `linear-gradient(to right, #FF7900 0%, #FF7900 ${((budget - 200) / (2500 - 200)) * 100
+                          }%, #374151 ${((budget - 200) / (2500 - 200)) * 100}%, #374151 100%)`,
+                      }}
+                      className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-[#FF7900] focus:outline-hidden"
                     />
-                    {/* Scale Marks */}
-                    <div className="flex items-center justify-between text-[#E1BFB8] text-[11px] px-1">
-                      <span>Min ₹500</span>
-                      <span>₹800</span>
-                      <span>₹1,200</span>
-                      <span className="text-[#43EDCD] font-bold">₹1,500</span>
-                      <span>₹2,000</span>
-                      <span>Max ₹3,500</span>
-                    </div>
                   </div>
-
-                  {/* Quick Preset Chips */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs text-[#E1BFB8]">Fast Presets:</span>
-                    {[
-                      { label: '₹800 Saver', val: 800 },
-                      { label: '₹1,200 Balanced', val: 1200 },
-                      { label: '₹1,500 Popular', val: 1500 },
-                      { label: '₹2,200 Luxury Sleeper', val: 2200 },
-                    ].map((preset) => (
-                      <button
-                        key={preset.val}
-                        type="button"
-                        onClick={() => setBudget(preset.val)}
-                        className={`px-3 py-1 rounded text-xs transition-colors ${
-                          budget === preset.val
-                            ? 'bg-[#43EDCD]/15 text-[#43EDCD] border border-[#43EDCD]/40 font-semibold'
-                            : 'bg-[#161B29] hover:bg-[#2F3543] text-[#DDE2F5] border border-[#2F3543]/50'
-                        }`}
-                      >
-                        {preset.label}
-                      </button>
-                    ))}
-                  </div>
+                  <span className="text-[10px] sm:text-[10.5px] font-bold text-[#145A4C] shrink-0">₹2,500</span>
                 </div>
 
-                {/* ROW 4: TRAVEL PREFERENCES & AMENITIES CHIPS (MULTI-SELECT) */}
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs sm:text-sm text-[#DDE2F5] font-semibold flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#43EDCD]">tune</span>
-                      Travel Preferences &amp; Coach Configuration (Multi-select)
-                    </span>
-                    <span className="text-[11px] text-[#BBC6E6]">Real-time telematics filters</span>
+                {/* Right: Friendly Pill Badge */}
+                <div className="shrink-0 flex items-center">
+                  <div className="inline-flex items-center gap-1 bg-[#D1F2E8] border border-[#A2DFCE] text-[#0B6B58] font-bold text-[10px] sm:text-[10.5px] px-2 py-0.5 rounded-[12px] shadow-xs">
+                    <span className="material-symbols-outlined text-[13px]">eco</span>
+                    <span>Budget Friendly</span>
                   </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    {[
-                      { name: 'Sleeper Berth', icon: 'airline_seat_flat', color: 'coral' },
-                      { name: 'Seater Recliner', icon: 'airline_seat_recline_extra', color: 'coral' },
-                      { name: 'Climate AC', icon: 'ac_unit', color: 'teal' },
-                      { name: 'Natural Air', icon: 'mode_fan', color: 'teal' },
-                      { name: 'Fastest Non-Stop', icon: 'bolt', color: 'teal', extra: 'Save 1h 40m' },
-                      { name: 'Budget Friendly', icon: 'savings', color: 'coral', extra: 'Under ₹1,500' },
-                      { name: 'Western Ghats Scenic', icon: 'landscape', color: 'teal' },
-                      { name: 'Single Women Reserved', icon: 'shield_person', color: 'teal' },
-                    ].map((pref) => {
-                      const isSelected = selectedPreferences.includes(pref.name);
-                      const isCoral = pref.color === 'coral';
-                      return (
-                        <button
-                          key={pref.name}
-                          type="button"
-                          onClick={() => handleTogglePreference(pref.name)}
-                          className={`px-3.5 py-2 rounded-full text-xs flex items-center gap-2 transition-all cursor-pointer ${
-                            isSelected
-                              ? isCoral
-                                ? 'bg-[#FF6B4A] text-[#080E1B] font-bold shadow-[0_0_16px_-4px_rgba(255,107,74,0.4)]'
-                                : 'bg-[#43EDCD] text-[#080E1B] font-bold shadow-[0_0_16px_-4px_rgba(67,237,205,0.4)]'
-                              : 'bg-[#161B29] text-[#E1BFB8] hover:text-[#DDE2F5] hover:bg-[#242A38] border border-[#2F3543]/50'
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-base">{pref.icon}</span>
-                          <span>{pref.name}</span>
-                          {pref.extra && (
-                            <span
-                              className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                                isSelected
-                                  ? 'bg-[#080E1B]/30 text-[#080E1B]'
-                                  : 'bg-[#2F3543]/50 text-[#BBC6E6]'
-                              }`}
-                            >
-                              {pref.extra}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* PRIMARY CTA BUTTON & REAL-TIME MATCH BANNER */}
-                <div className="flex flex-col items-center gap-3 pt-2">
-                  <button
-                    type="submit"
-                    disabled={isSearching}
-                    className="w-full sm:w-auto min-w-[320px] px-8 py-4 rounded-xl bg-gradient-to-r from-[#FF6B4A] via-[#FF6B4A] to-[#43EDCD] text-[#080E1B] font-['Sora',sans-serif] text-base font-bold tracking-tight shadow-[0_0_30px_-5px_rgba(255,107,74,0.5)] hover:shadow-[0_0_40px_-2px_rgba(67,237,205,0.6)] hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-80"
-                  >
-                    {isSearching ? (
-                      <>
-                        <span className="material-symbols-outlined animate-spin text-xl">progress_activity</span>
-                        <span>Calculating Real-time Corridors...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Find My Smart Journey</span>
-                        <span className="material-symbols-outlined text-2xl group-hover:translate-x-1.5 transition-transform">
-                          arrow_forward
-                        </span>
-                      </>
-                    )}
-                  </button>
-
-                  <div className="flex items-center gap-2 text-[#57FBDB] text-xs bg-[#43EDCD]/10 px-4 py-1.5 rounded-full border border-[#43EDCD]/20 text-center">
-                    <span className="material-symbols-outlined text-base text-[#43EDCD]">verified</span>
-                    <span>
-                      48 verified luxury buses match your timing (
-                      <span className="font-bold text-[#DDE2F5]">Reach by {reachCutoff.split(' ')[0]}</span>) &amp; ₹
-                      {budget.toLocaleString('en-IN')} budget
-                    </span>
-                  </div>
-                </div>
-              </form>
-            </div>
-          </section>
-
-          {/* ─────────────────────────────────────────────────────────
-              SECTION 2: THE "JOURNEY LINE" LIVE TELEMETRICS VISUALIZATION
-              ───────────────────────────────────────────────────────── */}
-          <section id="live-tracker-section" className="w-full px-4 sm:px-6 lg:px-12 py-10">
-            <div className="w-full max-w-6xl mx-auto flex flex-col gap-6">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-                <div>
-                  <span className="text-xs text-[#43EDCD] uppercase tracking-widest flex items-center gap-1 font-semibold">
-                    <span className="material-symbols-outlined text-base">satellite_alt</span>
-                    Live Waypoint Telemetry
-                  </span>
-                  <h2 className="font-['Sora',sans-serif] text-2xl sm:text-3xl font-bold text-[#DDE2F5] mt-1">
-                    Smart Route AI Progress Ribbon
-                  </h2>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 bg-[#161B29] px-3.5 py-1.5 rounded-full border border-[#2F3543]/50">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#43EDCD] animate-pulse" />
-                    <span className="text-xs text-[#DDE2F5]">Trip RL-409: In Transit</span>
-                  </div>
-                  <span className="text-xs text-[#FFB4A3] font-bold bg-[#FF6B4A]/10 border border-[#FF6B4A]/30 px-3 py-1 rounded-full">
-                    99.4% On-Time Index
-                  </span>
                 </div>
               </div>
 
-              {/* Main Journey Pathway Card */}
-              <div className="w-full bg-[#161B29] border border-[#2F3543]/60 rounded-2xl p-6 shadow-xl relative overflow-hidden">
-                {/* Live Route Metrics Bar */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-6 border-b border-[#2F3543]/40 mb-6">
-                  <div className="flex flex-col">
-                    <span className="text-[11px] text-[#BBC6E6]">Departed Origin</span>
-                    <span className="font-['Sora',sans-serif] text-base sm:text-lg font-semibold text-[#DDE2F5]">
-                      10:15 PM
-                    </span>
-                    <span className="text-[11px] text-[#E1BFB8]">Bengaluru Majestic Terminal</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[11px] text-[#BBC6E6]">Current Speed &amp; Cabin</span>
-                    <span className="font-['Sora',sans-serif] text-base sm:text-lg font-semibold text-[#43EDCD] flex items-center gap-1">
-                      74 km/h <span className="text-xs text-[#E1BFB8] font-normal">| 22.5°C</span>
-                    </span>
-                    <span className="text-[11px] text-[#E1BFB8]">Optimal cruising trajectory</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[11px] text-[#BBC6E6]">Smart Rest Stop</span>
-                    <span className="font-['Sora',sans-serif] text-base sm:text-lg font-semibold text-[#DDE2F5]">
-                      Hubballi Food Plaza
-                    </span>
-                    <span className="text-[11px] text-[#57FBDB]">25 min bio-break concluded</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[11px] text-[#BBC6E6]">Predicted Arrival (ETA)</span>
-                    <span className="font-['Sora',sans-serif] text-base sm:text-lg font-bold text-[#FF6B4A]">
-                      06:48 AM
-                    </span>
-                    <span className="text-[11px] text-[#57FBDB]">12 min ahead of schedule</span>
-                  </div>
+              {/* Row 4: Search Button */}
+              <button
+                type="submit"
+                className="h-[38px] sm:h-[40px] lg:h-[42px] rounded-[10px] sm:rounded-[11px] bg-gradient-to-r from-[#104FBD] to-[#062E79] hover:from-[#0B44A8] hover:to-[#042055] text-white text-[14px] sm:text-[14.5px] font-[800] flex items-center justify-center gap-2 shadow-[0_3px_10px_rgba(11,61,146,0.2)] hover:shadow-[0_5px_15px_rgba(11,61,146,0.28)] transition-all duration-200 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">search</span>
+                <span className="tracking-wide">Search Buses</span>
+              </button>
+            </form>
+          </div>
+        </section>
+
+        {/* ==========================================
+            SECTION 3: EXPLORE MORE (5 PASTEL CARDS)
+            ========================================== */}
+        <section className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 mb-16">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl sm:text-[28px] font-extrabold text-[#102B51] tracking-tight">✨ Explore More</h2>
+            </div>
+            <a
+              href="#routes"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('popular-journeys')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="text-sm text-[#0B4DBB] font-bold hover:underline flex items-center gap-1"
+            >
+              View All <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </a>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            {/* Card 1: Popular Routes */}
+            <div
+              onClick={() => document.getElementById('popular-journeys')?.scrollIntoView({ behavior: 'smooth' })}
+              className="group bg-[#EAF3FF] hover:bg-[#DEEDFF] p-4 rounded-2xl transition-all duration-200 flex flex-col justify-between shadow-xs border border-[#D0E4FF] cursor-pointer"
+            >
+              <img
+                className="w-full h-24 object-cover rounded-xl mb-3 group-hover:scale-105 transition-transform duration-300"
+                src={exploreBus}
+                alt="Popular Bengal Bus Routes"
+              />
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-white shadow-xs text-[#2058C5] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-[18px]">alt_route</span>
                 </div>
-
-                {/* SVG Journey Ribbon Visualizer */}
-                <div className="relative py-8">
-                  {/* Timeline Track Background */}
-                  <div className="relative flex items-center justify-between w-full">
-                    {/* Background line */}
-                    <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1.5 bg-[#2F3543]/50 rounded-full" />
-                    {/* Completed portion fill (65%) */}
-                    <div className="absolute left-6 w-[65%] top-1/2 -translate-y-1/2 h-1.5 bg-gradient-to-r from-[#00D0B2] via-[#43EDCD] to-[#FF6B4A] rounded-full shadow-[0_0_12px_rgba(67,237,205,0.6)]" />
-
-                    {/* NODE 1: BENGALURU */}
-                    <div className="relative z-10 flex flex-col items-center text-center">
-                      <div className="w-10 h-10 rounded-full bg-[#43EDCD] flex items-center justify-center text-[#080E1B] shadow-lg">
-                        <span className="material-symbols-outlined text-lg">check</span>
-                      </div>
-                      <span className="text-xs sm:text-sm font-semibold text-[#DDE2F5] mt-2">Bengaluru</span>
-                      <span className="text-[10px] text-[#E1BFB8]">10:15 PM Dep</span>
-                    </div>
-
-                    {/* NODE 2: TUMAKURU */}
-                    <div className="relative z-10 flex flex-col items-center text-center hidden sm:flex">
-                      <div className="w-7 h-7 rounded-full bg-[#00D0B2] flex items-center justify-center text-[#080E1B] shadow-md">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#080E1B]" />
-                      </div>
-                      <span className="text-xs sm:text-sm font-semibold text-[#DDE2F5] mt-2">Tumakuru</span>
-                      <span className="text-[10px] text-[#E1BFB8]">11:32 PM</span>
-                    </div>
-
-                    {/* NODE 3: HUBBALLI */}
-                    <div className="relative z-10 flex flex-col items-center text-center">
-                      <div className="w-8 h-8 rounded-full bg-[#43EDCD] flex items-center justify-center text-[#080E1B] shadow-lg">
-                        <span className="material-symbols-outlined text-sm">restaurant</span>
-                      </div>
-                      <span className="text-xs sm:text-sm font-semibold text-[#DDE2F5] mt-2">Hubballi Hub</span>
-                      <span className="text-[10px] text-[#57FBDB]">03:40 AM (Rest)</span>
-                    </div>
-
-                    {/* LIVE BUS POSITION PULSE */}
-                    <div className="relative z-20 flex flex-col items-center text-center -mt-6">
-                      <div className="relative flex items-center justify-center">
-                        <span className="absolute w-12 h-12 rounded-full bg-[#FF6B4A]/30 animate-ping" />
-                        <div className="w-10 h-10 rounded-full bg-[#FF6B4A] flex items-center justify-center text-[#080E1B] shadow-[0_0_20px_rgba(255,107,74,0.7)]">
-                          <span className="material-symbols-outlined text-xl">directions_bus</span>
-                        </div>
-                      </div>
-                      <span className="text-xs sm:text-sm font-bold text-[#FF6B4A] mt-2">Belagavi Bypass</span>
-                      <span className="text-[10px] text-[#FFB4A3] font-mono">Current 05:10 AM</span>
-                    </div>
-
-                    {/* NODE 4: GOA */}
-                    <div className="relative z-10 flex flex-col items-center text-center">
-                      <div className="w-10 h-10 rounded-full bg-[#242A38] border-2 border-[#43EDCD]/60 flex items-center justify-center text-[#43EDCD] shadow-lg">
-                        <span className="material-symbols-outlined text-lg">flag</span>
-                      </div>
-                      <span className="text-xs sm:text-sm font-semibold text-[#DDE2F5] mt-2">Goa (Panaji)</span>
-                      <span className="text-[10px] text-[#BBC6E6]">Est. 06:48 AM</span>
-                    </div>
-                  </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#102B51]">Popular Routes</h3>
+                  <p className="text-[11px] text-[#444651] line-clamp-1">Across Bengal</p>
                 </div>
+              </div>
+              <div className="flex justify-end pt-2 border-t border-[#D0E4FF]/60">
+                <div className="w-6 h-6 rounded-full bg-white text-[#0B4DBB] flex items-center justify-center shadow-xs group-hover:translate-x-1 transition-transform">
+                  <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </div>
+              </div>
+            </div>
 
-                {/* Telematics Weather & Road Sensor Strip */}
-                <div className="flex items-center justify-between flex-wrap gap-3 pt-4 border-t border-[#2F3543]/30 mt-4 text-xs">
-                  <div className="flex items-center gap-4 text-[#E1BFB8] flex-wrap">
-                    <span className="flex items-center gap-1">
-                      <span className="material-symbols-outlined text-sm text-[#43EDCD]">thermostat</span> Dry, 21°C Road Surface
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="material-symbols-outlined text-sm text-[#43EDCD]">shield</span> Twin-driver rest switch verified
-                    </span>
-                    <span className="flex items-center gap-1 hidden md:flex">
-                      <span className="material-symbols-outlined text-sm text-[#43EDCD]">wifi</span> High-throughput 5G Active
-                    </span>
+            {/* Card 2: Best Deals */}
+            <div
+              onClick={() => {
+                setBudget(400);
+                searchSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="group bg-[#FFF0DF] hover:bg-[#FFE5C7] p-4 rounded-2xl transition-all duration-200 flex flex-col justify-between shadow-xs border border-[#FFE1BF] cursor-pointer"
+            >
+              <img
+                className="w-full h-24 object-cover rounded-xl mb-3 group-hover:scale-105 transition-transform duration-300"
+                src={exploreVoucher}
+                alt="Best Bus Travel Deals and Vouchers"
+              />
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-white shadow-xs text-[#FF7900] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-[18px]">savings</span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#102B51]">Best Deals</h3>
+                  <p className="text-[11px] text-[#444651] line-clamp-1">Save with vouchers</p>
+                </div>
+              </div>
+              <div className="flex justify-end pt-2 border-t border-[#FFE1BF]/60">
+                <div className="w-6 h-6 rounded-full bg-white text-[#FF7900] flex items-center justify-center shadow-xs group-hover:translate-x-1 transition-transform">
+                  <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Nearby Stops */}
+            <div
+              onClick={() => {
+                setFromDropdownOpen(true);
+                searchSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="group bg-[#EFF6FF] hover:bg-[#E0EEFF] p-4 rounded-2xl transition-all duration-200 flex flex-col justify-between shadow-xs border border-[#D5E6FF] cursor-pointer"
+            >
+              <img
+                className="w-full h-24 object-cover rounded-xl mb-3 group-hover:scale-105 transition-transform duration-300"
+                src={exploreStop}
+                alt="Nearby Kolkata Bus Stops and Shelter"
+              />
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-white shadow-xs text-[#2058C5] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-[18px]">pin_drop</span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#102B51]">Nearby Stops</h3>
+                  <p className="text-[11px] text-[#444651] line-clamp-1">Verified boarding</p>
+                </div>
+              </div>
+              <div className="flex justify-end pt-2 border-t border-[#D5E6FF]/60">
+                <div className="w-6 h-6 rounded-full bg-white text-[#2058C5] flex items-center justify-center shadow-xs group-hover:translate-x-1 transition-transform">
+                  <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: Quick Book */}
+            <div
+              onClick={() => handleTriggerSearch()}
+              className="group bg-[#E3F8F5] hover:bg-[#D1F2ED] p-4 rounded-2xl transition-all duration-200 flex flex-col justify-between shadow-xs border border-[#C2EFE9] cursor-pointer"
+            >
+              <img
+                className="w-full h-24 object-cover rounded-xl mb-3 group-hover:scale-105 transition-transform duration-300"
+                src={exploreQr}
+                alt="Quick Book Instant Bus Ticket QR Code"
+              />
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-white shadow-xs text-[#00A896] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-[18px]">bolt</span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#102B51]">Quick Book</h3>
+                  <p className="text-[11px] text-[#444651] line-clamp-1">Fast confirmed seats</p>
+                </div>
+              </div>
+              <div className="flex justify-end pt-2 border-t border-[#C2EFE9]/60">
+                <div className="w-6 h-6 rounded-full bg-white text-[#00A896] flex items-center justify-center shadow-xs group-hover:translate-x-1 transition-transform">
+                  <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 5: Student Special */}
+            <div
+              onClick={() => document.getElementById('student-special')?.scrollIntoView({ behavior: 'smooth' })}
+              className="group bg-[#F0EAFF] hover:bg-[#E4D8FF] p-4 rounded-2xl transition-all duration-200 flex flex-col justify-between shadow-xs border border-[#E0D0FF] col-span-2 sm:col-span-1 cursor-pointer"
+            >
+              <img
+                className="w-full h-24 object-cover rounded-xl mb-3 group-hover:scale-105 transition-transform duration-300"
+                src={exploreStudents}
+                alt="College Students with Bengal Bus Passes"
+              />
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-white shadow-xs text-[#7C3AED] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-[18px]">school</span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#102B51]">Student Special</h3>
+                  <p className="text-[11px] text-[#444651] line-clamp-1">Campus routes, save!</p>
+                </div>
+              </div>
+              <div className="flex justify-end pt-2 border-t border-[#E0D0FF]/60">
+                <div className="w-6 h-6 rounded-full bg-white text-[#7C3AED] flex items-center justify-center shadow-xs group-hover:translate-x-1 transition-transform">
+                  <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ==========================================
+            SECTION 4: POPULAR JOURNEYS (4 DESKTOP CORRIDORS)
+            ========================================== */}
+        <section id="popular-journeys" className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 mb-16">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl sm:text-[28px] font-extrabold text-[#102B51]">Popular Journeys</h2>
+              <p className="text-xs md:text-sm text-[#64748B]">Bengal&apos;s most-traveled commuter and weekend corridors</p>
+            </div>
+            <a
+              href="#routes"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate('/results');
+              }}
+              className="text-sm text-[#0B4DBB] font-bold hover:underline flex items-center gap-1"
+            >
+              View All Routes <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </a>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Card 1: Kolkata to Digha */}
+            <div className="bg-white rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 border border-[#DCE8F7] flex flex-col group">
+              <div className="relative h-44 overflow-hidden">
+                <img
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtRBjYUYkdrc3QoOxLn7sCNiL_jUet0hi18_ibWNaj_HYvtxGpcF4GGHDe-Po3vyILJ370yGP5b_IfI03WNfeBKIqAAruBBeL4ipyqk4x_5qZ17n75tty60lXsimNmM3-uuSAehY-M9hWx5fUnmjtHn1i7PgiuXwMbd_dEF6yi2hvMZq2g2gmuy1ba27suLgHngXRFeqIu0ZwKzicqeLq1Zt1r7aJnnh5xnq8v4yI"
+                  alt="Digha Coastline"
+                />
+                <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs text-[#FF7900] font-bold text-xs px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">beach_access</span> 4 hrs 15 min
+                </span>
+                <span className="absolute bottom-3 right-3 bg-[#082E78] text-white text-xs font-bold px-2 py-0.5 rounded-md">
+                  From ₹220
+                </span>
+              </div>
+              <div className="p-5 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#64748B]">
+                    <span className="material-symbols-outlined text-[16px] text-[#2058C5]">explore</span>
+                    <span>Coastal Escape</span>
                   </div>
+                  <h3 className="text-lg font-bold text-[#102B51] mt-1">Kolkata → Digha</h3>
+                  <p className="text-xs text-[#64748B] mt-1">Direct AC Volvo &amp; non-AC express buses every 30 mins from Esplanade.</p>
+                </div>
+                <div className="mt-4 pt-4 border-t border-[#F0F3FF] flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#0F6155] bg-[#E3F8F5] px-2 py-0.5 rounded">34 Daily Buses</span>
                   <button
                     type="button"
-                    onClick={() => navigate('/results')}
-                    className="text-[#43EDCD] hover:text-[#57FBDB] flex items-center gap-1 font-semibold transition-colors cursor-pointer"
+                    onClick={() => handleSetQuickRoute('Kolkata', 'Esplanade / Babughat', 'Digha', 'Old Bus Stand')}
+                    className="w-8 h-8 rounded-full bg-[#EAF3FF] text-[#0B4DBB] flex items-center justify-center hover:bg-[#082E78] hover:text-white transition-colors cursor-pointer"
                   >
-                    <span>Open High-Res Satellite Telematics</span>
-                    <span className="material-symbols-outlined text-sm">open_in_new</span>
+                    <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                   </button>
                 </div>
               </div>
             </div>
-          </section>
 
-          {/* ─────────────────────────────────────────────────────────
-              SECTION 3: "JOURNEYS PEOPLE LOVE" SECTION
-              ───────────────────────────────────────────────────────── */}
-          <section id="journeys-love-section" className="w-full px-4 sm:px-6 lg:px-12 py-12 bg-[#080E1B]/60">
-            <div className="w-full max-w-6xl mx-auto flex flex-col gap-6">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-                <div>
-                  <span className="text-xs text-[#FF6B4A] uppercase tracking-widest flex items-center gap-1 font-semibold">
-                    <span className="material-symbols-outlined text-base">favorite</span>
-                    Top Rated Nocturnal Cruises
-                  </span>
-                  <h2 className="font-['Sora',sans-serif] text-2xl sm:text-3xl font-bold text-[#DDE2F5] mt-1">
-                    Journeys People Love
-                  </h2>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigate('/results')}
-                  className="text-xs sm:text-sm text-[#43EDCD] hover:text-[#57FBDB] flex items-center gap-1 transition-colors self-start sm:self-auto cursor-pointer"
-                >
-                  <span>View all 120+ active routes</span>
-                  <span className="material-symbols-outlined text-base">chevron_right</span>
-                </button>
+            {/* Card 2: Kolkata to Siliguri */}
+            <div className="bg-white rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 border border-[#DCE8F7] flex flex-col group">
+              <div className="relative h-44 overflow-hidden">
+                <img
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaQL2MS3qcXidg5enI6f5CjGGY8FeTl2dnOmJZ1okQ9XI8ESHnTBt6TzavJAEGb2LZRvgeAqVuCg7AJkwFKI6DlD4QbVywqlzgT8gLCTCkbszgLnuNv4-lJ5MXZ6nBJJ8Cp5rihgkQjOd_m5AivRcAye4UcRrqsx8cVJdmZ6IE4_qe7Hau1Qgnq2CohYY6-wSIBoczg57XelmLHMUzNSaSNwm09fu_HMb7Hz45TZM"
+                  alt="Siliguri Tea Hills"
+                />
+                <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs text-[#2058C5] font-bold text-xs px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">landscape</span> Overnight 12 hrs
+                </span>
+                <span className="absolute bottom-3 right-3 bg-[#082E78] text-white text-xs font-bold px-2 py-0.5 rounded-md">
+                  From ₹750
+                </span>
               </div>
-
-              {/* 4 Route Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* CARD 1: Bengaluru to Goa */}
-                <div className="flex flex-col bg-[#1A1F2D] border border-[#2F3543]/60 rounded-2xl p-4 hover:-translate-y-1.5 transition-all shadow-md group">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="px-2 py-0.5 rounded-full bg-[#FF6B4A]/20 text-[#FF6B4A] text-[10px] font-semibold">
-                      Overnight Sleeper
-                    </span>
-                    <div className="flex items-center gap-1 text-[#43EDCD] text-xs font-bold">
-                      <span className="material-symbols-outlined text-sm text-[#43EDCD]">star</span>
-                      <span>4.9</span>
-                      <span className="text-[#E1BFB8] font-normal text-[10px]">(1.4k)</span>
-                    </div>
+              <div className="p-5 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#64748B]">
+                    <span className="material-symbols-outlined text-[16px] text-[#2058C5]">filter_drama</span>
+                    <span>Gateway to Hills</span>
                   </div>
-                  <div className="h-32 rounded-xl mb-3 relative overflow-hidden bg-[#242A38]">
-                    <div className="w-full h-full bg-gradient-to-tr from-[#161B29] to-[#242A38] flex items-center justify-center">
-                      <span className="material-symbols-outlined text-4xl text-[#FF6B4A]/40">directions_bus</span>
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1A1F2D] via-transparent to-transparent" />
-                    <span className="absolute bottom-2 left-2 text-[10px] text-[#DDE2F5] bg-[#080E1B]/80 px-2 py-0.5 rounded backdrop-blur-md">
-                      Scania Multiaxle
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1 mb-3">
-                    <h3 className="font-['Sora',sans-serif] text-base font-bold text-[#DDE2F5]">
-                      Bengaluru → Goa
-                    </h3>
-                    <span className="text-xs text-[#BBC6E6]">Dep: 09:30 PM • Reach 06:45 AM</span>
-                  </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-[#2F3543]/40 mt-auto">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-[#E1BFB8]">Fares from</span>
-                      <span className="font-['Sora',sans-serif] text-base font-bold text-[#FF6B4A]">₹1,299</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleBookFeaturedRoute('Bengaluru', 'Goa', 1299)}
-                      className="px-3.5 py-1.5 rounded-lg bg-[#242A38] hover:bg-[#43EDCD] hover:text-[#080E1B] text-[#DDE2F5] text-xs font-semibold transition-all cursor-pointer"
-                    >
-                      Book Seat
-                    </button>
-                  </div>
+                  <h3 className="text-lg font-bold text-[#102B51] mt-1">Kolkata → Siliguri</h3>
+                  <p className="text-xs text-[#64748B] mt-1">Multi-axle Volvo &amp; BharatBenz sleeper luxury buses from Babughat.</p>
                 </div>
-
-                {/* CARD 2: Mumbai to Pune */}
-                <div className="flex flex-col bg-[#1A1F2D] border border-[#2F3543]/60 rounded-2xl p-4 hover:-translate-y-1.5 transition-all shadow-md group">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="px-2 py-0.5 rounded-full bg-[#43EDCD]/15 text-[#43EDCD] text-[10px] font-semibold">
-                      Express Hyperlink
-                    </span>
-                    <div className="flex items-center gap-1 text-[#43EDCD] text-xs font-bold">
-                      <span className="material-symbols-outlined text-sm text-[#43EDCD]">star</span>
-                      <span>4.8</span>
-                      <span className="text-[#E1BFB8] font-normal text-[10px]">(3.1k)</span>
-                    </div>
-                  </div>
-                  <div className="h-32 rounded-xl mb-3 relative overflow-hidden bg-[#242A38]">
-                    <div className="w-full h-full bg-gradient-to-tr from-[#161B29] to-[#242A38] flex items-center justify-center">
-                      <span className="material-symbols-outlined text-4xl text-[#43EDCD]/40">bolt</span>
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1A1F2D] via-transparent to-transparent" />
-                    <span className="absolute bottom-2 left-2 text-[10px] text-[#DDE2F5] bg-[#080E1B]/80 px-2 py-0.5 rounded backdrop-blur-md">
-                      Electric Volvo
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1 mb-3">
-                    <h3 className="font-['Sora',sans-serif] text-base font-bold text-[#DDE2F5]">
-                      Mumbai → Pune
-                    </h3>
-                    <span className="text-xs text-[#BBC6E6]">Hourly departures • 3h 15m</span>
-                  </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-[#2F3543]/40 mt-auto">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-[#E1BFB8]">Fares from</span>
-                      <span className="font-['Sora',sans-serif] text-base font-bold text-[#43EDCD]">₹649</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleBookFeaturedRoute('Mumbai', 'Pune', 649)}
-                      className="px-3.5 py-1.5 rounded-lg bg-[#242A38] hover:bg-[#43EDCD] hover:text-[#080E1B] text-[#DDE2F5] text-xs font-semibold transition-all cursor-pointer"
-                    >
-                      Book Seat
-                    </button>
-                  </div>
-                </div>
-
-                {/* CARD 3: Delhi to Manali */}
-                <div className="flex flex-col bg-[#1A1F2D] border border-[#2F3543]/60 rounded-2xl p-4 hover:-translate-y-1.5 transition-all shadow-md group">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="px-2 py-0.5 rounded-full bg-[#FF6B4A]/20 text-[#FF6B4A] text-[10px] font-semibold">
-                      Nordic Sleeper
-                    </span>
-                    <div className="flex items-center gap-1 text-[#43EDCD] text-xs font-bold">
-                      <span className="material-symbols-outlined text-sm text-[#43EDCD]">star</span>
-                      <span>4.9</span>
-                      <span className="text-[#E1BFB8] font-normal text-[10px]">(980)</span>
-                    </div>
-                  </div>
-                  <div className="h-32 rounded-xl mb-3 relative overflow-hidden bg-[#242A38]">
-                    <div className="w-full h-full bg-gradient-to-tr from-[#161B29] to-[#242A38] flex items-center justify-center">
-                      <span className="material-symbols-outlined text-4xl text-[#FF6B4A]/40">ac_unit</span>
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1A1F2D] via-transparent to-transparent" />
-                    <span className="absolute bottom-2 left-2 text-[10px] text-[#DDE2F5] bg-[#080E1B]/80 px-2 py-0.5 rounded backdrop-blur-md">
-                      Heated Berths
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1 mb-3">
-                    <h3 className="font-['Sora',sans-serif] text-base font-bold text-[#DDE2F5]">
-                      Delhi → Manali
-                    </h3>
-                    <span className="text-xs text-[#BBC6E6]">Dep: 06:00 PM • Reach 07:30 AM</span>
-                  </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-[#2F3543]/40 mt-auto">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-[#E1BFB8]">Fares from</span>
-                      <span className="font-['Sora',sans-serif] text-base font-bold text-[#FF6B4A]">₹1,450</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleBookFeaturedRoute('Delhi', 'Manali', 1450)}
-                      className="px-3.5 py-1.5 rounded-lg bg-[#242A38] hover:bg-[#43EDCD] hover:text-[#080E1B] text-[#DDE2F5] text-xs font-semibold transition-all cursor-pointer"
-                    >
-                      Book Seat
-                    </button>
-                  </div>
-                </div>
-
-                {/* CARD 4: Hyderabad to Bengaluru */}
-                <div className="flex flex-col bg-[#1A1F2D] border border-[#2F3543]/60 rounded-2xl p-4 hover:-translate-y-1.5 transition-all shadow-md group">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="px-2 py-0.5 rounded-full bg-[#43EDCD]/15 text-[#43EDCD] text-[10px] font-semibold">
-                      Night Glider
-                    </span>
-                    <div className="flex items-center gap-1 text-[#43EDCD] text-xs font-bold">
-                      <span className="material-symbols-outlined text-sm text-[#43EDCD]">star</span>
-                      <span>4.8</span>
-                      <span className="text-[#E1BFB8] font-normal text-[10px]">(2.2k)</span>
-                    </div>
-                  </div>
-                  <div className="h-32 rounded-xl mb-3 relative overflow-hidden bg-[#242A38]">
-                    <div className="w-full h-full bg-gradient-to-tr from-[#161B29] to-[#242A38] flex items-center justify-center">
-                      <span className="material-symbols-outlined text-4xl text-[#43EDCD]/40">nightlight</span>
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1A1F2D] via-transparent to-transparent" />
-                    <span className="absolute bottom-2 left-2 text-[10px] text-[#DDE2F5] bg-[#080E1B]/80 px-2 py-0.5 rounded backdrop-blur-md">
-                      Twin Axle AC
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1 mb-3">
-                    <h3 className="font-['Sora',sans-serif] text-base font-bold text-[#DDE2F5]">
-                      Hyderabad → BLR
-                    </h3>
-                    <span className="text-xs text-[#BBC6E6]">Dep: 10:00 PM • Reach 06:15 AM</span>
-                  </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-[#2F3543]/40 mt-auto">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-[#E1BFB8]">Fares from</span>
-                      <span className="font-['Sora',sans-serif] text-base font-bold text-[#43EDCD]">₹1,199</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleBookFeaturedRoute('Hyderabad', 'Bengaluru', 1199)}
-                      className="px-3.5 py-1.5 rounded-lg bg-[#242A38] hover:bg-[#43EDCD] hover:text-[#080E1B] text-[#DDE2F5] text-xs font-semibold transition-all cursor-pointer"
-                    >
-                      Book Seat
-                    </button>
-                  </div>
+                <div className="mt-4 pt-4 border-t border-[#F0F3FF] flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#0F6155] bg-[#E3F8F5] px-2 py-0.5 rounded">48 Daily Buses</span>
+                  <button
+                    type="button"
+                    onClick={() => handleSetQuickRoute('Kolkata', 'Esplanade / Babughat', 'Siliguri', 'Tenzing Norgay Bus Terminus')}
+                    className="w-8 h-8 rounded-full bg-[#EAF3FF] text-[#0B4DBB] flex items-center justify-center hover:bg-[#082E78] hover:text-white transition-colors cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  </button>
                 </div>
               </div>
             </div>
-          </section>
 
-          {/* ─────────────────────────────────────────────────────────
-              SECTION 4: DESTINATION RECOMMENDATIONS & SMART TRAVEL INSIGHTS
-              ───────────────────────────────────────────────────────── */}
-          <section className="w-full px-4 sm:px-6 lg:px-12 py-12">
-            <div className="w-full max-w-6xl mx-auto flex flex-col gap-6">
-              <div className="flex flex-col">
-                <span className="text-xs text-[#43EDCD] uppercase tracking-widest flex items-center gap-1 font-semibold">
-                  <span className="material-symbols-outlined text-base">explore</span>
-                  Weekend Escapes &amp; Curated Getaways
+            {/* Card 3: Kolkata to Durgapur */}
+            <div className="bg-white rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 border border-[#DCE8F7] flex flex-col group">
+              <div className="relative h-44 overflow-hidden">
+                <img
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDel_Un8HzgMqZNWlwULF2WS5my6Vfbn22L8mgpGME_bOPNCsRarJO0YMk1dgIsrK5UQWyIf-R5XVWobOF4fWAKY9jHrthog8KjSrt1rxt9XcpRuNjgf3U1iVNfUrDlzGaDthrDD_2VCmTKOw4-MXa-lyUaB94dhkWkxDsLtLKezHGpQe5rOwCu_cwC4II-H2HtsJTlLXEHSTYzS2WRMyndo-aRJGmuKPKQJt8KKbI"
+                  alt="Durgapur Highway"
+                />
+                <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs text-[#FF7900] font-bold text-xs px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">bolt</span> Express 3 hrs
                 </span>
-                <h2 className="font-['Sora',sans-serif] text-2xl sm:text-3xl font-bold text-[#DDE2F5] mt-1">
-                  Smart Travel Recommendations
-                </h2>
-                <p className="text-xs sm:text-sm text-[#BBC6E6]">
-                  Optimized routes paired with weather reports and early morning drop points.
+                <span className="absolute bottom-3 right-3 bg-[#082E78] text-white text-xs font-bold px-2 py-0.5 rounded-md">
+                  From ₹180
+                </span>
+              </div>
+              <div className="p-5 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#64748B]">
+                    <span className="material-symbols-outlined text-[16px] text-[#2058C5]">factory</span>
+                    <span>Industrial Corridor</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-[#102B51] mt-1">Kolkata → Durgapur</h3>
+                  <p className="text-xs text-[#64748B] mt-1">Hourly AC electric shuttle coaches via Durgapur Expressway (NH 19).</p>
+                </div>
+                <div className="mt-4 pt-4 border-t border-[#F0F3FF] flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#0F6155] bg-[#E3F8F5] px-2 py-0.5 rounded">52 Daily Buses</span>
+                  <button
+                    type="button"
+                    onClick={() => handleSetQuickRoute('Kolkata', 'Esplanade / Babughat', 'Durgapur', 'City Centre Bus Terminus')}
+                    className="w-8 h-8 rounded-full bg-[#EAF3FF] text-[#0B4DBB] flex items-center justify-center hover:bg-[#082E78] hover:text-white transition-colors cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: Kolkata to Malda */}
+            <div className="bg-white rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 border border-[#DCE8F7] flex flex-col group">
+              <div className="relative h-44 overflow-hidden">
+                <img
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcSoXlbXujDyos2DPBK0P7cQqaBaaz3U1PKi6pJesok2sJK_2bj4zp5gwXnNdR5296hSFX8piUk-o1F_pdK_mq2WMAZvYw68Tjd_MPHhry91MCgBSWH68TA9n2xlNrbcW8SxJ6YkkRy1xubHKA_6-yCJfSbrtgteM9-gS6lEYTmnMoKDfnDkWuoe7_Mjl5JFhC2qn8443DmvIqtJN3lq5If0FomhXCYbVOKd4LWSo"
+                  alt="Malda Heritage"
+                />
+                <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs text-[#2058C5] font-bold text-xs px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">history_edu</span> 7 hrs 30 min
+                </span>
+                <span className="absolute bottom-3 right-3 bg-[#082E78] text-white text-xs font-bold px-2 py-0.5 rounded-md">
+                  From ₹340
+                </span>
+              </div>
+              <div className="p-5 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#64748B]">
+                    <span className="material-symbols-outlined text-[16px] text-[#2058C5]">temple_hindu</span>
+                    <span>Heritage &amp; Mango City</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-[#102B51] mt-1">Kolkata → Malda</h3>
+                  <p className="text-xs text-[#64748B] mt-1">Smooth overnight and day services connecting south and north Bengal.</p>
+                </div>
+                <div className="mt-4 pt-4 border-t border-[#F0F3FF] flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#0F6155] bg-[#E3F8F5] px-2 py-0.5 rounded">26 Daily Buses</span>
+                  <button
+                    type="button"
+                    onClick={() => handleSetQuickRoute('Kolkata', 'Esplanade / Babughat', 'Malda', 'Rathbari Terminus')}
+                    className="w-8 h-8 rounded-full bg-[#EAF3FF] text-[#0B4DBB] flex items-center justify-center hover:bg-[#082E78] hover:text-white transition-colors cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ==========================================
+            SECTION 5: BENEFITS BANNER (DEEP NAVY)
+            ========================================== */}
+        <section className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 my-8">
+          <div className="bg-[#082E78] text-white rounded-2xl p-8 lg:p-10 shadow-xl relative overflow-hidden">
+            <div className="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-[#2058C5]/20 pointer-events-none" />
+            <div className="absolute -left-12 -bottom-12 w-64 h-64 rounded-full bg-[#FF7900]/10 pointer-events-none" />
+
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {/* Benefit 1 */}
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white/10 text-[#FF7900] flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[26px]">verified_user</span>
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-white">Reliable &amp; Safe</h4>
+                  <p className="text-xs text-blue-100 leading-relaxed mt-1">
+                    100% verified operators, vetted captains &amp; live GPS track sharing.
+                  </p>
+                </div>
+              </div>
+
+              {/* Benefit 2 */}
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white/10 text-[#FF7900] flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[26px]">flash_on</span>
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-white">Easy Booking</h4>
+                  <p className="text-xs text-blue-100 leading-relaxed mt-1">
+                    Reserve in under 60 seconds with instant WhatsApp and SMS m-ticket.
+                  </p>
+                </div>
+              </div>
+
+              {/* Benefit 3 */}
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white/10 text-[#FF7900] flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[26px]">sell</span>
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-white">Great Value</h4>
+                  <p className="text-xs text-blue-100 leading-relaxed mt-1">
+                    Zero convenience surprises, fair rates &amp; cashback rewards on every trip.
+                  </p>
+                </div>
+              </div>
+
+              {/* Benefit 4 */}
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white/10 text-[#FF7900] flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[26px]">support_agent</span>
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-white">Help When You Need It</h4>
+                  <p className="text-xs text-blue-100 leading-relaxed mt-1">
+                    24/7 dedicated Bengali &amp; English commuter support on call.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ==========================================
+            SECTION 6: HOW BUSSATHI WORKS
+            ========================================== */}
+        <section className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 py-12">
+          <div className="text-center max-w-lg mx-auto mb-10">
+            <h2 className="text-2xl sm:text-[28px] font-extrabold text-[#102B51]">⚙️ How BusSathi Works</h2>
+            <p className="text-xs md:text-sm text-[#64748B] mt-1.5">Commute effortlessly in three straightforward steps</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+            {/* Step 1 */}
+            <div className="bg-white rounded-2xl p-6 border border-[#DCE8F7] shadow-xs hover:shadow-md transition-shadow relative flex flex-col items-start">
+              <div className="w-10 h-10 rounded-full bg-[#FF7900] text-white font-extrabold flex items-center justify-center text-base mb-4 shadow-md shadow-[#FF7900]/25">
+                1
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-[#EAF3FF] text-[#082E78] flex items-center justify-center mb-3">
+                <span className="material-symbols-outlined text-[24px]">map</span>
+              </div>
+              <h3 className="text-lg font-bold text-[#102B51]">Choose Your Route</h3>
+              <p className="text-xs md:text-sm text-[#64748B] mt-2 leading-relaxed">
+                Select departure and destination cities across Bengal. Easily switch pickup points with one tap.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="bg-white rounded-2xl p-6 border border-[#DCE8F7] shadow-xs hover:shadow-md transition-shadow relative flex flex-col items-start">
+              <div className="w-10 h-10 rounded-full bg-[#FF7900] text-white font-extrabold flex items-center justify-center text-base mb-4 shadow-md shadow-[#FF7900]/25">
+                2
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-[#FFF0DF] text-[#FF7900] flex items-center justify-center mb-3">
+                <span className="material-symbols-outlined text-[24px]">tune</span>
+              </div>
+              <h3 className="text-lg font-bold text-[#102B51]">Set Preferences</h3>
+              <p className="text-xs md:text-sm text-[#64748B] mt-2 leading-relaxed">
+                Pick your preferred travel date, boarding slot, and slide your max budget to match your wallet.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="bg-white rounded-2xl p-6 border border-[#DCE8F7] shadow-xs hover:shadow-md transition-shadow relative flex flex-col items-start">
+              <div className="w-10 h-10 rounded-full bg-[#FF7900] text-white font-extrabold flex items-center justify-center text-base mb-4 shadow-md shadow-[#FF7900]/25">
+                3
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-[#E3F8F5] text-[#00A896] flex items-center justify-center mb-3">
+                <span className="material-symbols-outlined text-[24px]">check_circle</span>
+              </div>
+              <h3 className="text-lg font-bold text-[#102B51]">Find Your Ride</h3>
+              <p className="text-xs md:text-sm text-[#64748B] mt-2 leading-relaxed">
+                Browse verified operators, select your window or aisle seat, and get instant confirmed e-tickets.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ==========================================
+            SECTION 7: STUDENT TRAVEL SPECIAL
+            ========================================== */}
+        <section id="student-special" className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 my-8">
+          <div className="rounded-2xl bg-gradient-to-r from-[#FFF7ED] to-[#FFEDD5] border border-[#FED7AA] p-8 md:p-10 shadow-xs flex flex-col lg:flex-row items-center justify-between gap-6">
+            {/* Left Content */}
+            <div className="flex-1 max-w-xl text-center lg:text-left">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFEDD5] border border-[#FDBA74] text-[#C2410C] font-semibold text-xs mb-3">
+                <span className="material-symbols-outlined text-[16px]">school</span>
+                <span>College &amp; University Pass</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#7C2D12]">Student Travel Special</h2>
+              <p className="text-sm md:text-base text-[#9A3412] mt-2 font-medium">
+                Go further for less! Exclusive concessions on university routes across West Bengal. Present college ID and
+                save up to 40% every month.
+              </p>
+            </div>
+
+            {/* Center Graphic */}
+            <div className="shrink-0 flex items-center justify-center gap-3 bg-white/70 backdrop-blur-xs px-6 py-4 rounded-xl border border-[#FED7AA]">
+              <div className="w-12 h-12 rounded-xl bg-[#FF7900] text-white flex items-center justify-center">
+                <span className="material-symbols-outlined text-[28px]">luggage</span>
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-bold text-[#102B51]">Flat ₹150 OFF</p>
+                <p className="text-xs text-[#64748B]">
+                  Code: <span className="font-mono font-bold text-[#FF7900]">CAMPUSCOMMUTE</span>
                 </p>
               </div>
-
-              {/* Bento-style Getaway Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* ITEM 1: Ooty */}
-                <div className="flex flex-col rounded-2xl bg-[#161B29] border border-[#2F3543]/60 p-6 relative overflow-hidden group hover:bg-[#1A1F2D] transition-colors">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs text-[#FF6B4A] font-semibold flex items-center gap-1">
-                      <span className="material-symbols-outlined text-sm">forest</span> Nilgiri Hills
-                    </span>
-                    <span className="text-xs text-[#43EDCD] font-mono">6h 45m Direct</span>
-                  </div>
-                  <h3 className="font-['Sora',sans-serif] text-lg font-bold text-[#DDE2F5] mb-1">
-                    Ooty &amp; Nilgiri Heights
-                  </h3>
-                  <p className="text-xs text-[#BBC6E6] mb-4 leading-relaxed">
-                    Crisp mountain morning arrivals. Enjoy botanical misty strolls with zero check-in waiting time.
-                  </p>
-                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-[#2F3543]/40">
-                    <span className="text-[11px] text-[#E1BFB8]">Best window: Thu - Sun</span>
-                    <span className="text-xs font-semibold text-[#43EDCD]">From ₹899</span>
-                  </div>
-                </div>
-
-                {/* ITEM 2: Gokarna */}
-                <div className="flex flex-col rounded-2xl bg-[#161B29] border border-[#2F3543]/60 p-6 relative overflow-hidden group hover:bg-[#1A1F2D] transition-colors">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs text-[#43EDCD] font-semibold flex items-center gap-1">
-                      <span className="material-symbols-outlined text-sm">waves</span> Arabian Coastline
-                    </span>
-                    <span className="text-xs text-[#43EDCD] font-mono">8h 15m Overnight</span>
-                  </div>
-                  <h3 className="font-['Sora',sans-serif] text-lg font-bold text-[#DDE2F5] mb-1">
-                    Gokarna Quiet Shores
-                  </h3>
-                  <p className="text-xs text-[#BBC6E6] mb-4 leading-relaxed">
-                    Pristine beach trekking and serene cafes. Bus drops you steps away from Kudle beach trailheads.
-                  </p>
-                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-[#2F3543]/40">
-                    <span className="text-[11px] text-[#E1BFB8]">Best window: Fri night dep</span>
-                    <span className="text-xs font-semibold text-[#43EDCD]">From ₹1,120</span>
-                  </div>
-                </div>
-
-                {/* ITEM 3: Hampi */}
-                <div className="flex flex-col rounded-2xl bg-[#161B29] border border-[#2F3543]/60 p-6 relative overflow-hidden group hover:bg-[#1A1F2D] transition-colors">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs text-[#FF6B4A] font-semibold flex items-center gap-1">
-                      <span className="material-symbols-outlined text-sm">temple_hindu</span> Heritage Boulders
-                    </span>
-                    <span className="text-xs text-[#43EDCD] font-mono">7h 00m Direct</span>
-                  </div>
-                  <h3 className="font-['Sora',sans-serif] text-lg font-bold text-[#DDE2F5] mb-1">
-                    Hampi Ruins &amp; River
-                  </h3>
-                  <p className="text-xs text-[#BBC6E6] mb-4 leading-relaxed">
-                    Sunrise over Matanga Hill. Direct night sleepers ensure you wake up recharged right at the temple ruins.
-                  </p>
-                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-[#2F3543]/40">
-                    <span className="text-[11px] text-[#E1BFB8]">Best window: Oct - Feb</span>
-                    <span className="text-xs font-semibold text-[#43EDCD]">From ₹950</span>
-                  </div>
-                </div>
-              </div>
             </div>
-          </section>
 
-          {/* ─────────────────────────────────────────────────────────
-              SECTION 5: "AI TRAVEL ASSISTANT" (ROAMLY COPILOT WIDGET)
-              ───────────────────────────────────────────────────────── */}
-          <section id="copilot-section" className="w-full px-4 sm:px-6 lg:px-12 py-10 mb-4">
-            <div className="w-full max-w-4xl mx-auto rounded-3xl bg-gradient-to-br from-[#242A38] via-[#1A1F2D] to-[#080E1B] border border-[#2F3543]/70 p-6 sm:p-8 shadow-2xl relative">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#43EDCD] to-[#FF6B4A] flex items-center justify-center text-[#080E1B] shadow-lg">
-                    <span className="material-symbols-outlined text-2xl">neurology</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-['Sora',sans-serif] text-lg sm:text-xl font-bold text-[#DDE2F5]">
-                        Roamly Copilot AI
-                      </h3>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#43EDCD]/15 text-[#43EDCD] font-semibold border border-[#43EDCD]/30">
-                        Natural Query
-                      </span>
+            {/* Right Action Button */}
+            <div className="shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setCopilotOpen(true);
+                  handleCopilotSend('How do I apply for the 40% student pass?');
+                }}
+                className="inline-flex items-center gap-2 bg-[#FF7900] hover:bg-[#E06A00] text-white px-7 py-3.5 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all cursor-pointer"
+              >
+                <span>Explore Student Offers</span>
+                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ==========================================
+            SECTION 8: FREQUENTLY ASKED QUESTIONS (FAQ)
+            ========================================== */}
+        <section id="faq-section" className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 py-12 mb-16">
+          <div className="text-center max-w-lg mx-auto mb-8">
+            <h2 className="text-2xl sm:text-[28px] font-extrabold text-[#102B51]">Frequently Asked Questions (FAQ)</h2>
+            <p className="text-xs md:text-sm text-[#64748B] mt-1.5">Everything you need to know about riding with BusSathi</p>
+          </div>
+
+          <div className="max-w-3xl mx-auto flex flex-col gap-3">
+            {[
+              {
+                id: 1,
+                question: 'How do I book a bus ticket on BusSathi?',
+                answer:
+                  'Booking is effortless: enter your departure city, destination, and travel date above. Filter by timing or your maximum budget, choose your favorite seat layout, and finalize your booking using UPI, cards, or net banking. You will receive an instant confirmation SMS & WhatsApp m-ticket.',
+              },
+              {
+                id: 2,
+                question: 'Can I change or cancel my booking?',
+                answer:
+                  'Yes, tickets can be rescheduled or cancelled up to 2 hours prior to scheduled departure. Cancellation refund policies vary per bus operator, and your refund is automatically processed back to your original payment source within 24-48 hours.',
+              },
+              {
+                id: 3,
+                question: 'What payment methods are available?',
+                answer:
+                  'We accept all major payment modes including Google Pay, PhonePe, Paytm, all UPI apps, Rupay/Visa/Mastercard debit and credit cards, and internet banking from all recognized Indian banks with zero hidden handling fees.',
+              },
+              {
+                id: 4,
+                question: 'Is it safe to book on BusSathi?',
+                answer:
+                  'Completely safe. All bus operators on BusSathi are government-licensed and verified. Our platform provides 256-bit encrypted transactions, dedicated women’s seat reservation options, and real-time live bus GPS shareable links for family members.',
+              },
+            ].map((faq) => {
+              const isOpen = openFaq === faq.id;
+              return (
+                <div key={faq.id} className="bg-white border border-[#DCE8F7] rounded-xl overflow-hidden shadow-xs transition-all">
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(isOpen ? null : faq.id)}
+                    className="w-full p-5 text-left flex justify-between items-center gap-4 hover:bg-[#F0F3FF]/50 transition-colors cursor-pointer"
+                  >
+                    <span className="text-sm font-bold text-[#102B51]">{faq.question}</span>
+                    <span
+                      className={`material-symbols-outlined text-[#0B4DBB] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''
+                        }`}
+                    >
+                      expand_more
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <div className="px-5 pb-5 pt-1 text-sm text-[#444651] leading-relaxed border-t border-[#F0F3FF]">
+                      {faq.answer}
                     </div>
-                    <p className="text-xs text-[#BBC6E6]">
-                      Describe your journey in everyday words, our agent structures the schedule.
-                    </p>
-                  </div>
+                  )}
                 </div>
-                <span className="text-[11px] text-[#E1BFB8] flex items-center gap-1.5 self-start md:self-auto">
-                  <span className="w-2 h-2 rounded-full bg-[#43EDCD]" /> 24/7 Telemetry Assistant
-                </span>
-              </div>
-
-              {/* Natural Search Input Field */}
-              <div className="flex items-center gap-2 p-2 rounded-xl bg-[#080E1B] border border-[#2F3543]/60 shadow-inner mb-3">
-                <span className="material-symbols-outlined text-[#43EDCD] text-2xl pl-2">auto_awesome</span>
-                <input
-                  type="text"
-                  value={aiPromptInput}
-                  onChange={(e) => setAiPromptInput(e.target.value)}
-                  placeholder="Describe your journey in natural words..."
-                  className="w-full bg-transparent text-[#DDE2F5] text-xs sm:text-sm focus:outline-none placeholder:text-[#E1BFB8]/40"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRunAiPrompt()}
-                  className="px-4 py-2.5 rounded-lg bg-[#43EDCD] text-[#080E1B] text-xs sm:text-sm font-semibold hover:bg-[#57FBDB] transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
-                >
-                  <span>Search</span>
-                  <span className="material-symbols-outlined text-base">send</span>
-                </button>
-              </div>
-
-              {/* Quick AI Suggestion Chips */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] text-[#BBC6E6]">Try asking:</span>
-                <button
-                  type="button"
-                  onClick={() => handleRunAiPrompt('Solo female quiet sleeper to Hyderabad under ₹1,200')}
-                  className="text-[11px] px-3 py-1 rounded-full bg-[#1A1F2D] hover:bg-[#242A38] text-[#E1BFB8] hover:text-[#DDE2F5] transition-colors border border-[#2F3543]/40 cursor-pointer"
-                >
-                  "Solo female quiet sleeper to Hyderabad under ₹1,200"
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRunAiPrompt('Fastest AC bus from Mumbai to Pune departing after 6 PM')}
-                  className="text-[11px] px-3 py-1 rounded-full bg-[#1A1F2D] hover:bg-[#242A38] text-[#E1BFB8] hover:text-[#DDE2F5] transition-colors border border-[#2F3543]/40 cursor-pointer"
-                >
-                  "Fastest AC bus Mumbai to Pune after 6 PM"
-                </button>
-              </div>
-
-              {/* Dynamic Response Box */}
-              {aiResponse && (
-                <div className="mt-4 p-4 rounded-xl bg-[#080E1B]/90 border border-[#43EDCD]/30 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-[#43EDCD] flex items-center gap-1 font-semibold">
-                      <span className="material-symbols-outlined text-sm">check_circle</span> Copilot Parsed Parameters
-                    </span>
-                    <span className="text-[10px] text-[#BBC6E6]">Query ID #CP-892</span>
-                  </div>
-                  <p className="text-xs text-[#DDE2F5] leading-relaxed">{aiResponse}</p>
-                </div>
-              )}
-            </div>
-          </section>
-        </div>
+              );
+            })}
+          </div>
+        </section>
       </main>
 
-      {/* ─────────────────────────────────────────────────────────────
-          FOOTER
-          ───────────────────────────────────────────────────────────── */}
-      <footer className="w-full bg-[#080E1B] border-t border-[#2F3543]/40 pt-12 pb-8">
-        <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 border-b border-[#2F3543]/30">
-            {/* Column 1 */}
-            <div className="flex flex-col gap-3">
+      {/* ==========================================
+          FOOTER (DEEP NAVY)
+          ========================================== */}
+      <footer className="w-full bg-[#082E78] text-white">
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 pt-12 pb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-10 border-b border-white/10">
+            {/* Col 1 */}
+            <div className="lg:col-span-1 flex flex-col gap-3">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#43EDCD]">route</span>
-                <h4 className="font-['Sora',sans-serif] text-sm font-semibold text-[#DDE2F5]">
-                  Popular Highline Routes
-                </h4>
+                <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center text-white font-bold">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <rect height="13" rx="3" width="18" x="3" y="6" />
+                    <path d="M3 11h18" />
+                    <circle cx="7" cy="15" fill="#FF7900" r="1.5" stroke="none" />
+                    <circle cx="17" cy="15" fill="#FF7900" r="1.5" stroke="none" />
+                  </svg>
+                </div>
+                <span className="text-lg text-white tracking-tight font-bold">BusSathi</span>
               </div>
-              <p className="text-xs text-[#E1BFB8]">
-                Curated nocturnal expressways engineered for uninterrupted comfort.
+              <p className="text-xs text-[#FF7900] font-semibold">Travel Smart. Pay Less.</p>
+              <p className="text-xs text-blue-100 leading-relaxed">
+                Reliable intercity and suburban smart bus travel across Bengal.
               </p>
-              <div className="flex flex-col gap-2 mt-1">
-                <button
-                  type="button"
-                  onClick={() => handleBookFeaturedRoute('Bengaluru', 'Goa', 1299)}
-                  className="text-xs text-[#E1BFB8] hover:text-[#43EDCD] flex items-center justify-between py-1 transition-colors text-left"
-                >
-                  <span>Bengaluru → Goa Night Cruise</span>
-                  <span className="text-[11px] text-[#00D0B2]">From ₹1,299</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleBookFeaturedRoute('Mumbai', 'Pune', 449)}
-                  className="text-xs text-[#E1BFB8] hover:text-[#43EDCD] flex items-center justify-between py-1 transition-colors text-left"
-                >
-                  <span>Mumbai → Pune Hyperlink</span>
-                  <span className="text-[11px] text-[#00D0B2]">From ₹449</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleBookFeaturedRoute('Delhi', 'Manali', 1850)}
-                  className="text-xs text-[#E1BFB8] hover:text-[#43EDCD] flex items-center justify-between py-1 transition-colors text-left"
-                >
-                  <span>Delhi → Manali Nordic Sleeper</span>
-                  <span className="text-[11px] text-[#00D0B2]">From ₹1,850</span>
-                </button>
+            </div>
+
+            {/* Col 2 */}
+            <div className="flex flex-col gap-3">
+              <h3 className="text-sm font-bold text-white">Company</h3>
+              <div className="flex flex-col gap-2 text-xs text-blue-100">
+                <a href="#about" className="hover:text-white transition-colors">About Us</a>
+                <a href="#careers" className="hover:text-white transition-colors">Careers</a>
+                <a href="#contact" className="hover:text-white transition-colors">Contact Us</a>
               </div>
             </div>
 
-            {/* Column 2 */}
+            {/* Col 3 */}
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#43EDCD]">verified_user</span>
-                <h4 className="font-['Sora',sans-serif] text-sm font-semibold text-[#DDE2F5]">
-                  Smart Route AI Guarantee
-                </h4>
-              </div>
-              <p className="text-xs text-[#E1BFB8]">
-                Dynamic telematics rerouting algorithms predict bottlenecks before departure.
-              </p>
-              <ul className="flex flex-col gap-2 text-xs text-[#E1BFB8] mt-1">
-                <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#43EDCD] text-sm">check_circle</span>
-                  <span>Sub-second GPS waypoint verification</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#43EDCD] text-sm">check_circle</span>
-                  <span>Automated ETA compensation shield</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#43EDCD] text-sm">check_circle</span>
-                  <span>Real-time cabin air &amp; telemetry feeds</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 3 */}
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#43EDCD]">shield_with_heart</span>
-                <h4 className="font-['Sora',sans-serif] text-sm font-semibold text-[#DDE2F5]">
-                  Safety Protocols
-                </h4>
-              </div>
-              <p className="text-xs text-[#E1BFB8]">
-                Strict bio-rest cycles and twin-driver telemetry protocols on routes over 5 hours.
-              </p>
-              <div className="p-3 rounded-lg bg-[#161B29] border border-[#2F3543]/40 mt-1">
-                <div className="text-xs text-[#DDE2F5] font-semibold">ISO 39001 Road Traffic Certified</div>
-                <div className="text-[10px] text-[#E1BFB8] mt-0.5">Telematics audit verified every 24 hours</div>
+              <h3 className="text-sm font-bold text-white">Plan Your Trip</h3>
+              <div className="flex flex-col gap-2 text-xs text-blue-100">
+                <a
+                  href="#search"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    searchSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="hover:text-white transition-colors"
+                >
+                  Search Buses
+                </a>
+                <a
+                  href="#routes"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('popular-journeys')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="hover:text-white transition-colors"
+                >
+                  Popular Routes
+                </a>
+                <a
+                  href="#offers"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('student-special')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="hover:text-white transition-colors"
+                >
+                  Offers &amp; Deals
+                </a>
               </div>
             </div>
 
-            {/* Column 4 */}
+            {/* Col 4 */}
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#43EDCD]">phonelink</span>
-                <h4 className="font-['Sora',sans-serif] text-sm font-semibold text-[#DDE2F5]">
-                  Roamly Mobile Suite
-                </h4>
+              <h3 className="text-sm font-bold text-white">Help &amp; Support</h3>
+              <div className="flex flex-col gap-2 text-xs text-blue-100">
+                <a
+                  href="#faq"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('faq-section')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="hover:text-white transition-colors"
+                >
+                  FAQ
+                </a>
+                <a href="#help" className="hover:text-white transition-colors">Booking Help</a>
+                <a href="#support" className="hover:text-white transition-colors">Customer Support</a>
               </div>
-              <p className="text-xs text-[#E1BFB8]">
-                Live vehicle telemetry, boarding pass passkeys, and silent coach controls.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-2 mt-1">
-                <button
-                  type="button"
-                  className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg bg-[#161B29] border border-[#2F3543]/40 hover:border-[#43EDCD]/50 transition-colors text-left"
-                >
-                  <span className="material-symbols-outlined text-[#DDE2F5]">android</span>
-                  <div className="flex flex-col">
-                    <span className="text-[9px] text-[#E1BFB8] leading-none">Download on</span>
-                    <span className="text-xs text-[#DDE2F5] font-semibold leading-tight">Google Play</span>
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg bg-[#161B29] border border-[#2F3543]/40 hover:border-[#43EDCD]/50 transition-colors text-left"
-                >
-                  <span className="material-symbols-outlined text-[#DDE2F5]">phone_iphone</span>
-                  <div className="flex flex-col">
-                    <span className="text-[9px] text-[#E1BFB8] leading-none">Download on</span>
-                    <span className="text-xs text-[#DDE2F5] font-semibold leading-tight">Apple Store</span>
-                  </div>
-                </button>
+            </div>
+
+            {/* Col 5 */}
+            <div className="flex flex-col gap-3">
+              <h3 className="text-sm font-bold text-white">Useful Links</h3>
+              <div className="flex flex-col gap-2 text-xs text-blue-100">
+                <a href="#terms" className="hover:text-white transition-colors">Terms &amp; Conditions</a>
+                <a href="#privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="#sitemap" className="hover:text-white transition-colors">Sitemap</a>
               </div>
             </div>
           </div>
 
-          <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#E1BFB8]">
-            <div className="flex items-center gap-2 text-center md:text-left">
-              <span className="font-['Sora',sans-serif] text-xs font-bold text-[#DDE2F5] tracking-tight">
-                ROAMLY
+          <div className="flex flex-col md:flex-row items-center justify-between pt-6 gap-4">
+            <p className="text-xs text-blue-100 text-center md:text-left">
+              © 2025 BusSathi Technologies Pvt. Ltd. All rights reserved.
+            </p>
+            <div className="flex items-center gap-3">
+              <span className="w-8 h-8 rounded-full bg-[#001A50] text-white flex items-center justify-center hover:bg-[#2058C5] transition-colors cursor-pointer">
+                <span className="material-symbols-outlined text-[18px]">campaign</span>
               </span>
-              <span>•</span>
-              <span>© 2025 Roamly Mobility Technologies India Pvt. Ltd. All rights reserved.</span>
-            </div>
-            <div className="flex items-center gap-4 sm:gap-6 flex-wrap justify-center">
-              <button type="button" className="hover:text-[#DDE2F5] transition-colors">
-                Privacy Policy
-              </button>
-              <button type="button" className="hover:text-[#DDE2F5] transition-colors">
-                Terms of Carriage
-              </button>
-              <button type="button" className="hover:text-[#DDE2F5] transition-colors">
-                Fleet Telematics API
-              </button>
-              <button type="button" className="hover:text-[#DDE2F5] transition-colors">
-                Security Operations
-              </button>
+              <span className="w-8 h-8 rounded-full bg-[#001A50] text-white flex items-center justify-center hover:bg-[#2058C5] transition-colors cursor-pointer">
+                <span className="material-symbols-outlined text-[18px]">language</span>
+              </span>
+              <span className="w-8 h-8 rounded-full bg-[#001A50] text-white flex items-center justify-center hover:bg-[#2058C5] transition-colors cursor-pointer">
+                <span className="material-symbols-outlined text-[18px]">alternate_email</span>
+              </span>
+              <span className="w-8 h-8 rounded-full bg-[#001A50] text-white flex items-center justify-center hover:bg-[#2058C5] transition-colors cursor-pointer">
+                <span className="material-symbols-outlined text-[18px]">forum</span>
+              </span>
             </div>
           </div>
         </div>
       </footer>
+
+      {/* ==========================================
+          DEDICATED SATHI COPILOT SLIDE-OVER DRAWER (VARIANT 3)
+          ========================================== */}
+      <div
+        className={`fixed inset-0 z-50 transition-all duration-300 ${copilotOpen ? 'pointer-events-auto' : 'pointer-events-none'
+          }`}
+      >
+        {/* Backdrop */}
+        <div
+          onClick={() => setCopilotOpen(false)}
+          className={`fixed inset-0 bg-[#001A50]/40 backdrop-blur-xs transition-opacity duration-300 cursor-pointer ${copilotOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+        />
+
+        {/* Slide-over Drawer Panel */}
+        <aside
+          className={`fixed top-0 right-0 bottom-0 w-full max-w-[440px] bg-white shadow-2xl flex flex-col transition-transform duration-300 pointer-events-auto border-l border-[#D0E4FF] ${copilotOpen ? 'translate-x-0' : 'translate-x-full'
+            }`}
+        >
+          {/* Drawer Header */}
+          <div className="bg-gradient-to-r from-[#001A50] via-[#082E78] to-[#2058C5] text-white p-4 flex items-center justify-between shadow-md relative overflow-hidden shrink-0">
+            <div className="absolute -right-8 -top-8 w-28 h-28 bg-[#FF7900]/20 rounded-full blur-xl pointer-events-none" />
+            <div className="flex items-center gap-3 relative z-10">
+              <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-xs">
+                <span className="material-symbols-outlined text-[24px] text-[#FF7900]">smart_toy</span>
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold text-white tracking-tight">Sathi AI Concierge</h3>
+                  <span className="text-[10px] font-extrabold bg-[#FF7900] text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    v2.4
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#A7D7CE] flex items-center gap-1.5 mt-0.5">
+                  <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+                  Live Bengal Fleet Data Connected
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 relative z-10">
+              <button
+                type="button"
+                onClick={() => setCopilotOpen(false)}
+                title="Minimize"
+                className="w-8 h-8 rounded-lg hover:bg-white/15 text-white/80 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">remove</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCopilotOpen(false)}
+                title="Close"
+                className="w-8 h-8 rounded-lg hover:bg-white/15 text-white/80 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Sub-bar */}
+          <div className="bg-[#F8FAFC] border-b border-[#E2E8F0] px-4 py-2 flex items-center justify-between text-xs text-[#475569] shrink-0">
+            <span className="flex items-center gap-1 font-semibold text-[#2058C5]">
+              <span className="material-symbols-outlined text-[16px]">electric_bolt</span> Fast Assistant
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setCopilotChat([
+                    {
+                      id: `cleared-${Date.now()}`,
+                      sender: 'bot',
+                      text: 'Chat cleared. How else can I assist your Bengal bus journey today?',
+                    },
+                  ])
+                }
+                className="hover:text-[#001B3E] font-medium transition-colors hover:underline text-[11px] cursor-pointer"
+              >
+                Clear Chat
+              </button>
+              <span className="text-[#CBD5E1]">|</span>
+              <span className="text-[11px] bg-[#E3F8F5] text-[#0A5832] font-bold px-2 py-0.5 rounded-full">
+                24x7 Ready
+              </span>
+            </div>
+          </div>
+
+          {/* Message Stream */}
+          <div
+            ref={chatStreamRef}
+            className="flex-1 p-4 overflow-y-auto flex flex-col gap-3.5 bg-gradient-to-b from-[#F8FAFC] to-white"
+          >
+            {copilotChat.map((msg) => {
+              if (msg.sender === 'user') {
+                return (
+                  <div key={msg.id} className="flex justify-end">
+                    <div className="bg-[#082E78] text-white rounded-2xl rounded-tr-xs p-3 text-xs leading-relaxed max-w-[85%] shadow-xs">
+                      {msg.text}
+                    </div>
+                  </div>
+                );
+              }
+
+              if (msg.isDeal) {
+                return (
+                  <div key={msg.id} className="flex gap-2.5 items-start max-w-[96%]">
+                    <div className="w-7 h-7 rounded-lg bg-[#082E78] text-white flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="material-symbols-outlined text-[16px]">recommend</span>
+                    </div>
+                    <div className="bg-gradient-to-br from-[#FFF8F2] to-white rounded-2xl rounded-tl-xs p-3.5 shadow-xs border border-[#FED7AA] text-xs leading-relaxed">
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <span className="font-extrabold text-[#7C2D12] flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[16px] text-[#FF7900]">trending_up</span>
+                          Trending Deal Right Now
+                        </span>
+                        <span className="bg-[#FF7900] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                          Overnight
+                        </span>
+                      </div>
+                      <p className="font-bold text-sm text-[#001B3E]">Kolkata → Siliguri (AC Sleeper)</p>
+                      <p className="text-[#64748B] mt-0.5 text-[11px]">Departs 8:00 PM • Babughat • 94% on-time</p>
+                      <div className="mt-2.5 pt-2 border-t border-[#FED7AA]/60 flex items-center justify-between">
+                        <span className="text-lg text-[#082E78] font-black">₹750</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleSetQuickRoute('Kolkata', 'Esplanade / Babughat', 'Siliguri', 'Tenzing Norgay Bus Terminus');
+                            setCopilotOpen(false);
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-[#FF7900] hover:bg-[#E06A00] text-white font-bold text-xs flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                        >
+                          Quick Apply <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div key={msg.id} className="flex gap-2.5 items-start max-w-[92%]">
+                  <div className="w-7 h-7 rounded-lg bg-[#082E78] text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="material-symbols-outlined text-[16px]">smart_toy</span>
+                  </div>
+                  <div className="bg-white rounded-2xl rounded-tl-xs p-3.5 shadow-xs border border-[#DCE8F7] text-xs text-[#001B3E] leading-relaxed whitespace-pre-line">
+                    {msg.text}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Suggested Prompts */}
+          <div className="px-3 py-2 border-t border-[#E2E8F0] bg-white shrink-0">
+            <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-1.5 px-1">Suggested Prompts</p>
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+              <button
+                type="button"
+                onClick={() => handleCopilotSend('Compare AC vs Non-AC routes')}
+                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-[#EAF3FF] hover:bg-[#2058C5] hover:text-white text-[#2058C5] transition-colors whitespace-nowrap shrink-0 border border-[#D0E4FF] cursor-pointer"
+              >
+                Compare AC vs Non-AC
+              </button>
+              <button
+                type="button"
+                onClick={() => handleCopilotSend('How do I apply for the 40% student pass?')}
+                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-[#FFF0DF] hover:bg-[#FF7900] hover:text-white text-[#FF7900] transition-colors whitespace-nowrap shrink-0 border border-[#FFE1BF] cursor-pointer"
+              >
+                40% student pass
+              </button>
+              <button
+                type="button"
+                onClick={() => handleCopilotSend('What is the luggage allowance policy?')}
+                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-[#E3F8F5] hover:bg-[#00A896] hover:text-white text-[#00A896] transition-colors whitespace-nowrap shrink-0 border border-[#C2EFE9] cursor-pointer"
+              >
+                Luggage policy
+              </button>
+              <button
+                type="button"
+                onClick={() => handleCopilotSend('Find cheapest buses under ₹300')}
+                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-[#F0EAFF] hover:bg-[#7C3AED] hover:text-white text-[#7C3AED] transition-colors whitespace-nowrap shrink-0 border border-[#E0D0FF] cursor-pointer"
+              >
+                Cheapest &lt; ₹300
+              </button>
+            </div>
+          </div>
+
+          {/* Drawer Input Box */}
+          <div className="p-3 bg-white border-t border-[#DCE8F7] shrink-0">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleCopilotSend();
+              }}
+              className="flex items-center gap-2 bg-[#F1F5F9] border border-[#CBD5E1] rounded-2xl px-3 py-1.5 focus-within:border-[#2058C5] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#2058C5]/20 transition-all"
+            >
+              <button
+                type="button"
+                onClick={handleVoiceToggle}
+                title="Voice Input"
+                className={`transition-colors p-1 rounded-lg flex items-center justify-center cursor-pointer ${isVoiceActive ? 'text-[#FF7900]' : 'text-[#64748B] hover:text-[#082E78]'
+                  }`}
+              >
+                <span className="material-symbols-outlined text-[20px]">mic</span>
+              </button>
+              <input
+                type="text"
+                autoComplete="off"
+                value={copilotInput}
+                onChange={(e) => setCopilotInput(e.target.value)}
+                placeholder={isVoiceActive ? 'Listening for your voice... (say route or query)' : 'Ask Sathi (e.g. buses to Digha this evening)...'}
+                className="flex-1 bg-transparent border-0 outline-hidden text-xs text-[#001B3E] placeholder-[#64748B] py-1.5"
+              />
+              <button
+                type="submit"
+                aria-label="Send Message"
+                className="w-8 h-8 rounded-xl bg-[#082E78] hover:bg-[#FF7900] text-white flex items-center justify-center transition-colors shrink-0 shadow-xs cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">send</span>
+              </button>
+            </form>
+            <div className="flex items-center justify-between text-[10px] text-[#64748B] px-1 mt-1.5">
+              <span>Instant response • AI transit model</span>
+              <span className="flex items-center gap-1 text-[#059669] font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" /> Sathi Active
+              </span>
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 };
+
+export default HomePage;
