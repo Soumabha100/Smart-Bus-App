@@ -234,3 +234,184 @@
   - Zero raw hex colors in all new files (strictly mapped to design tokens).
   - All new files kept modular and under 85 lines (pages under 185 lines).
   - No changes to backend, routing, or existing dark theme components on other pages.
+
+## Phase 8 - BusSathi Finalized 4th Stitch Homepage Design (2026-11-16)
+- **Branch**: `feature/frontend-Design`
+- **Stitch Project ID**: `3249928304240990338`
+- **Selected Screen**: Screen No. 4 (Latest/Finalized) — `3182ad4da42b4a0d85c76a30f6379413` ("BusSathi — Variant 3: Dedicated Sathi Copilot Slide-Over Drawer").
+- **Exclusions Enforced**: Strictly avoided earlier Screen 1 (basic), Screen 2 (dropdowns only), and Screen 3 (calendar only).
+- **Files Changed**:
+  - `frontend/src/pages/HomePage.tsx`: Fully replaced with the finalized 4th Stitch homepage design.
+- **Core Architecture & Features Implemented**:
+  1. **Sticky Header (`h-[76px]`)**:
+     - BusSathi logo emblem (navy `#082E78` container with white bus glyph + saffron wheel accents) + wordmark "BusSathi" with orange accent and subtitle "Travel Smart. Pay Less."
+     - Desktop navigation links (`Home` active pill, `Routes`, `Offers`, `Bus Pass`, `Help & Support`).
+     - Dedicated **Sathi Copilot Button** (`#082E78`, sparkle star, AI badge) with slide-over drawer trigger.
+     - Notification bell with unread dot indicator and traveler account profile with dropdown.
+     - Responsive mobile hamburger menu.
+  2. **Hero Section (`min-h-[500px]`)**:
+     - Kolkata Bengal Transit illustration (Howrah Bridge, Victoria Memorial, luxury bus).
+     - "Bengal's Smartest Transit Network" pulsing badge.
+     - Dynamic heading "Where to next?" with orange curved arc graphic.
+  3. **Main 4-Row Bus Search Card (`max-w-[1120px]`, -mt-6 to -mt-14 relative z-30)**:
+     - **Row 1 (Origin & Destination)**: Interactive searchable dropdowns with Bengal transit points (Kolkata, Howrah, Durgapur, Asansol, Siliguri, Digha, Malda, Santiniketan, Haldia) + quick popular chips + centered animated swap button.
+     - **Row 2 (Date & Time)**: Interactive Calendar Popover with quick preset chips (`Today`, `Tomorrow`, `+2 Days`, `Weekend`), month navigator, days grid with lowest fare badges (`₹180`), and time slot selector.
+     - **Row 3 (Max Budget Panel)**: Aqua container (`#E3F8F5`, border `#94D2BD`) with dynamic currency badge (`₹`), real-time budget range slider (₹200 to ₹2,500), and "Budget Friendly 🌱" status pill.
+     - **Row 4 (Search CTA)**: Full-width button (`#001A50`) wired to `navigate('/results')`.
+  4. **✨ Explore More (5 Soft Pastel Cards)**:
+     - Popular Routes (`#EAF3FF`), Best Deals (`#FFF0DF`), Nearby Stops (`#EFF6FF`), Quick Book (`#E3F8F5`), Student Special (`#F0EAFF`).
+  5. **Popular Journeys (4 Bengal Corridors in 1 Desktop Row)**:
+     - Kolkata → Digha (Coastal Escape, 4 hrs 15 min, From ₹220, 34 daily buses).
+     - Kolkata → Siliguri (Gateway to Hills, Overnight 12 hrs, From ₹750, 48 daily buses).
+     - Kolkata → Durgapur (Industrial Corridor, Express 3 hrs, From ₹180, 52 daily buses).
+     - Kolkata → Malda (Heritage & Mango City, 7 hrs 30 min, From ₹340, 26 daily buses).
+     - Quick route prefill actions on each card.
+  6. **Benefits Banner (Deep Navy `#082E78`)**:
+     - 4 pillars: Reliable & Safe, Easy Booking, Great Value, Help When You Need It.
+  7. **How BusSathi Works**:
+     - 3 connected steps: Choose Your Route, Set Preferences, Find Your Ride.
+  8. **Student Travel Special**:
+     - Campus commute banner offering flat ₹150 OFF with code `CAMPUSCOMMUTE`.
+  9. **Frequently Asked Questions (FAQ)**:
+     - 4 collapsible accordion cards covering booking, cancellations, payment methods, and travel safety.
+  10. **Comprehensive Footer**:
+      - 5-column navigation with company links, trip planner, customer care, and legal guidelines.
+  11. **Dedicated Sathi Copilot Slide-Over Drawer (Variant 3 Specific)**:
+      - Slide-over panel (max-w-[440px]) with backdrop, live fleet connection status, and conversation stream.
+      - Bengali transit welcome ("নমস্কার! Welcome to BusSathi 🙏") + Trending deal card (Kolkata → Siliguri ₹750 with Quick Apply action).
+      - Suggested prompt chips ("Compare AC vs Non-AC", "40% student pass", "Luggage policy", "Cheapest < ₹300").
+      - Interactive query responses, voice input button animation, and clear chat utility.
+- **Verification**:
+  - `npm run lint`: 0 errors, 0 warnings across all files.
+  - `npm run build`: Production build succeeded (`tsc -b && vite build` in 1.18s).
+  - Zero changes to other pages, authentication, backend code, database, or environment configs.
+
+## BusSathi Hero Section — Seamless Panoramic Background Extension Behind Heading (2026-11-16)
+- **Files Changed**:
+  - `frontend/src/assets/hero_bussathi_design4.webp`: Created a seamless panoramic composite (2048×768 WebP, 165 KB) that extends the Bengal landscape canvas to the left behind the heading while preserving the right-side artwork.
+  - `frontend/src/pages/HomePage.tsx`:
+    - Imported `heroBg` from `../assets/hero_bussathi_design4.webp`.
+    - Wired into Section 1 as ONE continuous full-width background layer (`w-full h-full object-cover object-right md:object-right-bottom lg:object-right opacity-95`).
+    - Maintained exact heading typography, colors, orange arc underline, and positioning with subtle cream-white radial blur backdrop for effortless readability.
+- **Visual Composition**:
+  - **Right Side (Preserved Exactly)**: Modern smart coach bus in royal navy and saffron orange on the asphalt road, Howrah Bridge, Victoria Memorial dome on the horizon, calm Hooghly river with ferry boat, riverside trees and buildings, original colors and sharpness.
+  - **Left Side (Extended Behind Heading)**: Soft cream-blue morning dawn sky, natural clouds, gentle riverbank greenery, and calm river waters continuing seamlessly behind the "Where to next?" heading.
+  - **Seamless Unity**: One continuous full-width background layer with zero vertical seam or visible panel split.
+- **Verification**:
+  - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
+  - `npm --prefix frontend run build`: Succeeded in 1.90s, bundling `hero_bussathi_design4-B8mpKiTV.webp` (165.40 kB).
+  - All collaboration rules and file protection constraints respected.
+
+## BusSathi Asset Bundling & Explore Cards Local Integration (2026-11-16)
+- **Files Changed**:
+  - `frontend/src/assets/explore_bus.webp`: Local WebP asset for Card 1 (Express Highway Bus).
+  - `frontend/src/assets/explore_voucher.webp`: Local WebP asset for Card 2 (Ticket Voucher).
+  - `frontend/src/assets/explore_stop.webp`: Local WebP asset for Card 3 (Bus Stop Shelter).
+  - `frontend/src/assets/explore_qr.webp`: Local WebP asset for Card 4 (Instant QR Code).
+  - `frontend/src/assets/explore_students.webp`: Local WebP asset for Card 5 (Student Campus Special).
+  - `frontend/src/pages/HomePage.tsx`: Wired local assets into Section 3 Explore Cards, eliminating all external session dependencies.
+- **Verification**:
+  - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
+  - `npm --prefix frontend run build`: Succeeded in 2.02s, bundling all 6 WebP assets cleanly into `dist/assets/`.
+
+## BusSathi Hero Header — 100% Stitch Specification Realignment (2026-11-16)
+- **Files Changed**:
+  - `frontend/src/pages/HomePage.tsx`:
+    - Container height adjusted to exact Stitch specification: `h-[340px] md:h-[370px] lg:h-[390px] flex flex-col justify-start bg-[#f9f9ff]`.
+    - Restored Stitch's exact horizontal scrim overlay: `bg-gradient-to-r from-white/90 via-white/70 to-transparent w-full md:w-3/5 lg:w-1/2`.
+    - Vertically centered headline container: `max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 relative z-10 w-full h-full flex items-center`.
+    - Heading typography reset to exact Stitch dimensions: `text-3xl md:text-4xl lg:text-[40px] leading-tight font-extrabold text-[#001A50] tracking-tight drop-shadow-xs`.
+    - Subtitle reset to exact Stitch size and spacing: `text-sm md:text-base text-[#334155] font-semibold mt-2`.
+    - Section 2 Search Card spacing reset to `mt-4` (removing artificial negative top margins).
+  - `frontend/src/assets/hero_bussathi_design4.webp`: Bundled the authentic Stitch panoramic banner asset (`stitch_screen_d52ea_raw.png`, 163 KB) with `object-cover object-bottom`.
+- **Verification**:
+  - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
+  - `npm --prefix frontend run build`: Succeeded in 1.66s.
+
+## BusSathi Above-the-Fold Optimization — redBus-Inspired Booking Form Placement (2026-11-16)
+- **Files Changed**:
+  - `frontend/src/assets/hero_bussathi_compact.webp`: Tailored panoramic Kolkata transit asset (1376×718 WebP, 171 KB) with optimized sky headroom, ensuring Howrah Bridge, Victoria Memorial dome, Hooghly river ferry, bus, and road remain 100% visible.
+  - `frontend/src/pages/HomePage.tsx`:
+    - **Header Compactness**: Height optimized to `h-[70px]` for standard desktop viewport efficiency.
+    - **Hero Section Height**: Reduced to `h-[290px] sm:h-[310px] lg:h-[330px]` with `object-cover object-[center_60%]`, keeping the Howrah Bridge truss, Victoria Memorial dome, ferry, and orange-and-white express bus in full view.
+    - **redBus-Style Card Elevation**: Applied `-mt-10 sm:-mt-11 lg:-mt-12` (40px–48px negative top margin), seamlessly overlapping the bottom asphalt road zone without covering the bus body, wheels, or landmark features.
+    - **Compact Booking Form Proportions**:
+      - Card padding: `p-3.5 sm:p-4 md:p-5` with `rounded-[22px]` and 2px `#D0E4FF` border.
+      - Inter-row spacing: `gap-2.5 sm:gap-3` (10px–12px).
+      - Row 1 (From / To): `h-[64px]` with 40px icon containers and clean `[10px]` uppercase labels.
+      - Row 2 (Date & Time): `h-[54px] sm:h-[56px]` with 32px icons and quick presets.
+      - Row 3 (Max Budget Slider): `py-2.5 px-3.5 sm:px-4` (~58px height) with responsive layout.
+      - Row 4 (Search Buses CTA): `h-[48px] sm:h-[50px] rounded-[14px]` with `text-[16px]` font-bold.
+    - **Above-the-Fold Result**: Total vertical stack height from top of page to bottom of Search button is ~605px–620px across `1366×768`, `1440×900`, and `1920×1080` viewports, leaving 45px–65px of margin above the fold line without scrolling.
+- **Verification**:
+  - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
+  - `npm --prefix frontend run build`: Succeeded in 1.43s, bundling `hero_bussathi_compact-C_GjuR6o.webp` cleanly into `dist/assets/`.
+  - Zero modifications to other pages, routes, authentication, or backend code.
+
+## BusSathi Finalized Compact Top Section Re-creation (2026-11-16)
+- **Visual Reference**: Finalized design screenshot (`media_1794842958896_a1eecd72.jpg`, reference URL `bussathi-compact-booking-demo-2026.vibrantoffer4.chatgpt.site`).
+- **Scope Boundary Strictly Followed**:
+  - Replaced ONLY the three requested top sections:
+    1. Navigation Bar (Floating pill navbar)
+    2. Hero Section (Compact banner with right-bottom Kolkata artwork)
+    3. Bus Search Form (4-row compact card up to the "Search Buses" CTA button)
+  - Everything below the "Search Buses" button (Section 3: Explore More, Popular Routes, Offers, Bus Pass, FAQ, Footer, Sathi Copilot drawer, all modals) remains 100% UNCHANGED.
+  - Excluded the website editor's floating "Edit site" control.
+- **Files Changed**:
+  - `frontend/src/pages/HomePage.tsx`:
+    - **Floating Pill Navbar**: `max-w-[1520px] mx-auto h-[64px] rounded-full bg-[#FCFEFF]/95 backdrop-blur-[18px] border border-[#CEDDF3] shadow-[0_4px_20px_rgba(11,61,146,0.06)] px-4 sm:px-6 sticky top-3 z-40`.
+      - Logo: 43×43px rounded-[13px] bg `#0B3D92`, "Bus" navy + "Sathi" orange font-black text-[23px] with "Travel Smart. Pay Less." muted blue.
+      - Center navigation: Active Home gradient pill (`bg-gradient-to-r from-[#104FBD] to-[#082E78]` text white, rounded-[25px], home icon), Routes, Offers, Bus Pass, Help & Support with material icons.
+      - Actions: Sathi Copilot AI pill button (`#082454`, `✦`, orange AI badge), notification bell with orange dot, profile avatar button with dropdown menu.
+    - **Compact Hero Section**: `max-w-[1560px] mx-auto px-4 sm:px-[22px] mt-2.5 h-[250px] rounded-[24px] bg-white border border-[#E2ECF8] overflow-hidden`.
+      - Right-bottom aligned Kolkata illustration: `hero_bussathi_compact.webp` at 116% container height, keeping Howrah Bridge, Victoria Memorial dome, Hooghly river ferry, bus, and road perfectly sharp and uncropped.
+      - Scrim: Soft horizontal gradient scrim from white to transparent on left.
+      - Badge: `• BENGAL'S SMARTEST TRANSIT NETWORK` pill.
+      - Headline: "Where to next?" on a single line with orange arc curve underline SVG.
+      - Subtitle: "Find affordable buses for your journey 😊".
+      - Popular route pills: `Kolkata → Digha`, `Kolkata → Siliguri`, `Kolkata → Durgapur` with click-to-fill handlers.
+    - **Compact 4-Row Search Form**: `max-w-[1220px] mx-auto bg-white rounded-[23px] shadow-[0_12px_32px_rgba(11,61,146,0.08)] px-5 pt-[17px] pb-[19px] border-[1.4px] border-[#D4E0EE] -mt-[23px]`.
+      - Row 1: FROM & TO fields (`h-[61px]`, rounded-[13px], 35×35px icon containers, 9.5px uppercase labels, 15px city name, 10.5px subtext) + Center Swap button (`43×43px` circular, 22px `sync_alt` icon, 300ms smooth 180° rotation).
+      - Row 2: DATE & TIME fields (`h-[52px]`, rounded-[13px], 32×32px icon containers, 9px uppercase labels, 14px bold values; Date formatted as `17-11-2026`, Time as `Anytime`; interactive calendar and time popovers preserved).
+      - Row 3: MAX BUDGET panel (`h-[50px]`, rounded-[12px], bg `#E7F7F3`, border `#B8E5D9`, 28×28px rupee icon box, ₹800 per seat, dual-color track slider with `#FF7900` fill and `#374151` base, `Budget Friendly` leaf pill badge).
+      - Row 4: CTA Button (`h-[46px]`, rounded-[12px], `bg-gradient-to-r from-[#104FBD] to-[#062E79]`, text-[15px] font-[800] with search icon).
+- **Verification**:
+  - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
+  - `npm --prefix frontend run build`: Succeeded in 2.32s with zero TypeScript or Vite errors.
+  - All interactive features (dropdowns, calendar picker, time selector, budget slider, route search, copilot trigger, and profile menu) fully functional.
+
+## BusSathi Top Section Viewport Height Responsiveness Optimization (2026-11-16)
+- **Problem**: On Windows laptops with 125%/150% scaling or 1366×768 displays (effective inner browser viewport height ~460px–520px), the "Search Buses" CTA button was getting partially cropped off at the bottom.
+- **Solution & CSS Adjustments**:
+  - **Floating Navbar**: Compacted height to `h-[50px] sm:h-[54px] lg:h-[58px]` with `top-1 sm:top-2` and refined icon & brand scale (`34px–38px`).
+  - **Hero Section**: Optimized height to `h-[180px] sm:h-[195px] lg:h-[205px]` with `mt-1.5 sm:mt-2`. The Kolkata illustration (`hero_bussathi_compact.webp`) remains right-bottom pinned at `116%` height, preserving Howrah Bridge, Victoria Memorial, ferry, bus, and road.
+  - **Search Card Overlap**: Adjusted to `-mt-6 sm:-mt-7 lg:-mt-8` and streamlined internal padding to `px-3.5 sm:px-5 pt-3 sm:pt-3.5 pb-3 sm:pb-3.5` with `gap-1.5 sm:gap-2`.
+  - **Row 1 (From / To)**: Streamlined to `h-[48px] sm:h-[50px] lg:h-[52px]` with 30px–32px icons, 8.5px labels, and 34px–36px circular swap button.
+  - **Row 2 (Date & Time)**: Streamlined to `h-[42px] sm:h-[44px] lg:h-[46px]` with 26px–28px icons and 8px labels.
+  - **Row 3 (Max Budget)**: Streamlined to `h-[38px] sm:h-[40px] lg:h-[42px]` with 24px rupee icon box, 7.5px label, 14px–15px amount, and compact Budget Friendly badge.
+  - **Row 4 (Search CTA Button)**: Streamlined to `h-[38px] sm:h-[40px] lg:h-[42px]` with 18px search icon and 14px–14.5px font-[800].
+  - **Result**: Total vertical footprint reduced from ~590px down to ~370px, leaving 90px+ of clear breathing margin on 460px laptop viewports and eliminating all clipping across all laptop screens and resolutions.
+- **Verification**:
+  - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
+  - `npm --prefix frontend run build`: Succeeded in 3.68s.
+
+## BusSathi Homepage Visual Alignment & One Continuous Hero Section Fix (2026-11-16)
+- **Visual Differences Resolved**:
+  1. **Continuous Hero Section**:
+     - Removed any split appearance between left text and right illustration.
+     - Single hero container with `position: relative` and desktop height ~250px (`h-[210px] sm:h-[230px] lg:h-[250px]`).
+     - Kolkata illustration positioned as an absolute background layer (`absolute inset-0 z-0 w-full h-full`) behind the content using `object-[center_80%] sm:object-[center_82%] md:object-[center_83%]`, preserving Howrah Bridge, Victoria Memorial dome, Hooghly river ferry, bus wheels on the road, and the asphalt road along the bottom edge without cropping landmarks.
+     - Smooth horizontal gradient scrim (`bg-gradient-to-r from-white via-white/90 via-28% md:via-white/75 md:via-42% lg:via-white/55 lg:via-50% to-transparent w-full md:w-[70%] lg:w-[62%]`) providing soft readability for "Where to next?" and popular route pills on the left while smoothly fading to transparent with zero hard vertical division.
+  2. **Preserved Navbar**:
+     - Floating pill navbar preserved 100% with branding, navigation links, Sathi Copilot AI button, notification bell, and user profile avatar.
+  3. **Search Form Dimensions & Alignment**:
+     - Search card wrapper width set to `max-w-[1220px] w-full mx-auto` with ~20px horizontal page padding (`px-4 sm:px-5 lg:px-[20px]`).
+     - Rounded corners set to `rounded-[23px]`.
+     - Overlap maintained with `-mt-[23px]` top margin on the search section wrapper.
+  4. **Budget Default Value**:
+     - Default state set to ₹800 per seat (`useState(800)`), with min ₹200, max ₹2,500, step 50, and slider thumb initialized at ₹800 (26.09% along the dual-colored track).
+  5. **Scope Guardrail Strictly Preserved**:
+     - Everything below the "Search Buses" CTA button remains 100% untouched.
+- **Verification**:
+  - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
+  - `npm --prefix frontend run build`: Built successfully in 2.50s.
