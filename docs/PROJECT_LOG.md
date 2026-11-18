@@ -416,9 +416,268 @@
   - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
   - `npm --prefix frontend run build`: Built successfully in 2.50s.
 
-## BusSathi ChatMessage Type Safety Fix (2026-11-17)
-- **Problem**: In `frontend/src/pages/HomePage.tsx`, `ChatMessage` interface fields `text` and `isDeal` were defined as required (`text: string; isDeal: boolean;`), triggering TypeScript errors TS2741 and TS2345 on initial copilot chat messages (`msg-1` missing `isDeal`, `msg-2` missing `text`) and in message send/clear handlers.
-- **Solution**:
-  - Made `text` and `isDeal` optional in `ChatMessage` interface (`text?: string; isDeal?: boolean;`).
+## Phase 9 - OneGoBus Universal Glassmorphic Layout & Route Architecture (2026-11-17)
+- **Objective**: Deprecate legacy dark mode Onboarding page, establish `HomePage.tsx` as primary app entry point (`/`), and introduce unified glassmorphic `Navbar` and `Footer` wrapped around all parent application views.
+- **Tokens & CSS Utility Added** (`frontend/src/index.css`):
+  - Defined CSS glass variables in `:root` strictly for light mode (`--glass-bg: rgba(255, 255, 255, 0.78)`, `--glass-border: rgba(255, 255, 255, 0.85)`, `--glass-blur: blur(20px)`, `--glass-shadow: 0 10px 35px rgba(11, 35, 65, 0.08)`, `--glass-highlight: rgba(255, 255, 255, 0.95)`, `--glass-fallback-bg: #FFFFFF`).
+  - Added `@utility glass` with `backdrop-filter: var(--glass-blur) saturate(150%)`, subtle 1px border, box-shadow, and inner highlight.
+  - Purged `.dark` classes, deferred dark mode, and updated `index.html` body to warm cream canvas (`#FBF9F5`) and deep ink (`#1B1C1A`).
+  - Provided `@supports not (backdrop-filter: blur(1px))` and `@media (prefers-reduced-transparency: reduce)` fallbacks.
+  - Implemented dynamic scrolled state enhancements (`data-scrolled="true"` on scroll > 8px) with zero React re-renders.
+- **Components Created**:
+  - `frontend/src/components/layout/Navbar.tsx`: Floating pill bar (`fixed top-3 inset-x-0 mx-auto w-[calc(100%-1.5rem)] max-w-6xl rounded-2xl z-50 glass`) with numeral '1' speed bus logo, desktop NavLinks with active indicators, theme toggle (light/dark with localStorage sync), and touch-optimized hamburger.
+  - `frontend/src/components/layout/MobileMenu.tsx`: Accessible glass drawer with focus trap, body scroll lock, route-change auto-close, and pinned auth buttons.
+  - `frontend/src/components/layout/footer.config.ts`: Single typed data configuration for brand, 5 responsive columns, newsletter, and legal links.
+  - `frontend/src/components/layout/Footer.tsx`: 5-column responsive glass card with brand mission, inline SVG socials (GitHub, LinkedIn, Instagram, X), newsletter input, and legal bottom bar.
+  - `frontend/src/components/layout/AppLayout.tsx`: Root layout component wrapping all views with reserved top padding (`pt-20`) guaranteeing zero cumulative layout shift (CLS = 0).
+- **Page Upgrades & Cleanups**:
+  - **OnboardingPage Deleted**: Unlinked and permanently deleted obsolete `OnboardingPage.tsx`.
+  - **HomePage Upgraded**: Removed redundant local headers and footers; mounted as root route (`/`).
+  - **AuthLayout Nested**: Streamlined `AuthLayout.tsx` to nest cleanly inside `AppLayout`, displaying the universal floating glass navbar and footer over the heritage bus backdrop.
+  - **Placeholder Pages Created**: `FeaturesPage.tsx`, `HowItWorksPage.tsx`, `RoutesPage.tsx`, `AskAiPage.tsx`, `AboutPage.tsx`, `ContactPage.tsx`, `PrivacyPage.tsx`, `TermsPage.tsx`, `FaqPage.tsx`, and updated `NotFoundPage.tsx`.
+  - **Route Architecture (`App.tsx`)**: Refactored all 14 routes to use `React.lazy()` and `Suspense`, enabling per-route code splitting and reducing main chunk size from 557 kB to 304 kB.
 - **Verification**:
-  - `npm --prefix frontend run build`: Succeeded with zero TypeScript or Vite errors.
+  - `npm run build`: Bundled in 309ms with 0 errors across 20 split chunks.
+  - `npm run lint`: 0 errors, 0 warnings across entire codebase.
+
+
+## Phase 10 - Auth Background Restoration & Retail Auth Micro-Footer Architecture (2026-11-17)
+- **Problem Statement**:
+  - Following the introduction of `AppLayout.tsx`, the Kolkata heritage vector-style art illustration background (`Login_Hero.webp`) on `/login` and `/register` disappeared and was replaced by a solid white screen.
+  - The heavy 5-column marketing `Footer` was also rendered on the auth pages, causing an unwanted vertical scrollbar and covering the heritage bus, roadway, and Hooghly river artwork.
+- **Root Cause Analysis**:
+  - In `frontend/index.html` and `AppLayout.tsx`, `<body>` and the layout root container applied solid background colors (`bg-[#FBF9F5]` and `bg-canvas`).
+  - In `AuthLayout.tsx`, the fixed backdrop container was styled with `fixed inset-0 -z-10`. Under CSS stacking context rules, negative z-indices are painted behind the background of parent elements, causing the solid cream/white surface to occlude the illustration.
+- **Retail & Transit UX Research (Footer on Auth Pages)**:
+  - Industry benchmark audit across top retail and transit platforms (Airbnb, Uber, redBus, MakeMyTrip, Amazon, Stripe, Linear):
+    - Multi-column marketing sitemaps, newsletters, and heavy footers are strictly avoided on login/register pages because they introduce decision friction, break the focused conversion funnel, and cause vertical scrolling.
+    - The optimal industry standard is a **focused Micro-Footer**: a sleek, single-line utility bar docked at the bottom containing copyright, legal links (Privacy Policy, Terms of Service), and DPDP 2025 compliance.
+- **Implementation & Fixes**:
+  - **Stacking Context Fixed (`AuthLayout.tsx`)**:
+    - Changed backdrop container from `-z-10` to `z-0` (`fixed inset-0 z-0 w-screen h-screen overflow-hidden pointer-events-none select-none`).
+    - The narrative Sky Pod and Auth Card remain at `relative z-10`.
+    - Floating glass navbar sits at `fixed top-3 ... z-50`.
+  - **Dynamic Layout Adaptability (`AppLayout.tsx`)**:
+    - Added route detection: `const isAuthPage = location.pathname === '/login' || location.pathname === '/register';`.
+    - Set layout background to `bg-transparent` on auth routes and `bg-canvas` on discovery/marketing routes.
+    - Excluded the heavy 5-column marketing footer on auth pages (`{!isAuthPage && <Footer />}`).
+  - **Micro-Footer Integrated (`AuthLayout.tsx`)**:
+    - Embedded a lightweight, single-line micro-footer docked over the neutral asphalt section: `© 2026 OneGoBus • West Bengal AI Smart Bus Booking Platform • Privacy • Terms • DPDP 2025 Compliant`.
+    - Zero vertical scrollbar on standard desktop screens (100vh fit).
+  - **Preserved Artwork & Alignment**:
+    - 100% of the artwork (heritage express coach, Howrah Bridge, Dakshineswar Kali Temple, Victoria Memorial, Goddess Durga idol, autumn flame tree) is unclipped and clearly visible.
+    - Maintained top-aligned column anchors (`self-start items-start`) so switching between Sign In / Sign Up or Email / Phone OTP causes zero layout shifting.
+- **Verification**:
+  - `npm run build`: Bundled cleanly in 289ms across 20 chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings.
+
+
+## Phase 11 - Desktop Bus Search Results Light Mode Redesign (2026-11-17)
+- **Objective**: Replace the legacy dark mode search results page (`frontend/src/pages/ResultsPage.tsx`) with the modern light mode design from Stitch project `9772835342865580419` (Node ID: `bd8344ff3d534669bafe7eea90604b47` - "OneGoBus - Desktop Bus Search Results").
+- **Design Specifications & Tokens Implemented**:
+  - **Color Palette & Glassmorphic Surface**:
+    - Canvas: `--canvas: #FBF9F5` (warm cream background).
+    - Card surfaces: `--surface: #FFFFFF` with subtle border `#E5E1D8` and soft drop-shadow.
+    - Typography & Ink: `--ink-strong: #0B2341` for headlines and prices; `--ink-muted: #64748B` for secondary details.
+    - Accents: Coral/Orange `#FC7728` (`hover: #E06547`) for primary CTAs and badges; Teal `#0D9488` (`bg: #F0FDFA`, `border: #99F6E4`) for AI route recommendations and verification.
+  - **Top Promo Announcement**:
+    - Deep brand navy strip with "Bengal AI Route Advisor" pill announcing real-time NH-12 holiday rush traffic insights and sleeper locking advice.
+  - **Route Summary Bar**:
+    - Clean white card displaying origin ➔ destination (`Kolkata ⟿ Siliguri`), active journey pill (`SAT, 14 NOV • 1 PASSENGER • AC SLEEPER`), distance (574 km), corridor info (NH-12), and "Modify Route" action.
+  - **Date Carousel Strip (`DateStrip.tsx`)**:
+    - 6 interactive date tiles displaying daily minimum fares (12 Nov to 16 Nov) with "SELECTED" gradient pill and Calendar View trigger.
+  - **Left Journey Filter Sidebar (`FilterSidebar.tsx`)**:
+    - Travel Mood chips: `😴 Sleep Well`, `⚡ Fastest`, `💰 Budget Friendly`, `🌄 Scenic Route`, `All` (AI Recommended).
+    - Max Price Budget Range Slider: ₹400 to ₹1,500 with instant discount callout.
+    - Departure Time Slots: 4 tiles (Early Morning, Morning, Afternoon, Night - "Best Sleep Pick").
+    - Bus Types & Comfort checkboxes: AC Sleeper, Semi-Sleeper, Volvo Luxury, Non-AC.
+    - Boarding & Dropping Points: Esplanade, Babughat, Airport Gate 1, Dankuni; Tenzing Norgay, Siliguri Junction, ISBT.
+    - Amenities multi-select: Free WiFi, Charging, Water, Blanket, Live GPS.
+    - Bengal Operators: NBSTC (Govt of WB), SBSTC & WBTC, Shyamoli Paribahan, Royal Cruiser, Greenline Travels.
+    - Conductor Route Advice callout card with scenic tips.
+  - **Perforated Ticket Cards (`TicketCard.tsx`)**:
+    - Authentic boarding pass styling with semicircular notches (`ticket-notch-top`, `ticket-notch-bottom`) and dashed perforation divider.
+    - Real-time schedule timeline with on-time performance badges and amenity pills.
+    - Interactive **Inline Sleeper Berth Selector**:
+      - Expandable lower & upper deck diagrams with Driver position indicator.
+      - Full interactive seat selection: Available, Ladies Only (`♀`), Selected (`✓`), Booked (`disabled`).
+      - Selected berth checkout strip with total payable calculation and "Continue Booking" CTA.
+  - **7-Minute OneGoHold™ Seat Protection Guarantee**:
+    - Real-time countdown timer dialog (`SeatHoldModal.tsx`) enforcing DPDP 2025 compliance and instant seat holding.
+    - Persistent bottom toast confirming reserved berth status with pulsing indicator.
+  - **Trust Strip**:
+    - 3 light cards highlighting 100% Safe Journey & GPS, Verified Bengal RTC & Fleets, and 15-Min Instant UPI Refunds.
+- **Verification**:
+  - `npm run build`: Bundled in 278ms across 20 chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings across the entire repository.
+
+
+## Phase 12 - Seat Selection Modal (Desktop & Mobile Light Mode) & OneGoHold™ (2026-11-18)
+- **Objective**: Implement the dedicated full-screen / responsive sheet Seat Selection Modal based on Stitch project `9772835342865580419`:
+  - **Desktop Screen**: `projects/9772835342865580419/screens/13a355a4fb44436b8b133a2b76e1f65d` ("OneGoBus - Seat Selection Modal (Desktop Light)")
+  - **Mobile Screen**: `projects/9772835342865580419/screens/dce2b070c6034041b93a50314ff81778` ("OneGoBus - Seat Selection Modal (Mobile Light)")
+- **Animation Architecture**:
+  - Engineered hardware-accelerated CSS spring animations (`cubic-bezier(0.16, 1, 0.3, 1)`) matching Framer Motion's physics-based fluid spring feel:
+    - `.animate-modal-backdrop`: Smooth fade-in overlay with backdrop blur.
+    - `.animate-modal-scale`: Smooth scale-up (0.95 ➔ 1.0) and ease-out for desktop dialog.
+    - `.animate-sheet-up`: Mobile bottom-sheet upward slide (`translate-y-full` ➔ `translate-y-0`).
+  - Zero bundle overhead and strict adherence to the project's pinned dependency guidelines.
+- **Component Architecture (`frontend/src/features/results/SeatSelectionModal.tsx`)**:
+  - **Modal Header**:
+    - Route display (`Kolkata ➔ Siliguri`) with "Direct AC" badge, journey date, passenger counter, and vehicle class.
+    - Pulsing "Instant Seat Confirmation" badge and live 7-minute countdown lock timer (`Locking 07m 00s`).
+  - **Step Indicator Tabs**:
+    - Step 1: Active "Select Seats" with teal badge and border indicator.
+    - Step 2: "Board/Drop Point".
+    - Step 3: "Passenger Details".
+  - **Dual-Deck Layout & Selectors**:
+    - Mobile deck switcher pill: toggle between Lower Deck and Upper Deck with seat count indicators.
+    - Lower Deck (10 rows, 2+1 layout, ₹300/seat): Executive seating with steering wheel / driver cabin indicator.
+    - Upper Deck (8 rows, 2+1 layout, ₹460–₹510/berth): Panoramic capsule sleeper berths with extra privacy curtains.
+    - Interactive seat states: Available (white), Selected (`#FC7728` with `✓`), Ladies Only (`pink-100` with `♀`), and Booked (`#E4E2DE` with disabled state).
+    - Seat Legend explaining each seat category and icon.
+  - **Right Info Column (Operator & Route Intelligence)**:
+    - Operator Profile: Avatar, verified badge, rating (4.8 ★), reviews count.
+    - Visual Gallery: 3 high-resolution vehicle photos (Fleet exterior, Luxury cabin, Sanitized berths).
+    - 6 Quick Highlight Badges: On-Time Record, USB Charging, Free 5G WiFi, Emergency SOS, Clean Linens, Air Suspension.
+    - Interactive Policy Tabs: Highlights, Cancellation, Reschedule, Boarding Points.
+    - OneGoBus AI Trip Intelligence callout detailing rest stops, dinner halt at NH-12 Shaktigarh, and traffic advisories.
+  - **Sticky Bottom Checkout Bar**:
+    - Live selected seat chips with deck indicator (`L3 (lower)`, `U2 (upper)`), price badge, and 1-click removal (`✕`).
+    - Dynamic total payable fare calculation with inclusive tax notice and 7-minute lock status.
+    - Primary CTA: "Book Seat" button with hover transitions and active micro-scaling.
+- **Booking Staging & Confirmation**:
+  - Connected `TicketCard.tsx` "View Seats" action directly to `SeatSelectionModal`.
+  - Added OneGoHold™ staging modal in `ResultsPage.tsx`: locks selected seats in memory for 7 minutes and presents DPDP 2025 compliant privacy assurance before transitioning to Passenger Details.
+- **Verification**:
+  - `npm run build`: Bundled in 324ms with 0 errors across 20 lazy-loaded chunks.
+  - `npm run lint`: 0 errors, 0 warnings.
+
+
+## Phase 13 - OneGo Bus 3D Seat Status Specifications & Asset Integration (2026-11-18)
+- **Objective**: Replace standard seat squares and boxes across Lower and Upper Decks with high-quality 3D illustrated seat PNG assets, integrating the user-specified 5-tier seat status and color specifications:
+  1. **Available**: Outline `#16834A`, Highlight `#27AE60`, Background `#F0FBF4` (`General_Seat_Available.png`). Clickable to select.
+  2. **Selected**: Outline `#0B4DBB`, Highlight `#2563EB`, Background `#EAF3FF` (`General_Seat_Selected.png`). Active user choice with spring pop animation.
+  3. **Booked**: Outline `#B94B53`, Highlight `#D96A70`, Background `#FCEEEF` (`General_Seat_Booked.png`). Pre-booked and non-selectable.
+  4. **Unavailable**: Outline `#B8BDC5`, Highlight `#A8AFB9`, Background `#F1F2F4` (`General_Seat_Unavailable.png`). Operator blocked or disabled.
+  5. **Women Reserved**: Outline `#C55473`, Highlight `#E87999`, Background `#FFF0F5` (`General_Seat_Women.png`). Reserved exclusively for female commuters.
+  6. **OneGo Brand General**: Outline `#0B2341`, Highlight `#FC7728`, Background `#FFF8F1` (`General_Seat.png`).
+- **CSS Architecture (`frontend/src/index.css`)**:
+  - Added `:root` custom CSS variables:
+    - `--seat-available`, `--seat-available-highlight`, `--seat-available-bg`
+    - `--seat-selected`, `--seat-selected-highlight`, `--seat-selected-bg`
+    - `--seat-booked`, `--seat-booked-highlight`, `--seat-booked-bg`
+    - `--seat-unavailable`, `--seat-unavailable-highlight`, `--seat-unavailable-bg`
+    - `--seat-women`, `--seat-women-highlight`, `--seat-women-bg`
+    - `--brand-navy`, `--brand-orange`, `--page-background`
+  - Added micro-animations:
+    - `@keyframes seatPop`: Scale 0.92 ➔ 1.08 ➔ 1.0 (`animate-seat-pop`) on selection toggle.
+    - `@keyframes seatSelectedPulse`: Subtle dual-ring glow (`seat-selected-pulse`) on active user seats.
+- **Component Architecture (`frontend/src/components/ui/BusSeat.tsx`)**:
+  - Modular, memoized seat component accepting `id`, `status`, `deck`, `price`, `isSleeper`, `size`, `onClick`, `showPrice`, and `showBadge`.
+  - Realistic orthographic 3D armchair display with centered seat ID on the cushion, status micro-badge (e.g. `✓`, `♀`, `✕`, `—`), and dynamic price label.
+  - Full support for Upper Deck sleeper capsules with berth indicator pillows and sleeper frames.
+- **Modal & Ticket Integration**:
+  - **`SeatSelectionModal.tsx`**:
+    - Replaced the seat legend with an interactive 5-card status guide displaying the real PNG seat miniatures, official status titles, price tiers, and hover descriptions.
+    - Lower Deck (10 rows): Updated to render `<BusSeat deck="lower" size="md" />` with realistic aisle spacing.
+    - Upper Deck (8 rows): Updated to render `<BusSeat deck="upper" isSleeper={true} size="md" />` with berth capsule frames.
+    - Sticky bottom bar: Selected seat chips updated to blue `#0B4DBB` / `#EAF3FF` with the `General_Seat_Selected.png` icon.
+  - **`TicketCard.tsx`**:
+    - Updated inline seat selection preview drawer to render `<BusSeat size="sm" />` across lower and upper decks.
+- **Verification**:
+  - `npm run build`: Bundled in 335ms across 20 chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings.
+
+
+## Phase 14 - MacBook Full-Screen Modal Scaling & Seat Cushion Overlap Fix (2026-11-18)
+- **Objective**: Address user feedback on MacBook/laptop screen responsiveness:
+  1. Expand modal to cover ~90–95% of the screen (similar to redBus / modern travel apps).
+  2. Increase seat dimensions and eliminate letter overlap inside seat cushions.
+  3. Redesign seat numbering to standard sequential bus seat nomenclature.
+  4. Elevate aisle corridor and sleeper berth layouts for a premium, light-mode feel.
+- **Root Cause Analysis**:
+  - **Small Modal & Narrow Decks**: Modal was capped at `max-w-[1240px]` with 7-column allocation for the seat map. Inside each deck column, only ~300px was available, causing seats to shrink to 40px–50px.
+  - **Letter Overlapping**: Test IDs included 4-character strings with underscores (e.g. `L_B1`, `U_B2`), causing text to collide with the seat armrests and backrest boundaries.
+- **Architectural Enhancements**:
+  - **RedBus-Style 95% Viewport Window (`SeatSelectionModal.tsx`)**:
+    - Changed modal dimensions to `w-full sm:w-[96vw] max-w-[1680px] h-full sm:h-[94vh] max-h-[980px]`.
+    - Reduced backdrop padding to `p-0 sm:p-2 md:p-3 xl:p-4`, maximizing interactive canvas on 13", 14", and 16" MacBooks.
+    - Expanded grid distribution: `lg:col-span-7 xl:col-span-8 2xl:col-span-8` for the interactive seat map, and `lg:col-span-5 xl:col-span-4 2xl:col-span-4` for operator intelligence.
+  - **Sequential Bus Seat Numbering**:
+    - Lower Deck (10 Rows × 3 Seats = 30 Seats): Sequential IDs `L1` through `L30` (with realistic booked, unavailable, and ladies-reserved distributions).
+    - Upper Deck (8 Rows × 3 Berths = 24 Berths): Sequential IDs `U1` through `U24`.
+    - Default selected recommendation updated to `L7` (lower deck window seat).
+  - **High-Resolution Scaled Seats & Zero Overlap (`BusSeat.tsx`)**:
+    - Scaled cushion size: `md: w-14 h-14 sm:w-16 sm:h-16 md:w-[70px] md:h-[70px] xl:w-[74px] xl:h-[74px]`.
+    - Tile widths: Regular seater `w-[74px] sm:w-[84px] md:w-[94px] xl:w-[98px]`; Sleeper berth `w-[78px] sm:w-[90px] md:w-[102px] xl:w-[110px] min-h-[118px] sm:min-h-[128px] md:min-h-[136px] xl:min-h-[142px]`.
+    - Cushion typography: Positioned with `pt-2 sm:pt-2.5` down in the cushion basin with `font-black text-xs sm:text-sm md:text-[14px] xl:text-[15px]`, ensuring zero overlap with armrests or backrest borders.
+    - Outer status badges (`✓`, `♀`, `✕`, `—`) anchored at `-top-1 -right-1`.
+  - **Authentic Walkway Aisle Corridor**:
+    - Replaced basic `| |` spacers with dedicated vertical aisle corridors featuring dashed side borders (`border-x border-dashed border-slate-200/90`), subtle shading (`bg-slate-50/40`), and vertical orientation-aware `AISLE` markers.
+- **Verification**:
+  - `npm run build`: Bundled in 321ms with 0 errors across 20 chunks.
+  - `npm run lint`: 0 errors, 0 warnings across the codebase.
+
+
+## Phase 15 - Modal Unified Scrolling & Clean Cushion Surface (Selected-Only Numbering) (2026-11-18)
+- **Objective**:
+  1. Remove seat numbers from unselected seats to eliminate visual noise and preserve clean 3D chair artwork; show seat numbers exclusively on selected seats.
+  2. Remove individual nested scrollbars from Lower Deck and Upper Deck, making the entire modal scroll smoothly as a unified page container (Redbus-style).
+  3. Eliminate horizontal and vertical scrolling in the Upper Deck by resizing sleeper berths, tuning column allocations (`lg:col-span-8` / `lg:col-span-4`), and adjusting aisle width so all 3 seats fit comfortably without edge clipping.
+- **Architectural & Design Changes**:
+  - **Selected-Only Cushion Numbering (`BusSeat.tsx`)**:
+    - Unselected seats (Available, Booked, Unavailable, Women Reserved) now display the pristine 3D armchair graphic without text overlays.
+    - When a seat is selected (`isSelected === true`), the seat ID (e.g. `L7`, `U4`) is rendered dynamically in bold brand blue (`#0B4DBB`) with pop animation (`animate-seat-pop`) directly inside the cushion basin.
+    - Hover accessibility (`title` and `aria-label`) remains fully preserved.
+  - **Unified Modal Scrolling (`SeatSelectionModal.tsx`)**:
+    - Completely removed inner `max-h-[560px] overflow-y-auto` from both Lower Deck and Upper Deck containers.
+    - Both deck cards expand naturally to their full 10-row and 8-row heights with `overflow-hidden`.
+    - The full modal body (`flex-1 overflow-y-auto`) handles scrolling uniformly with sticky header and sticky checkout bar.
+  - **Upper Deck Sizing & Zero Horizontal Overflow**:
+    - Tuned sleeper capsule frame width to `w-[68px] sm:w-[74px] md:w-[80px] lg:w-[86px] xl:w-[90px]`, regular seater to `w-[64px] sm:w-[70px] md:w-[76px] lg:w-[80px] xl:w-[84px]`.
+    - Sized walkway aisle to `w-6 sm:w-7 md:w-8` with vertical `AISLE` marker.
+    - Total row width (~256px–280px) fits inside the deck card (~360px–460px) with 50px–100px of breathing margin, completely preventing horizontal clipping and scrollbars.
+- **Verification**:
+  - `npm run build`: Bundled in 291ms across 20 chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings.
+
+
+## Phase 16 - Minimal Clean Seat Selection Modal Redesign (2026-11-19)
+- **Objective**: Completely transform the Seat Selection Modal to match the user's uploaded clean reference design (`media_1795026707961_d4c5fc5d.jpg`), removing clunky/messy visual elements and achieving pixel-perfect alignment.
+- **Architectural & Design Enhancements**:
+  - **Clean Header**:
+    - Replaced cluttered badges with a sleek, minimalist bar: `Kolkata ➔ Siliguri`, `Wed, 18 Nov • 1 passenger`, and a single amber countdown pill (`🔒 Locking 06m 35s`).
+  - **Refined 3-Step Navigation**:
+    - Step 1: Active `(1) Select seats` with solid orange circle (`#FC7728`), bold title, and bottom active indicator line.
+    - Steps 2 & 3: Clean muted `›` chevrons leading to `(2) Boarding & dropping` and `(3) Passenger details`.
+  - **Left Container (Deck & Seats Canvas)**:
+    - **Single-Row Status Legend**: 5 clean, compact status pills (`Available`, `Selected`, `Booked`, `Unavailable`, `Women reserved`) in a single horizontal strip.
+    - **Lower Deck Sub-Card**: Clean header with `Lower deck`, `Executive Seater (2+1) • 10 Rows • 30 Seats`, and a minimalist `Driver` badge with steering wheel icon. 10 complete rows with 3D armchair graphics, centered `AISLE` text, and clean price tags below.
+    - **Upper Deck Sub-Card**: `Upper deck`, `Full Capsule Sleeper (2+1) • 8 Rows • 24 Berths`. 8 complete rows of sleeper capsules with colored top pillow bars, 3D chairs, clean prices (`₹460`, `₹510`), and zero text clutter inside the cushion.
+    - **No Inner Scrollbars**: Both decks expand fully to their natural heights without nested scrollbars.
+  - **Right Container (Operator, Route & Amenities)**:
+    - **Operator Title**: Bold uppercase `GREENLINE TRAVELS`, subtitle `Scania AC Multi-Axle Sleeper`, and solid emerald rating badge `★ 4.8`.
+    - **Schedule Timeline**: Clean modern station-to-station timeline with `22:00 Kolkata ── 11h • Direct ➔ ── 09:00 Siliguri`.
+    - **Bus Photo Gallery**: 3 real luxury coach photos side-by-side in a responsive 3-column grid (`aspect-[4/3]`).
+    - **Tab Navigation**: Minimal horizontal tabs (`Highlights`, `Cancellation`, `Reschedule`, `Boarding points`) with orange active indicator.
+    - **Highlights 2x2 Grid**: Exactly 4 clean amenity cards: 🚌 `Premium AC bus`, 🍽️ `Complimentary breakfast`, 🚻 `Onboard washroom`, 👩 `Women-friendly`.
+  - **Minimal Sticky Checkout Footer**:
+    - Left: Single clean summary text: `1 seat selected • L7` (or `2 seats selected • L7, U4`).
+    - Right: Dynamic `Total ₹300` and primary action button `Continue to boarding ➔`.
+- **Verification**:
+  - `npm run build`: Bundled cleanly in 304ms across 20 chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings across the codebase.
+
+
+## Phase 17 - Driver Steering Wheel Icon Bug Fix & Header Text Alignment (2026-11-19)
+- **Bug Analysis**:
+  - In `SeatSelectionModal.tsx`, the Driver badge used `<span className="material-symbols-outlined">sports_steering_wheel</span>`. Because `sports_steering_wheel` is not supported in Google Material Symbols, the font failed to render an icon and fell back to displaying raw ligature text (`_STEERING_WHEEL`).
+  - This lengthy unspaced string broke the flexbox container, squeezing the left title container and wrapping "Lower deck" into multiple fragmented lines.
+- **Fixes Applied**:
+  - Replaced the ligature font with a crisp, standalone inline SVG steering wheel (`<svg viewBox="0 0 24 24">` with wheel circle, hub, and spokes).
+  - Also replaced the modal close button and timer lock icon with clean, zero-delay vector SVGs, completely eliminating any external webfont ligature fallbacks.
+  - Added `shrink-0` to the Driver badge and `min-w-0` with `leading-tight` to the title block, guaranteeing that "Lower deck" and its subtitle render on a single, clean line with proper spacing.
+- **Verification**:
+  - `npm run build`: Bundled cleanly in 274ms across 20 chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings across the repository.
