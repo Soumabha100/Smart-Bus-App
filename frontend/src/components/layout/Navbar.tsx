@@ -1,120 +1,140 @@
-import React from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { tokenStorage } from '../../utils/tokenStorage';
+import { useState, useEffect, useRef, type FC } from 'react';
+import { NavLink, Link } from 'react-router-dom';
+import { Sparkles, Menu } from 'lucide-react';
+import { MobileMenu } from './MobileMenu';
 
-export const Navbar: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const user = tokenStorage.getUser();
-  const isAuthenticated = tokenStorage.isAuthenticated();
+export const Navbar: FC = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
 
-  const handleLogout = () => {
-    tokenStorage.clear();
-    navigate('/login');
-  };
+  // Guarantee strict light mode and clear any stale dark preferences
+  useEffect(() => {
+    document.documentElement.classList.remove('dark');
+    localStorage.removeItem('onego_theme');
+  }, []);
 
-  const navLinks = [
-    { label: 'Explore Routes', path: '/home' },
-    { label: 'Find Buses', path: '/results' },
-    { label: 'System Health', path: '/system-status' },
+  // Passive scroll listener: toggles data-scrolled without React re-renders
+  useEffect(() => {
+    const handleScroll = () => {
+      if (headerRef.current) {
+        headerRef.current.dataset.scrolled = window.scrollY > 8 ? 'true' : 'false';
+      }
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const desktopLinks = [
+    { label: 'Home', to: '/' },
+    { label: 'Features', to: '/features' },
+    { label: 'How it Works', to: '/how-it-works' },
+    { label: 'Routes', to: '/routes' },
+    { label: 'Ask AI', to: '/ask-ai', isAi: true },
+    { label: 'About', to: '/about' },
   ];
 
   return (
-    <header className="w-full sticky top-0 z-50 bg-[#0B1220]/85 backdrop-blur-xl border-b border-white/10 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        {/* Left: Brand Logo & Navigation */}
-        <div className="flex items-center gap-8 lg:gap-12">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FF7A59] to-[#2DD4BF] p-0.5 shadow-[0_0_16px_rgba(255,122,89,0.35)] group-hover:scale-105 transition-transform flex items-center justify-center">
-              <div className="w-full h-full bg-[#0B1220] rounded-[14px] flex items-center justify-center">
-                <span className="material-symbols-outlined text-[22px] text-[#FF7A59]">
-                  directions_bus
-                </span>
-              </div>
+    <>
+      <header
+        ref={headerRef}
+        data-scrolled="false"
+        className="fixed top-3 inset-x-0 mx-auto w-[calc(100%-1.5rem)] max-w-6xl rounded-2xl z-50 glass transition-all duration-200"
+      >
+        <nav
+          aria-label="Primary"
+          className="h-14 sm:h-16 px-3.5 sm:px-5 flex items-center justify-between gap-3"
+        >
+          {/* LEFT: BRAND LOGO */}
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-xl p-1"
+          >
+            {/* Numeral 1 + Speed Bus Hybrid Icon */}
+            <div className="w-9 h-9 rounded-xl bg-brand text-on-brand flex items-center justify-center shadow-xs transition-transform duration-200 group-hover:scale-105 shrink-0">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-5 h-5 text-white"
+                aria-hidden="true"
+              >
+                {/* Stylized '1' stem + bus body */}
+                <path d="M4 17V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v11" />
+                <path d="M4 10h12" />
+                <path d="M16 8l3 2v7h-3" />
+                <circle cx="7" cy="18" r="1.5" />
+                <circle cx="15" cy="18" r="1.5" />
+              </svg>
             </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="font-sora text-xl font-bold tracking-tight text-white">
-                  Roamly
-                </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#2DD4BF] animate-pulse" />
-              </div>
-              <span className="text-[11px] font-inter text-[#DFC0B8] tracking-wider uppercase font-medium">
-                The Journey Line
-              </span>
-            </div>
+            <span className="font-sans text-lg sm:text-xl font-extrabold tracking-tight text-ink-strong">
+              One<span className="text-accent-bright">Go</span>Bus
+            </span>
           </Link>
 
-          {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-1 lg:gap-2">
-            {navLinks.map((link) => {
-              const isActive = location.pathname === link.path;
-              return (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`px-4 py-2 rounded-full font-inter text-xs font-semibold tracking-wide transition-all ${
+          {/* CENTRE: DESKTOP NAV LINKS */}
+          <div className="hidden md:flex items-center gap-1">
+            {desktopLinks.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) =>
+                  `px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                     isActive
-                      ? 'bg-white/10 text-[#2DD4BF] border border-[#2DD4BF]/30 shadow-[0_0_12px_rgba(45,212,191,0.2)]'
-                      : 'text-gray-300 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Right: Actions & User Profile */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          {isAuthenticated ? (
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex flex-col text-right">
-                <span className="font-sora text-xs font-semibold text-white">
-                  {user?.name || 'Traveler'}
-                </span>
-                <span className="text-[10px] text-gray-400 truncate max-w-[150px]">
-                  {user?.email || 'wanderer@roamly.journal'}
-                </span>
-              </div>
-
-              {/* Avatar */}
-              <div className="w-10 h-10 rounded-full bg-[#19202E] border border-white/15 flex items-center justify-center font-sora font-bold text-sm text-[#FF7A59] shadow-md ring-2 ring-[#2DD4BF]/20">
-                {user?.name ? user.name.charAt(0).toUpperCase() : 'R'}
-              </div>
-
-              {/* Sign Out Button */}
-              <button
-                type="button"
-                onClick={handleLogout}
-                title="Sign Out"
-                className="h-10 px-3.5 rounded-full bg-white/5 border border-white/10 hover:bg-rose-500/10 hover:border-rose-500/30 hover:text-rose-400 text-gray-300 font-inter text-xs font-medium transition-all flex items-center gap-1.5"
+                      ? 'bg-brand text-on-brand shadow-xs font-bold'
+                      : link.isAi
+                      ? 'text-accent font-bold bg-accent-tint/70 hover:bg-accent-tint border border-accent/25'
+                      : 'text-ink-strong/85 hover:text-ink-strong hover:bg-surface-2'
+                  }`
+                }
               >
-                <span className="material-symbols-outlined text-[16px]">logout</span>
-                <span className="hidden sm:inline">Sign Out</span>
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 sm:gap-3">
+                {link.isAi && <Sparkles className="w-3.5 h-3.5 text-accent-bright" />}
+                <span>{link.label}</span>
+              </NavLink>
+            ))}
+          </div>
+
+          {/* RIGHT: AUTH CTAs */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Desktop Auth Links */}
+            <div className="hidden sm:flex items-center gap-2">
               <Link
                 to="/login"
-                className="h-10 px-4 sm:px-5 rounded-full bg-transparent hover:bg-white/5 text-gray-200 hover:text-white font-inter text-xs font-semibold transition-all flex items-center"
+                className="px-3.5 py-2 text-xs sm:text-sm font-semibold text-brand hover:bg-surface-2 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 Sign In
               </Link>
               <Link
                 to="/register"
-                className="h-10 px-5 rounded-full bg-[#FF7A59] hover:bg-[#E06547] text-white font-sora text-xs font-semibold transition-all shadow-[0_4px_16px_rgba(255,122,89,0.35)] flex items-center gap-1.5"
+                className="px-4 py-2 text-xs sm:text-sm font-bold bg-brand hover:bg-brand-hover text-on-brand rounded-xl shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
-                <span>Start Journey</span>
-                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                Register
               </Link>
             </div>
-          )}
-        </div>
-      </div>
-    </header>
+
+            {/* Mobile Hamburger Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation"
+              aria-label="Open navigation menu"
+              className="md:hidden w-11 h-11 rounded-xl flex items-center justify-center text-ink-strong hover:bg-surface-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              <Menu className="w-5 h-5 text-ink-strong" />
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      {/* Mobile Drawer */}
+      <MobileMenu
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+      />
+    </>
   );
 };
-

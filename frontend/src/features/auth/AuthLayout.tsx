@@ -17,51 +17,36 @@ export const AuthLayout: FC<AuthLayoutProps> = ({
   subtitle,
 }) => {
   return (
-    <div className="relative min-h-screen w-full flex flex-col justify-between overflow-x-hidden antialiased selection:bg-accent-tint selection:text-on-accent-tint">
-      {/* 1. FIXED VIEWPORT BACKGROUND: Locked to 100vw x 100vh so it NEVER stretches between pages */}
-      <div className="fixed inset-0 -z-10 w-screen h-screen overflow-hidden pointer-events-none select-none">
+    <div className="relative min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-5rem)] w-full flex flex-col justify-between overflow-x-hidden antialiased selection:bg-accent-tint selection:text-on-accent-tint">
+      {/* 1. FIXED VIEWPORT BACKGROUND: Locked to 100vw x 100vh so it NEVER stretches between pages.
+          z-0 ensures it renders above body canvas background, while content at z-10 renders crisply on top */}
+      <div className="fixed inset-0 z-0 w-screen h-screen overflow-hidden pointer-events-none select-none">
         <img
           src={loginHeroBg}
           alt="West Bengal Heritage Travel Backdrop"
           aria-hidden="true"
           className="w-full h-full object-cover object-bottom"
         />
-        {/* Soft responsive ambient scrim on small mobile (<1024px) */}
+        {/* Soft responsive ambient scrim on small mobile (<1024px) for readability */}
         <div className="absolute inset-0 bg-canvas/30 lg:bg-transparent backdrop-blur-[1px] lg:backdrop-blur-none" />
       </div>
 
-      {/* 2. TOP FLOATING NAVIGATION BAR */}
-      <header className="relative z-10 w-full py-3 px-6 sm:px-10 max-w-7xl mx-auto flex items-center justify-between shrink-0">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-surface/85 backdrop-blur-md border border-white/80 text-xs font-semibold text-ink-strong hover:bg-surface shadow-xs transition-all"
-        >
-          <span className="material-symbols-outlined text-[18px] text-accent">arrow_back</span>
-          <span>Back to Home</span>
-        </Link>
-
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface/85 backdrop-blur-md border border-white/80 shadow-xs text-xs font-medium text-ink-strong">
-          <span className="w-2 h-2 rounded-full bg-success animate-pulse" aria-hidden="true" />
-          <span>DPDP 2025 Certified</span>
-        </div>
-      </header>
-
-      {/* 3. MAIN ARENA (TWO-LAYOUT DESIGN: Sky Capsule Narrative + Floating Auth Form) */}
-      {/* Fixed top-alignment (justify-start) guarantees zero jumping or vertical layout shifts when toggling tabs or opening fields */}
-      <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-10 flex flex-col justify-start pt-2 sm:pt-4 lg:pt-6 pb-4">
+      {/* 2. MAIN ARENA (TWO-LAYOUT DESIGN: Sky Capsule Narrative + Floating Auth Form) */}
+      {/* Fixed top-alignment (justify-start) guarantees zero jumping or vertical layout shifts */}
+      <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-10 flex flex-col justify-start pt-2 sm:pt-4 pb-4">
         <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           {/* Left Column: Compact Floating Sky Glass Pod (Docked in the open sky zone, shifted rightwards away from the tree) */}
           <div className="lg:col-span-6 xl:col-span-7 flex flex-col justify-start items-start self-start pt-1 lg:pt-2 lg:pl-10 xl:pl-16">
-            <div className="w-full max-w-[390px] bg-surface/75 backdrop-blur-md border border-white/85 shadow-[0_10px_30px_rgba(0,13,33,0.06)] ring-1 ring-white/60 rounded-2xl p-4 sm:p-5">
+            <div className="w-full max-w-[390px] bg-surface/80 backdrop-blur-md border border-white/85 shadow-[0_10px_30px_rgba(0,13,33,0.06)] ring-1 ring-white/60 rounded-2xl p-4 sm:p-5">
               {/* Brand Header */}
               <div className="flex items-center justify-between pb-2.5 border-b border-line/25">
                 <Link to="/" className="inline-block focus:outline-none">
                   <Logo size="sm" variant="bus" />
                 </Link>
 
-                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-accent-tint/80 border border-accent/20 text-[11px] font-bold text-on-accent-tint">
-                  <span className="material-symbols-outlined text-[13px] text-accent">flare</span>
-                  <span>Heritage Express</span>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-accent-tint/80 border border-accent/20 text-[11px] font-bold text-on-accent-tint">
+                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" aria-hidden="true" />
+                  <span>DPDP 2025 Certified</span>
                 </div>
               </div>
 
@@ -93,7 +78,7 @@ export const AuthLayout: FC<AuthLayoutProps> = ({
 
           {/* Right Column: Floating iOS Frosted Glass Form Card */}
           <div className="lg:col-span-6 xl:col-span-5 flex justify-center lg:justify-end xl:justify-center self-start">
-            <div className="w-full max-w-[430px] bg-surface/85 backdrop-blur-xl border border-white/70 shadow-[0_20px_50px_rgba(0,13,33,0.12)] rounded-3xl p-5 sm:p-7 max-h-[calc(100vh-90px)] overflow-y-auto">
+            <div className="w-full max-w-[430px] bg-surface/90 backdrop-blur-xl border border-white/70 shadow-[0_20px_50px_rgba(0,13,33,0.12)] rounded-3xl p-5 sm:p-7 max-h-[calc(100vh-120px)] overflow-y-auto">
               {/* Segmented Sign In / Sign Up Switcher */}
               <div className="flex p-1 bg-surface-2/80 rounded-xl mb-4 border border-line/50" role="tablist">
                 <Link
@@ -142,9 +127,26 @@ export const AuthLayout: FC<AuthLayoutProps> = ({
         </div>
       </main>
 
-      {/* 4. FOOTER */}
-      <footer className="relative z-10 w-full py-2.5 px-6 text-center text-[11px] font-medium text-ink-strong/70 shrink-0">
-        <span>&copy; {new Date().getFullYear()} One Go Bus &bull; West Bengal AI Smart Bus Booking Platform</span>
+      {/* 3. SLEEK RETAIL/TRANSIT MICRO-FOOTER: Anchored over the road, zero scrolling required */}
+      <footer className="relative z-10 w-full py-2.5 sm:py-3 px-4 text-center shrink-0">
+        <p className="text-[11px] sm:text-xs text-ink-strong/80 font-medium flex items-center justify-center flex-wrap gap-x-2 gap-y-1">
+          <span>&copy; {new Date().getFullYear()} OneGoBus</span>
+          <span className="opacity-40">&bull;</span>
+          <span>West Bengal AI Smart Bus Booking Platform</span>
+          <span className="opacity-40">&bull;</span>
+          <Link to="/privacy" className="hover:text-accent transition-colors hover:underline">
+            Privacy
+          </Link>
+          <span className="opacity-40">&bull;</span>
+          <Link to="/terms" className="hover:text-accent transition-colors hover:underline">
+            Terms
+          </Link>
+          <span className="opacity-40">&bull;</span>
+          <span className="inline-flex items-center gap-1 text-ink-muted">
+            <span className="w-1.5 h-1.5 rounded-full bg-success" />
+            DPDP 2025 Compliant
+          </span>
+        </p>
       </footer>
     </div>
   );

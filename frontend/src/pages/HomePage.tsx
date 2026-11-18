@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { tokenStorage } from '../utils/tokenStorage';
 import heroBg from '../assets/hero_bussathi_compact.webp';
 import exploreBus from '../assets/explore_bus.webp';
 import exploreVoucher from '../assets/explore_voucher.webp';
@@ -51,7 +50,6 @@ const DAY_NAMES_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const user = tokenStorage.getUser();
 
   // ─────────────────────────────────────────────────────────────
   // 1. SEARCH FORM STATES
@@ -96,8 +94,6 @@ export const HomePage: React.FC = () => {
   ]);
   const [copilotInput, setCopilotInput] = useState('');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   // Refs for click outside
@@ -105,7 +101,6 @@ export const HomePage: React.FC = () => {
   const toContainerRef = useRef<HTMLDivElement>(null);
   const dateContainerRef = useRef<HTMLDivElement>(null);
   const timeContainerRef = useRef<HTMLDivElement>(null);
-  const profileMenuRef = useRef<HTMLDivElement>(null);
   const chatStreamRef = useRef<HTMLDivElement>(null);
   const searchSectionRef = useRef<HTMLDivElement>(null);
 
@@ -124,9 +119,6 @@ export const HomePage: React.FC = () => {
       }
       if (timeContainerRef.current && !timeContainerRef.current.contains(target)) {
         setTimeDropdownOpen(false);
-      }
-      if (profileMenuRef.current && !profileMenuRef.current.contains(target)) {
-        setProfileMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -282,11 +274,6 @@ export const HomePage: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
-    tokenStorage.clear();
-    navigate('/login');
-  };
-
   // Calendar Day Grid Computation
   const firstDayOfWeek = new Date(displayedYear, displayedMonth, 1).getDay();
   const daysInCurrentMonth = new Date(displayedYear, displayedMonth + 1, 0).getDate();
@@ -310,249 +297,11 @@ export const HomePage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#F9F9FF] font-['Plus_Jakarta_Sans',sans-serif] text-[#001B3E] antialiased flex flex-col">
-      {/* ==========================================
-          HEADER (FLOATING PILL NAVBAR, max-w-[1520px])
-          ========================================== */}
-      <header className="sticky top-1 sm:top-2 z-40 w-full px-3 sm:px-[22px]">
-        <div className="max-w-[1520px] mx-auto h-[50px] sm:h-[54px] lg:h-[58px] rounded-full bg-[#FCFEFF]/95 backdrop-blur-[18px] border border-[#CEDDF3] shadow-[0_4px_20px_rgba(11,61,146,0.06)] px-3 sm:px-5 lg:px-6 flex items-center justify-between">
-          {/* LEFT: BRAND */}
-          <div className="flex items-center">
-            <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="flex items-center gap-2 group focus:outline-hidden text-left cursor-pointer"
-            >
-              <div className="w-[34px] h-[34px] sm:w-[38px] sm:h-[38px] rounded-[10px] sm:rounded-[12px] bg-[#0B3D92] flex items-center justify-center text-white shadow-xs shrink-0 group-hover:scale-105 transition-transform duration-200">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <rect height="13" rx="3" width="18" x="3" y="6" />
-                  <path d="M3 11h18" />
-                  <circle cx="7" cy="15" fill="#FF7900" r="1.5" stroke="none" />
-                  <circle cx="17" cy="15" fill="#FF7900" r="1.5" stroke="none" />
-                  <path d="M6 19v2" />
-                  <path d="M18 19v2" />
-                </svg>
-              </div>
-              <div className="flex flex-col justify-center leading-none">
-                <span className="text-[20px] sm:text-[22px] font-black tracking-tight leading-none text-[#082E78]">
-                  Bus<span className="text-[#FF7900]">Sathi</span>
-                </span>
-                <span className="text-[9.5px] sm:text-[10px] font-medium text-[#4B6584] tracking-wide mt-0.5">Travel Smart. Pay Less.</span>
-              </div>
-            </button>
-          </div>
-
-          {/* CENTER: DESKTOP NAVIGATION LINKS */}
-          <nav className="hidden lg:flex items-center gap-1.5 xl:gap-2.5">
-            <a
-              href="#home"
-              onClick={(e) => {
-                e.preventDefault();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="h-[34px] sm:h-[36px] px-3.5 rounded-[25px] bg-gradient-to-r from-[#104FBD] to-[#082E78] text-white font-bold text-[13px] sm:text-[13.5px] flex items-center gap-1.5 shadow-sm transition-all duration-200"
-            >
-              <span className="material-symbols-outlined text-[17px]">home</span>
-              <span>Home</span>
-            </a>
-            <a
-              href="#routes"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('popular-journeys')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="text-[#2D3F58] hover:text-[#0B4DBB] font-bold text-[13px] sm:text-[13.5px] px-2.5 py-1 flex items-center gap-1 transition-colors duration-200"
-            >
-              <span className="material-symbols-outlined text-[17px]">explore</span>
-              <span>Routes</span>
-            </a>
-            <a
-              href="#offers"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('student-special')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="text-[#2D3F58] hover:text-[#0B4DBB] font-bold text-[13px] sm:text-[13.5px] px-2.5 py-1 flex items-center gap-1 transition-colors duration-200"
-            >
-              <span className="material-symbols-outlined text-[17px]">local_offer</span>
-              <span>Offers</span>
-            </a>
-            <a
-              href="#bus-pass"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('student-special')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="text-[#2D3F58] hover:text-[#0B4DBB] font-bold text-[13px] sm:text-[13.5px] px-2.5 py-1 flex items-center gap-1 transition-colors duration-200"
-            >
-              <span className="material-symbols-outlined text-[17px]">badge</span>
-              <span>Bus Pass</span>
-            </a>
-            <a
-              href="#faq"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('faq-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="text-[#2D3F58] hover:text-[#0B4DBB] font-bold text-[13px] sm:text-[13.5px] px-2.5 py-1 flex items-center gap-1 transition-colors duration-200"
-            >
-              <span className="material-symbols-outlined text-[17px]">headset_mic</span>
-              <span>Help &amp; Support</span>
-            </a>
-          </nav>
-
-          {/* RIGHT: ACTIONS & USER PROFILE */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Sathi Copilot Trigger Button */}
-            <button
-              type="button"
-              aria-label="Open Sathi Copilot AI Concierge"
-              onClick={() => setCopilotOpen(true)}
-              className="h-[34px] sm:h-[36px] px-3 rounded-full bg-[#082454] hover:bg-[#0C3270] text-white font-bold text-[12.5px] sm:text-[13px] flex items-center gap-1.5 shadow-xs transition-all cursor-pointer select-none"
-            >
-              <span className="text-amber-400 text-xs sm:text-sm">✦</span>
-              <span>Sathi Copilot</span>
-              <span className="bg-[#FF7900] text-white text-[9.5px] font-black px-1.5 py-0.2 rounded-full leading-none">
-                AI
-              </span>
-            </button>
-
-            {/* Notification Bell Button */}
-            <button
-              type="button"
-              aria-label="Notifications"
-              onClick={() => alert('No new notifications right now.')}
-              className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full flex items-center justify-center hover:bg-slate-100 relative transition-colors duration-200 text-[#2D3F58] cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[20px]">notifications</span>
-              <span className="w-1.5 h-1.5 bg-[#FF7900] rounded-full ring-2 ring-white absolute top-1.5 right-1.5" />
-            </button>
-
-            {/* Profile Avatar Button with Dropdown */}
-            <div className="relative" ref={profileMenuRef}>
-              <button
-                type="button"
-                aria-label="My Account Profile"
-                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#EBF3FC] border border-[#CEDDF3] flex items-center justify-center text-[#082E78] hover:border-[#082E78] transition-colors duration-200 cursor-pointer font-bold text-[13px]"
-              >
-                {user?.name ? (
-                  <span>{user.name.charAt(0).toUpperCase()}</span>
-                ) : (
-                  <span className="material-symbols-outlined text-[18px]">person</span>
-                )}
-              </button>
-
-              {profileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-[#D0E4FF] py-2 z-50 animate-in fade-in slide-in-from-top-2">
-                  <div className="px-4 py-2 border-b border-slate-100">
-                    <p className="text-xs text-slate-500">Signed in as</p>
-                    <p className="text-sm font-bold text-[#082E78] truncate">{user?.name || user?.email || 'Commuter'}</p>
-                    <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E3F8F5] text-[#0A5832]">
-                      Verified Rider
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setProfileMenuOpen(false);
-                      navigate('/results');
-                    }}
-                    className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-[#EAF3FF] hover:text-[#082E78] transition-colors"
-                  >
-                    My Bookings
-                  </button>
-                  <button
-                    onClick={() => {
-                      setProfileMenuOpen(false);
-                      setCopilotOpen(true);
-                    }}
-                    className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-[#EAF3FF] hover:text-[#082E78] transition-colors flex items-center justify-between"
-                  >
-                    <span>Sathi Copilot AI</span>
-                    <span className="text-[10px] bg-[#FF7900] text-white px-1.5 py-0.2 rounded font-bold">AI</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setProfileMenuOpen(false);
-                      handleLogout();
-                    }}
-                    className="w-full text-left px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors border-t border-slate-100"
-                  >
-                    Log Out
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Mobile Menu Hamburger (lg:hidden) */}
-            <button
-              type="button"
-              aria-label="Toggle Mobile Menu"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden w-9 h-9 rounded-full flex items-center justify-center hover:bg-slate-100 text-[#082E78] transition-colors duration-200 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[22px]">{mobileMenuOpen ? 'close' : 'menu'}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden mt-2 max-w-[1520px] mx-auto bg-white rounded-2xl border border-[#CEDDF3] px-6 py-4 flex flex-col gap-3 shadow-xl">
-            <a
-              href="#home"
-              onClick={() => setMobileMenuOpen(false)}
-              className="font-bold text-[#082E78] text-base py-1"
-            >
-              Home
-            </a>
-            <a
-              href="#routes"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                document.getElementById('popular-journeys')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="font-medium text-slate-700 text-base py-1 hover:text-[#082E78]"
-            >
-              Routes
-            </a>
-            <a
-              href="#offers"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                document.getElementById('student-special')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="font-medium text-slate-700 text-base py-1 hover:text-[#082E78]"
-            >
-              Offers &amp; Deals
-            </a>
-            <a
-              href="#bus-pass"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                document.getElementById('student-special')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="font-medium text-slate-700 text-base py-1 hover:text-[#082E78]"
-            >
-              Student Bus Pass
-            </a>
-            <a
-              href="#faq"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                document.getElementById('faq-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="font-medium text-slate-700 text-base py-1 hover:text-[#082E78]"
-            >
-              Help &amp; Support
-            </a>
-          </div>
-        )}
-      </header>
-
+    <div className="min-h-screen bg-canvas font-['Plus_Jakarta_Sans',sans-serif] text-ink antialiased flex flex-col">
       {/* ==========================================
           MAIN CONTENT CONTAINER
           ========================================== */}
-      <main className="w-full grow bg-[#F9F9FF]">
+      <main className="w-full grow bg-canvas">
         {/* ==========================================
             SECTION 1: HERO SECTION & KOLKATA BANNER
             ========================================== */}
@@ -1732,130 +1481,6 @@ export const HomePage: React.FC = () => {
           </div>
         </section>
       </main>
-
-      {/* ==========================================
-          FOOTER (DEEP NAVY)
-          ========================================== */}
-      <footer className="w-full bg-[#082E78] text-white">
-        <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-10 pt-12 pb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-10 border-b border-white/10">
-            {/* Col 1 */}
-            <div className="lg:col-span-1 flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center text-white font-bold">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <rect height="13" rx="3" width="18" x="3" y="6" />
-                    <path d="M3 11h18" />
-                    <circle cx="7" cy="15" fill="#FF7900" r="1.5" stroke="none" />
-                    <circle cx="17" cy="15" fill="#FF7900" r="1.5" stroke="none" />
-                  </svg>
-                </div>
-                <span className="text-lg text-white tracking-tight font-bold">BusSathi</span>
-              </div>
-              <p className="text-xs text-[#FF7900] font-semibold">Travel Smart. Pay Less.</p>
-              <p className="text-xs text-blue-100 leading-relaxed">
-                Reliable intercity and suburban smart bus travel across Bengal.
-              </p>
-            </div>
-
-            {/* Col 2 */}
-            <div className="flex flex-col gap-3">
-              <h3 className="text-sm font-bold text-white">Company</h3>
-              <div className="flex flex-col gap-2 text-xs text-blue-100">
-                <a href="#about" className="hover:text-white transition-colors">About Us</a>
-                <a href="#careers" className="hover:text-white transition-colors">Careers</a>
-                <a href="#contact" className="hover:text-white transition-colors">Contact Us</a>
-              </div>
-            </div>
-
-            {/* Col 3 */}
-            <div className="flex flex-col gap-3">
-              <h3 className="text-sm font-bold text-white">Plan Your Trip</h3>
-              <div className="flex flex-col gap-2 text-xs text-blue-100">
-                <a
-                  href="#search"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    searchSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="hover:text-white transition-colors"
-                >
-                  Search Buses
-                </a>
-                <a
-                  href="#routes"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById('popular-journeys')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="hover:text-white transition-colors"
-                >
-                  Popular Routes
-                </a>
-                <a
-                  href="#offers"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById('student-special')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="hover:text-white transition-colors"
-                >
-                  Offers &amp; Deals
-                </a>
-              </div>
-            </div>
-
-            {/* Col 4 */}
-            <div className="flex flex-col gap-3">
-              <h3 className="text-sm font-bold text-white">Help &amp; Support</h3>
-              <div className="flex flex-col gap-2 text-xs text-blue-100">
-                <a
-                  href="#faq"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById('faq-section')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="hover:text-white transition-colors"
-                >
-                  FAQ
-                </a>
-                <a href="#help" className="hover:text-white transition-colors">Booking Help</a>
-                <a href="#support" className="hover:text-white transition-colors">Customer Support</a>
-              </div>
-            </div>
-
-            {/* Col 5 */}
-            <div className="flex flex-col gap-3">
-              <h3 className="text-sm font-bold text-white">Useful Links</h3>
-              <div className="flex flex-col gap-2 text-xs text-blue-100">
-                <a href="#terms" className="hover:text-white transition-colors">Terms &amp; Conditions</a>
-                <a href="#privacy" className="hover:text-white transition-colors">Privacy Policy</a>
-                <a href="#sitemap" className="hover:text-white transition-colors">Sitemap</a>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col md:flex-row items-center justify-between pt-6 gap-4">
-            <p className="text-xs text-blue-100 text-center md:text-left">
-              © 2025 BusSathi Technologies Pvt. Ltd. All rights reserved.
-            </p>
-            <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-full bg-[#001A50] text-white flex items-center justify-center hover:bg-[#2058C5] transition-colors cursor-pointer">
-                <span className="material-symbols-outlined text-[18px]">campaign</span>
-              </span>
-              <span className="w-8 h-8 rounded-full bg-[#001A50] text-white flex items-center justify-center hover:bg-[#2058C5] transition-colors cursor-pointer">
-                <span className="material-symbols-outlined text-[18px]">language</span>
-              </span>
-              <span className="w-8 h-8 rounded-full bg-[#001A50] text-white flex items-center justify-center hover:bg-[#2058C5] transition-colors cursor-pointer">
-                <span className="material-symbols-outlined text-[18px]">alternate_email</span>
-              </span>
-              <span className="w-8 h-8 rounded-full bg-[#001A50] text-white flex items-center justify-center hover:bg-[#2058C5] transition-colors cursor-pointer">
-                <span className="material-symbols-outlined text-[18px]">forum</span>
-              </span>
-            </div>
-          </div>
-        </div>
-      </footer>
 
       {/* ==========================================
           DEDICATED SATHI COPILOT SLIDE-OVER DRAWER (VARIANT 3)

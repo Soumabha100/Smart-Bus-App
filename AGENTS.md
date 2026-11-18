@@ -34,3 +34,21 @@
 - **Propose-Only Tools:** The Spring AI agent may search trips, explain rules, and propose seat holds. It can NEVER charge money or finalize bookings directly. Final booking/payment requires a user-confirmed REST call.
 - **Data Minimization (DPDP Rules 2025):** Never send passenger PII (names, phone numbers, email addresses) to third-party LLMs.
 - **SQL / Prompt Injection Defense:** All user inputs and vector RAG chunks are treated as untrusted data.
+
+---
+
+## 4. OneGoBus Frontend Architecture & UI Guardrails
+- **Official Brand:** **OneGoBus** (all former names — Roamly, BusWise, BusSathi, ApnaBus — are strictly obsolete).
+- **Primary Entry Point:** `frontend/src/pages/HomePage.tsx` mounted at `/`. Old `OnboardingPage.tsx` is completely deprecated and deleted.
+- **Universal Layout (`AppLayout.tsx`):** All application routes are wrapped inside `AppLayout`, providing:
+  - Floating pill glassmorphic `Navbar` (`fixed top-3 inset-x-0 mx-auto w-[calc(100%-1.5rem)] max-w-6xl rounded-2xl z-50`).
+  - Top padding `pt-20` on `<main>` ensuring **Zero Cumulative Layout Shift (CLS = 0)**.
+  - Multi-column responsive glass `Footer` driven by typed config (`footer.config.ts`).
+- **Glassmorphic System (@utility glass):**
+  - Reusable CSS utility defined via Tailwind v4 `@utility glass` in `frontend/src/index.css`.
+  - Configurable CSS variables: `--glass-bg`, `--glass-border`, `--glass-blur`, `--glass-shadow`, `--glass-highlight`, `--glass-fallback-bg`.
+  - Strict Light Mode Architecture: Dark mode is deferred. The application uses the light mode palette exclusively (`--canvas: #FBF9F5`, `--brand: #0B2341`, `--accent: #A04100`, `--accent-bright: #FC7728`, `--ink-strong: #000D21`, `--ink-muted: #44474E`).
+  - Passive scroll state toggling via `data-scrolled="true"` on the DOM node (zero React re-renders).
+- **Performance & Code Splitting:**
+  - All page routes MUST be lazy-loaded using `React.lazy()` and `Suspense`.
+  - No heavy icon fonts or animation libraries — strictly inline SVGs and tree-shaken `lucide-react` icons.

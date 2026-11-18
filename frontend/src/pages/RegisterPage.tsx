@@ -179,3 +179,5 @@ export const RegisterPage: FC = () => {
     </AuthLayout>
   );
 };
+
+export default RegisterPage;

@@ -85,7 +85,7 @@ export const SystemStatusPage: React.FC = () => {
 
         <footer className="mt-6 pt-6 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
           <Link to="/" className="text-emerald-400 hover:underline">
-            Go to Roamly Home →
+            Go to OneGoBus Home →
           </Link>
           <span>Java 25 + Spring Boot 4.1 + React 19</span>
         </footer>
@@ -93,3 +93,5 @@ export const SystemStatusPage: React.FC = () => {
     </div>
   );
 };
+
+export default SystemStatusPage;
