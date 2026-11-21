@@ -1,6 +1,7 @@
 import { useEffect, useRef, type FC } from 'react';
-import { NavLink, Link, useLocation } from 'react-router-dom';
-import { Sparkles, X } from 'lucide-react';
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Sparkles, X, User, LogOut, ShieldCheck } from 'lucide-react';
+import { useAuth } from '../../context/useAuth';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -9,6 +10,8 @@ interface MobileMenuProps {
 
 export const MobileMenu: FC<MobileMenuProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close on route change
@@ -60,6 +63,22 @@ export const MobileMenu: FC<MobileMenuProps> = ({ isOpen, onClose }) => {
     { label: 'About', to: '/about' },
   ];
 
+  const handleLogout = () => {
+    onClose();
+    logout();
+    navigate('/');
+  };
+
+  const initials = user?.name
+    ? user.name
+        .split(' ')
+        .filter(Boolean)
+        .map((part) => part[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    : 'U';
+
   return (
     <div
       id="mobile-navigation"
@@ -76,12 +95,43 @@ export const MobileMenu: FC<MobileMenuProps> = ({ isOpen, onClose }) => {
         <button
           type="button"
           onClick={onClose}
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-ink-strong hover:bg-surface-2 transition-colors"
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-ink-strong hover:bg-surface-2 transition-colors cursor-pointer"
           aria-label="Close navigation menu"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
+
+      {/* Authenticated User Header Card on Mobile */}
+      {isAuthenticated && user && (
+        <div className="p-3 rounded-xl bg-white/70 border border-white/80 flex items-center gap-3">
+          <div className="w-11 h-11 rounded-full bg-[#0B2341] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden border border-brand/20">
+            {user.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              initials
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-sm text-[#0B2341] truncate">
+              {user.name}
+            </div>
+            <div className="text-xs text-slate-500 truncate">
+              {user.email}
+            </div>
+            <div className="mt-1 flex items-center gap-1">
+              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold">
+                <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                <span>{user.role || 'Verified Traveler'}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <nav className="flex flex-col gap-1.5" aria-label="Mobile links">
         {navLinks.map((link) => (
@@ -113,21 +163,44 @@ export const MobileMenu: FC<MobileMenuProps> = ({ isOpen, onClose }) => {
       </nav>
 
       {/* Pinned Auth Actions */}
-      <div className="pt-3 border-t border-line/30 grid grid-cols-2 gap-2.5">
-        <Link
-          to="/login"
-          onClick={onClose}
-          className="min-h-[44px] flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold text-brand bg-surface-2 hover:bg-surface-3 transition-colors"
-        >
-          Sign In
-        </Link>
-        <Link
-          to="/register"
-          onClick={onClose}
-          className="min-h-[44px] flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-bold bg-brand hover:bg-brand-hover text-on-brand shadow-sm transition-colors"
-        >
-          Register
-        </Link>
+      <div className="pt-3 border-t border-line/30">
+        {isAuthenticated && user ? (
+          <div className="grid grid-cols-2 gap-2.5">
+            <Link
+              to="/profile"
+              onClick={onClose}
+              className="min-h-[44px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-brand bg-white/80 border border-brand/20 hover:bg-surface-2 transition-colors"
+            >
+              <User className="w-4 h-4" />
+              <span>My Profile</span>
+            </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="min-h-[44px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition-colors cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2.5">
+            <Link
+              to="/login"
+              onClick={onClose}
+              className="min-h-[44px] flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold text-brand bg-surface-2 hover:bg-surface-3 transition-colors"
+            >
+              Sign In
+            </Link>
+            <Link
+              to="/register"
+              onClick={onClose}
+              className="min-h-[44px] flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-bold bg-brand hover:bg-brand-hover text-on-brand shadow-sm transition-colors"
+            >
+              Register
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

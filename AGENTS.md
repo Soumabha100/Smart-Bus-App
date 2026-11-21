@@ -1,5 +1,5 @@
 # AI Agent Guidelines & Architecture Rules
-**Project:** West Bengal AI Smart Bus Booking Platform  
+**Project:** West Bengal AI Smart Bus Booking Platform (One Go Bus)  
 **Target:** Sprint 0 to Sprint 5 (10-Week "Build-Then-Learn" Roadmap)
 
 ---
@@ -37,13 +37,18 @@
 
 ---
 
-## 4. OneGoBus Frontend Architecture & UI Guardrails
-- **Official Brand:** **OneGoBus** (all former names — Roamly, BusWise, BusSathi, ApnaBus — are strictly obsolete).
+## 4. One Go Bus Frontend Architecture & UI Guardrails
+- **Official Brand:** **One Go Bus** (all former names — Roamly, BusWise, BusSathi, ApnaBus, VanGo Bus, OneGoBus — are strictly obsolete. Never use "VanGo Bus", "OneGoBus", or any variation).
 - **Primary Entry Point:** `frontend/src/pages/HomePage.tsx` mounted at `/`. Old `OnboardingPage.tsx` is completely deprecated and deleted.
 - **Universal Layout (`AppLayout.tsx`):** All application routes are wrapped inside `AppLayout`, providing:
   - Floating pill glassmorphic `Navbar` (`fixed top-3 inset-x-0 mx-auto w-[calc(100%-1.5rem)] max-w-6xl rounded-2xl z-50`).
   - Top padding `pt-20` on `<main>` ensuring **Zero Cumulative Layout Shift (CLS = 0)**.
-  - Multi-column responsive glass `Footer` driven by typed config (`footer.config.ts`).
+  - Full-width natural canvas `Footer` driven by typed config (`footer.config.ts`).
+- **Footer Architecture (Pixel-Accurate 4-Section System):**
+  - Section 1: Dark Navy CTA Banner (`#0B2341`, rounded 26px, height ~220px, orange `MADE FOR MOVING` label, heading `Your next journey starts here.`, route illustration, `Find buses →` CTA).
+  - Section 2: 5-Column Navigation Grid (Brand identity, `EXPLORE`, `COMPANY`, `SUPPORT`, `GET IN TOUCH` with Kolkata address and contact button).
+  - Section 3: Newsletter Subscription (`Get route updates`, email input, navy `Subscribe` button, interactive validation).
+  - Section 4: Bottom Legal Bar (Dynamic year copyright, centered legal links, delicate Kolkata skyline vector illustration depicting Victoria Memorial & Howrah Bridge, and `Made for West Bengal` with orange heart).
 - **Glassmorphic System (@utility glass):**
   - Reusable CSS utility defined via Tailwind v4 `@utility glass` in `frontend/src/index.css`.
   - Configurable CSS variables: `--glass-bg`, `--glass-border`, `--glass-blur`, `--glass-shadow`, `--glass-highlight`, `--glass-fallback-bg`.

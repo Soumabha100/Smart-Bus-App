@@ -84,6 +84,29 @@
   --brand-navy: #0B2341;
   --brand-orange: #FC7728;
   --page-background: #FFF8F1;
+
+  /* OneGo Premium Design Tokens */
+  --onego-navy: #0B2341;
+  --onego-orange: #FC7728;
+  --onego-orange-hover: #E6651D;
+  --onego-cream: #FFF8F1;
+  --onego-page: #FBF9F5;
+  --onego-text-primary: #0B2341;
+  --onego-text-secondary: #64748B;
+
+  --glass-surface: rgba(255, 255, 255, 0.48);
+  --glass-surface-strong: rgba(255, 255, 255, 0.68);
+  --glass-border: rgba(255, 255, 255, 0.72);
+  --glass-shadow: 0 12px 36px rgba(11, 35, 65, 0.08);
+}
+
+.premium-glass-card {
+  background: rgba(255, 255, 255, 0.52);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 24px;
+  box-shadow: 0 12px 36px rgba(11, 35, 65, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 @theme inline {
@@ -191,14 +214,30 @@
   to { opacity: 1; }
 }
 
+@keyframes modalBackdropFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 @keyframes modalScaleIn {
-  from {
+  0% {
     opacity: 0;
-    transform: scale(0.95) translateY(10px);
+    transform: scale(0.95) translateY(12px);
   }
-  to {
+  100% {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalScaleOut {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
   }
 }
 
@@ -219,6 +258,22 @@
 
 .animate-modal-scale {
   animation: modalScaleIn 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-modal-backdrop-in {
+  animation: modalBackdropFadeIn 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-modal-backdrop-out {
+  animation: modalBackdropFadeOut 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-modal-scale-in {
+  animation: modalScaleIn 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-modal-scale-out {
+  animation: modalScaleOut 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .animate-sheet-up {

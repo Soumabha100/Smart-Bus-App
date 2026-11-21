@@ -1,10 +1,4 @@
 import { memo, type FC } from 'react';
-import generalSeatImg from '../../assets/General_Seat.png';
-import availableSeatImg from '../../assets/General_Seat_Available.png';
-import selectedSeatImg from '../../assets/General_Seat_Selected.png';
-import bookedSeatImg from '../../assets/General_Seat_Booked.png';
-import unavailableSeatImg from '../../assets/General_Seat_Unavailable.png';
-import womenSeatImg from '../../assets/General_Seat_Women.png';
 
 export type SeatStatus = 'available' | 'selected' | 'booked' | 'unavailable' | 'women';
 
@@ -22,77 +16,75 @@ export interface BusSeatProps {
   title?: string;
 }
 
-const SEAT_IMAGE_MAP: Record<SeatStatus, string> = {
-  available: availableSeatImg,
-  selected: selectedSeatImg,
-  booked: bookedSeatImg,
-  unavailable: unavailableSeatImg,
-  women: womenSeatImg,
-};
-
 const SEAT_COLOR_CONFIG: Record<
   SeatStatus,
   {
-    outline: string;
-    highlight: string;
     bg: string;
+    border: string;
     textColor: string;
-    badgeBg: string;
-    badgeText: string;
-    badgeIcon?: string;
+    iconColor: string;
     label: string;
   }
 > = {
   available: {
-    outline: '#16834A',
-    highlight: '#27AE60',
-    bg: '#F0FBF4',
+    bg: '#DDF6DD',
+    border: '#A8DDAA',
     textColor: '#16834A',
-    badgeBg: 'bg-emerald-600',
-    badgeText: 'text-white',
+    iconColor: '#276749',
     label: 'Available',
   },
   selected: {
-    outline: '#0B4DBB',
-    highlight: '#2563EB',
-    bg: '#EAF3FF',
-    textColor: '#0B4DBB',
-    badgeBg: 'bg-[#0B4DBB]',
-    badgeText: 'text-white',
-    badgeIcon: '✓',
+    bg: '#FC7728',
+    border: '#E6651D',
+    textColor: '#FFFFFF',
+    iconColor: '#FFFFFF',
     label: 'Selected',
   },
   booked: {
-    outline: '#B94B53',
-    highlight: '#D96A70',
-    bg: '#FCEEEF',
-    textColor: '#B94B53',
-    badgeBg: 'bg-[#B94B53]',
-    badgeText: 'text-white',
-    badgeIcon: '✕',
+    bg: '#E4E1E5',
+    border: '#C6C2C9',
+    textColor: '#77747D',
+    iconColor: '#77747D',
     label: 'Booked',
   },
   unavailable: {
-    outline: '#B8BDC5',
-    highlight: '#A8AFB9',
-    bg: '#F1F2F4',
-    textColor: '#717A88',
-    badgeBg: 'bg-[#A8AFB9]',
-    badgeText: 'text-white',
-    badgeIcon: '—',
+    bg: '#F3F2F1',
+    border: '#E3E0DE',
+    textColor: '#B7B3B0',
+    iconColor: '#B7B3B0',
     label: 'Unavailable',
   },
   women: {
-    outline: '#C55473',
-    highlight: '#E87999',
-    bg: '#FFF0F5',
-    textColor: '#C55473',
-    badgeBg: 'bg-[#C55473]',
-    badgeText: 'text-white',
-    badgeIcon: '♀',
-    label: 'Women Reserved',
+    bg: '#F8D1DF',
+    border: '#EFA9BF',
+    textColor: '#934C67',
+    iconColor: '#934C67',
+    label: 'Women only',
   },
 };
+
+/**
+ * Top-down vector seat icon representing a luxury coach passenger seat.
+ * Vector-only; lightweight, crisp on all resolutions, zero asset downloads.
+ */
+export const SeatArmchairIcon: FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+  >
+    {/* Headrest / upper backrest */}
+    <rect x="7" y="3" width="10" height="4" rx="2" />
+    {/* Main seat cushion */}
+    <rect x="6" y="8" width="12" height="10" rx="3" />
+    {/* Left armrest */}
+    <rect x="3.5" y="8" width="2.2" height="8" rx="1.1" />
+    {/* Right armrest */}
+    <rect x="18.3" y="8" width="2.2" height="8" rx="1.1" />
+  </svg>
+);
 
 export const BusSeat: FC<BusSeatProps> = memo(({
   id,
@@ -102,153 +94,131 @@ export const BusSeat: FC<BusSeatProps> = memo(({
   isSleeper = false,
   onClick,
   size = 'md',
-  showPrice = true,
-  showBadge = true,
+  showPrice = false,
+  showBadge = false,
   className = '',
   title,
 }) => {
-  const config = SEAT_COLOR_CONFIG[status];
-  const imgSrc = SEAT_IMAGE_MAP[status] || generalSeatImg;
+  const config = SEAT_COLOR_CONFIG[status] || SEAT_COLOR_CONFIG.available;
   const isInteractive = status === 'available' || status === 'selected' || status === 'women';
   const isSelected = status === 'selected';
 
-  const sizeClasses = {
-    sm: 'w-8 h-8 sm:w-9 sm:h-9',
-    md: 'w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12',
-    lg: 'w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20',
-  }[size];
+  const defaultTitle = `${id} (${deck === 'upper' ? 'Upper Berth' : 'Lower Seat'} • ${config.label})${
+    price ? ` • ₹${price}` : ''
+  }`;
 
-  const defaultTitle = `${id} (${deck === 'upper' ? 'Upper Berth' : 'Lower Seat'} • ${config.label})${price ? ` • ₹${price}` : ''}`;
-
-  return (
-    <button
-      type="button"
-      data-deck={deck}
-      disabled={!isInteractive}
-      onClick={isInteractive ? onClick : undefined}
-      title={title || defaultTitle}
-      aria-label={title || defaultTitle}
-      className={`group relative flex flex-col items-center justify-center p-0.5 sm:p-1 rounded-xl transition-all duration-150 select-none ${
-        isInteractive
-          ? 'cursor-pointer hover:-translate-y-0.5 active:scale-95'
-          : 'cursor-not-allowed opacity-80 filter saturate-75'
-      } ${
-        isSelected
-          ? 'animate-seat-pop rounded-xl bg-blue-50/70'
-          : isInteractive
-          ? 'hover:bg-slate-100/60'
-          : ''
-      } ${className}`}
-    >
-      {/* Sleeper Deck Capsule Frame (for Upper Deck) */}
-      {isSleeper ? (
+  // Sleeper Berth layout (Capsule)
+  if (isSleeper) {
+    return (
+      <button
+        type="button"
+        disabled={!isInteractive}
+        onClick={isInteractive ? onClick : undefined}
+        title={title || defaultTitle}
+        aria-label={title || defaultTitle}
+        className={`group relative flex flex-col items-center justify-between p-1 rounded-xl border transition-all duration-150 select-none ${
+          isInteractive
+            ? 'cursor-pointer hover:-translate-y-0.5 active:scale-95'
+            : 'cursor-not-allowed opacity-75'
+        } ${
+          isSelected
+            ? 'shadow-md shadow-[#FC7728]/30 ring-2 ring-[#FC7728]'
+            : ''
+        } ${className}`}
+        style={{
+          backgroundColor: config.bg,
+          borderColor: config.border,
+          color: config.iconColor,
+          width: size === 'sm' ? '46px' : '56px',
+          minHeight: size === 'sm' ? '70px' : '84px',
+        }}
+      >
+        {/* Sleeper pillow bar */}
         <div
-          className={`flex flex-col items-center justify-between p-1.5 rounded-xl border transition-all select-none ${
-            isSelected
-              ? 'border-[#0B4DBB] bg-[#EAF3FF] shadow-xs ring-1 ring-[#0B4DBB]/30'
-              : status === 'women'
-              ? 'border-[#E87999] bg-[#FFF0F5]/80 hover:border-[#C55473]'
-              : status === 'available'
-              ? 'border-[#27AE60]/50 bg-[#F0FBF4]/80 hover:border-[#16834A]'
-              : status === 'booked'
-              ? 'border-[#D96A70]/50 bg-[#FCEEEF]/70'
-              : 'border-[#B8BDC5]/60 bg-[#F1F2F4]/70'
-          } w-[58px] sm:w-[64px] md:w-[70px] lg:w-[74px] min-h-[96px] sm:min-h-[102px] md:min-h-[108px]`}
-        >
-          {/* Berth Pillow Headrest (Clean rounded colored bar matching Image 2) */}
-          <div className="w-full flex items-center justify-center px-0.5 mb-1">
-            <div
-              className={`h-2 w-full rounded-full shadow-inner ${
-                isSelected
-                  ? 'bg-[#2563EB]'
-                  : status === 'women'
-                  ? 'bg-[#E87999]'
-                  : status === 'available'
-                  ? 'bg-[#27AE60]'
-                  : status === 'booked'
-                  ? 'bg-[#D96A70]'
-                  : 'bg-slate-300'
-              }`}
-            />
-          </div>
+          className="w-full h-1.5 rounded-full opacity-80"
+          style={{ backgroundColor: isSelected ? '#FFFFFF' : config.iconColor }}
+        />
 
-          {/* 3D Seat Image Graphic */}
-          <div className="relative my-0.5">
-            <img
-              src={imgSrc}
-              alt={config.label}
-              className={`${sizeClasses} object-contain transition-transform duration-200 group-hover:scale-105`}
-              loading="lazy"
-              draggable={false}
-            />
-
-            {/* Micro Badge for Status (Checkmark, Women ♀, etc.) */}
-            {showBadge && config.badgeIcon && (
-              <span
-                className={`absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full ${config.badgeBg} ${config.badgeText} text-[8px] sm:text-[9px] font-black flex items-center justify-center shadow-xs leading-none`}
-              >
-                {config.badgeIcon}
-              </span>
-            )}
-          </div>
-
-          {/* Bottom: Sleeper Berth Price (Clean font, no divider line matching Image 2) */}
-          {showPrice && price !== undefined ? (
-            <span
-              className={`text-[11px] font-bold font-mono mt-0.5 block ${
-                isSelected
-                  ? 'text-[#0B4DBB]'
-                  : status === 'women'
-                  ? 'text-[#C55473]'
-                  : status === 'available'
-                  ? 'text-slate-700'
-                  : 'text-slate-400'
-              }`}
-            >
-              ₹{price}
-            </span>
-          ) : null}
+        {/* Armchair / Berth Vector Icon */}
+        <div className="my-auto">
+          <SeatArmchairIcon className={size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'} />
         </div>
-      ) : (
-        /* Regular Seater (Lower Deck) */
-        <div className="flex flex-col items-center justify-center w-[52px] sm:w-[58px] md:w-[64px] lg:w-[68px]">
-          <div className="relative">
-            {/* 3D Seat Image Graphic */}
-            <img
-              src={imgSrc}
-              alt={config.label}
-              className={`${sizeClasses} object-contain transition-transform duration-200 group-hover:scale-105 drop-shadow-xs`}
-              loading="lazy"
-              draggable={false}
-            />
 
-            {/* Micro Status Badge */}
-            {showBadge && config.badgeIcon && (
-              <span
-                className={`absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full ${config.badgeBg} ${config.badgeText} text-[8px] sm:text-[9px] font-black flex items-center justify-center shadow-xs leading-none`}
-              >
-                {config.badgeIcon}
-              </span>
-            )}
-          </div>
-
-          {/* Seat Price Display (Clean font matching Image 2) */}
+        {/* Berth ID & Price */}
+        <div className="flex flex-col items-center leading-none">
+          <span
+            className="text-[9px] font-bold font-mono"
+            style={{ color: isSelected ? '#FFFFFF' : config.textColor }}
+          >
+            {id}
+          </span>
           {showPrice && price !== undefined && (
             <span
-              className={`text-[11px] font-bold font-mono mt-0.5 transition-colors ${
-                isSelected
-                  ? 'text-[#0B4DBB]'
-                  : status === 'women'
-                  ? 'text-[#C55473]'
-                  : status === 'available'
-                  ? 'text-slate-700'
-                  : 'text-slate-400'
-              }`}
+              className="text-[9px] font-semibold opacity-90 mt-0.5"
+              style={{ color: isSelected ? '#FFFFFF' : config.textColor }}
             >
               ₹{price}
             </span>
           )}
         </div>
+      </button>
+    );
+  }
+
+  // Circular Seater Layout (Matching Image 1: ~40px circular seat buttons on desktop)
+  const circularSizeClasses = {
+    sm: 'w-7.5 h-7.5 sm:w-8.5 sm:h-8.5',
+    md: 'w-9.5 h-9.5 sm:w-10 sm:h-10 md:w-10.5 md:h-10.5',
+    lg: 'w-11 h-11 sm:w-12 sm:h-12',
+  }[size];
+
+  const iconSizeClasses = {
+    sm: 'w-3.5 h-3.5',
+    md: 'w-4 h-4 sm:w-4.5 sm:h-4.5',
+    lg: 'w-5 h-5',
+  }[size];
+
+  return (
+    <button
+      type="button"
+      data-deck={deck}
+      data-seat-id={id}
+      disabled={!isInteractive}
+      onClick={isInteractive ? onClick : undefined}
+      title={title || defaultTitle}
+      aria-label={title || defaultTitle}
+      className={`group relative flex flex-col items-center justify-center rounded-full border transition-all duration-150 select-none ${circularSizeClasses} ${
+        isInteractive
+          ? 'cursor-pointer hover:scale-105 active:scale-95'
+          : 'cursor-not-allowed opacity-75'
+      } ${
+        isSelected
+          ? 'animate-seat-pop shadow-md shadow-[#FC7728]/35 ring-2 ring-[#FC7728]/40'
+          : 'hover:shadow-xs'
+      } ${className}`}
+      style={{
+        backgroundColor: config.bg,
+        borderColor: config.border,
+        color: config.iconColor,
+      }}
+    >
+      <SeatArmchairIcon className={iconSizeClasses} />
+
+      {/* Optional micro status badge */}
+      {showBadge && isSelected && (
+        <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-white text-[#FC7728] text-[8px] font-black flex items-center justify-center shadow-xs">
+          ✓
+        </span>
+      )}
+
+      {/* Optional Price Display below seat */}
+      {showPrice && price !== undefined && (
+        <span
+          className="absolute -bottom-4 text-[10px] font-bold font-mono tracking-tight pointer-events-none"
+          style={{ color: config.textColor }}
+        >
+          ₹{price}
+        </span>
       )}
     </button>
   );

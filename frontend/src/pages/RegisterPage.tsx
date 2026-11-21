@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, type RegisterFormData } from '../schemas/authSchema';
-import { tokenStorage } from '../utils/tokenStorage';
+import { useAuth } from '../context/useAuth';
 import { AuthLayout } from '../features/auth/AuthLayout';
 import { AuthField } from '../features/auth/AuthField';
 import { PasswordField } from '../features/auth/PasswordField';
@@ -12,6 +12,7 @@ import { AuthSocialButtons } from '../features/auth/AuthSocialButtons';
 
 export const RegisterPage: FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phone, setPhone] = useState('');
   const [isStudent, setIsStudent] = useState(false);
@@ -57,12 +58,23 @@ export const RegisterPage: FC = () => {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      tokenStorage.setToken('onego_jwt_token_sample');
-      tokenStorage.setUser({
+      const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80';
+      login({
         name: data.name,
         email: data.email,
+        phone: phone ? (phone.startsWith('+91') ? phone : `+91 ${phone}`) : '+91 98301 24567',
+        avatar: defaultAvatar,
+        role: isStudent ? 'Student Explorer' : 'Verified Traveler',
+        memberSince: 'November 2026',
+        isStudent: isStudent,
+        emergencyContactName: 'Family Contact',
+        emergencyContactPhone: '+91 98300 11223',
+        gender: 'Not Specified',
+        seatPreference: 'lower_window',
+        whatsappNotifications: true,
+        smsNotifications: true,
       });
-      navigate('/home');
+      navigate('/', { replace: true });
     }, 450);
   };
 

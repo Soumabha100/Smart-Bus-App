@@ -681,3 +681,215 @@
 - **Verification**:
   - `npm run build`: Bundled cleanly in 274ms across 20 chunks with 0 errors.
   - `npm run lint`: 0 errors, 0 warnings across the repository.
+
+
+## Phase 18 - Premium Glassmorphism Seat Booking Modal Implementation (2026-11-19)
+- **Objective**: Implement the brand-new, high-fidelity 3-column glassmorphism seat booking modal based on the user's reference design (`media_1795106338124_5f35e1c0.jpg`) and transparent One Go Bus luxury coach asset (`onego-luxury-coach.png`), removing all previous heavy PNG seat images and outdated clutter.
+- **Architectural & Design Enhancements**:
+  - **1. Premium Glassmorphic Modal Window**:
+    - Frosted glass container (`rounded-[28px]`, `background: linear-gradient(135deg, rgba(255, 248, 241, 0.94) 0%, rgba(255, 237, 228, 0.88) 50%, rgba(254, 245, 238, 0.92) 100%)`, `backdrop-filter: blur(28px) saturate(150%)`, border `1px solid rgba(255, 255, 255, 0.8)`).
+    - Top header with OneGoBus brand wordmark, vertical separator, "Choose your seats" frosted pill, and circular `✕` close button.
+  - **2. Column 1 (Left - Bus Showcase & Journey Details)**:
+    - Authentic inline vector silhouette of Kolkata's landmark **Howrah Bridge** rendered as a soft atmospheric backdrop.
+    - User's branded Volvo luxury coach bus (`onego-luxury-coach.png`) with ambient lighting and ground shadow.
+    - Frosted Journey Details card displaying `Kolkata ➔ Siliguri`, departure & arrival times, AC Sleeper 2+1, and total seat count.
+  - **3. Column 2 (Center - Deck Switcher & Bus Cabin Layout)**:
+    - Segmented pill deck switcher (`Lower Deck` active `#FC7728` vs `Upper Deck`) plus interactive floating badge (`Upper Deck 18 Seats Available ›`).
+    - Vertical bus cabin chassis with driver steering wheel icon at front, rows 1 through 10 along the left margin, central dashed aisle line, and 4 circular seat columns.
+    - Pure vector top-down armchair SVG icons replacing all raster PNG assets:
+      - Available: Bg `#DDF6DD`, Border `#A8DDAA`, Icon `#276749`
+      - Selected: Bg `#FC7728`, Border `#E6651D`, Icon `#FFFFFF`
+      - Booked: Bg `#E4E1E5`, Border `#C6C2C9`, Icon `#77747D`
+      - Women only: Bg `#F8D1DF`, Border `#EFA9BF`, Icon `#934C67`
+    - Horizontal status legend directly below bus chassis.
+  - **4. Column 3 (Right - Booking Summary & CTA)**:
+    - Frosted glass card with real-time dynamic seat selection (`Your Seats: L2, L3`), Boarding point (`Esplanade, Kolkata`), Dropping point (`Siliguri Junction`), Best Price green badge, calculated total fare (`₹1,499 Including taxes`), and full-width pill `Continue →` CTA.
+  - **5. Asset Optimization**:
+    - Completely removed all 6 legacy raster PNG seat files (`General_Seat*.png`), saving over 2MB of bundle weight.
+    - Updated `TicketCard.tsx` to utilize pure vector `SeatArmchairIcon`.
+- **Verification**:
+  - `npm run build`: Bundled cleanly in 371ms across 20 chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings across the repository.
+
+
+## Phase 19 - Premium Glassmorphism UI Polish Pass & Visual Hierarchy Refinement (2026-11-19)
+- **Objective**: Thoroughly polish the seat booking modal to match the intended premium glassmorphism reference design (`media_1795106338124_5f35e1c0.jpg`), eliminating large empty voids, fixing functional data inconsistencies, standardizing icons to Lucide-React, and perfecting layout balance across all 3 columns.
+- **Architectural & Design Enhancements**:
+  - **1. Unified Left Composition (Eliminated Blank Canyon)**:
+    - Removed `justify-between` and the disconnected separate rectangular bus card that previously pushed the bus to the top and trip details to the bottom with an empty ~250px void.
+    - Integrated the transparent luxury Volvo coach bus (`~92% width`), ground shadow, Howrah Bridge vector skyline, and the Journey Details glass card into a single, cohesive visual composition with proportional natural spacing.
+  - **2. Resolved Seat Count & Selection Inconsistencies**:
+    - Aligned layout to **36 seats across 9 rows** (`9 rows × 4 seats = 36 seats`), resolving the mismatch where the info badge said 36 seats but 40 circles were displayed.
+    - Highlighted seats in Row 2 (left column) now correspond accurately to `L2` and `L3`, perfectly synchronizing the seat map with the `Your Seats: L2, L3` summary.
+  - **3. Single-Line Deck Switcher Controls**:
+    - Added `whitespace-nowrap` to the segmented control buttons ("Lower Deck" / "Upper Deck"), preventing text from breaking across two lines.
+    - Decoupled the "Upper Deck 18 Seats Available" availability pill into its own flexible container so it never crowds or distorts the deck tabs.
+  - **4. Consistent Vector Iconography (Zero Emojis)**:
+    - Standardized all icons using pure, tree-shaken `lucide-react` components with a uniform 1.75px–2px stroke: `CalendarDays`, `Clock3`, `MapPin`, `Armchair`, `BedSingle`, `IndianRupee`, `ArrowRight`, `X`, `Tag`, and `ChevronRight`.
+    - Implemented an authentic 3-spoke automotive steering wheel SVG for the front driver station.
+  - **5. Tightened Booking Summary (Right Column)**:
+    - Replaced sparse, overstretched vertical layouts with a structured, elegant hierarchy: `Your Seats` (large bold navy `L2, L3`), thin dividers, `Boarding` and `Dropping` station points, `Fare` total with `Best price` tag, and a 52px full-width pill `Continue ➔` CTA button.
+  - **6. Enhanced Glassmorphism Depth & Ambient Atmosphere**:
+    - Added CSS design tokens (`--glass-surface`, `--glass-surface-strong`, `--glass-border`, `--glass-shadow`) and `.premium-glass-card` in `frontend/src/index.css`.
+    - Introduced soft, diffused ambient light glows (pale sage, warm cream, soft peach) behind translucent frosted glass surfaces.
+- **Verification**:
+  - `npm run build`: Bundled in 286ms across 21 chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings across the repository.
+
+
+## Phase 20 - Howrah Bridge Photographic Background Integration & Subtle Blur Layering (2026-11-19)
+- **Objective**: Integrate the user-supplied high-resolution Howrah Bridge sunrise photographic illustration (`media_1795108385802_cd4c6ada.jpg` -> `howrah-bridge-sunrise.jpg`) as the atmospheric background layer for the Seat Booking Modal, applying a subtle `blur(2px)` and `opacity: 0.45` while preserving 100% crispness on the Volvo coach bus and UI controls.
+- **Architectural & Design Enhancements**:
+  - **1. Background Image Asset Management**:
+    - Saved high-resolution artwork as `frontend/src/assets/howrah-bridge-sunrise.jpg` (197 KB).
+    - Bundled into production build output (`201.99 kB`).
+  - **2. Selective Blur & Opacity Separation**:
+    - Embedded the photographic Howrah Bridge background in a dedicated layer behind the bus in the Left Column (`filter: 'blur(2px)'`, `opacity: 0.45`, `object-cover`, `scale-105`).
+    - Added an upward warm cream gradient mask (`from-[#FFF8F1] via-[#FFF8F1]/20 to-transparent`) to blend the Hooghly river reflections into the Journey Details card.
+    - Positioned the transparent One Go Bus luxury coach (`onego-luxury-coach.png`) in an independent foreground layer (`z-10`) with zero blur applied, maintaining complete visual sharpness, high contrast, and realistic ground shadow.
+  - **3. Modal-Wide Ambient Glow Harmonization**:
+    - Added a subtle modal-wide background layer using the Howrah Bridge photograph with `blur(16px)` and `opacity: 0.14`, harmonizing the pastel pink, golden, and mint green hues across the entire frosted glass window.
+- **Verification**:
+  - `npm run build`: Bundled cleanly in 276ms across 21 chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings across the repository.
+
+
+## Phase 21 - Background Scroll Lock & Zero Cumulative Layout Shift Fix (2026-11-19)
+- **Objective**: Fix background page scrolling when the Seat Selection Modal is open, ensuring a native, professional modal experience without layout shifts or scroll leakage.
+- **Implementation**:
+  - Added a dedicated `useEffect` in [`SeatSelectionModal.tsx`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart-Bus-Application/frontend/src/features/results/SeatSelectionModal.tsx) triggered by `isOpen`.
+  - Dynamically calculates `scrollbarWidth = window.innerWidth - document.documentElement.clientWidth`.
+  - Sets `document.body.style.overflow = 'hidden'` to completely lock background screen scrolling on `/results`.
+  - When a vertical scrollbar was present, applies `document.body.style.paddingRight = '${scrollbarWidth}px'` to avoid any page content shifting (CLS = 0).
+  - Gracefully restores original `overflow` and `paddingRight` values when the modal is closed or unmounted.
+- **Verification**:
+  - `npm run build`: Bundled in 339ms across 21 chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings across the repository.
+
+
+## Phase 22 - Premium Modal Polish: Red Close Button, Spring Transitions, Dynamic Pricing & Removable Chips (2026-11-19)
+- **Objective**: Deliver a refined, high-performance user experience for the Seat Selection Modal addressing four key areas:
+  1. Top-right close button turns vibrant red on hover with smooth micro-interaction.
+  2. Hardware-accelerated modal entry & exit animations with ease-in/ease-out transitions, zero lag, and instant responsiveness across all devices.
+  3. Dynamic pricing tied directly to search results (`ticket.price`), featuring strikethrough original price, real-time total fare computation, and savings indicator.
+  4. Interactive removable seat chips (`[ L2 ✕ ]` `[ L3 ✕ ]`) and a connected station timeline in the booking summary card.
+- **Architectural & Design Enhancements**:
+  - **1. Micro-Interactions: Red Hover Close Button**:
+    - Enhanced top-right `X` button with `group/close` hover state: turns rose-red (`hover:bg-rose-500 hover:text-white hover:border-rose-500 hover:shadow-rose-500/25 hover:scale-110 active:scale-95 duration-200 ease-in-out`).
+    - Added 90-degree smooth rotation on the `X` icon inside: `group-hover/close:rotate-90 transition-transform duration-200`.
+  - **2. Hardware-Accelerated Open & Exit Transitions**:
+    - Created lightweight CSS keyframe animations in `frontend/src/index.css`:
+      - `@keyframes modalBackdropFadeIn` & `@keyframes modalBackdropFadeOut` (opacity fade).
+      - `@keyframes modalScaleIn` & `@keyframes modalScaleOut` (scale 0.95 ➔ 1.0 ➔ 0.96 with subtle vertical translation).
+    - Implemented internal `isClosing` state and `handleClose` callback in `SeatSelectionModal.tsx` that triggers a 200ms exit animation before calling `onClose()`.
+    - Zero external dependencies (zero Framer Motion / Lottie bundle bloat) ensuring 60fps performance on mobile, tablets, and laptops.
+  - **3. Dynamic Pricing & Strikethrough Original Fare**:
+    - Replaced static `₹1,499` with dynamic fare calculation derived from `ticket.price`:
+      - Standard Lower Deck seats: base price (defaults to `ticket.price` or `₹749`).
+      - Upper Deck sleeper berths: dynamic markup (`Math.round(basePrice * 1.15)`).
+      - Total fare computes dynamically based on all selected seats.
+      - Displays higher strikethrough original price (`₹{totalOriginalPrice}`), highlighted total payable fare (`₹{totalPrice}`), green "Save ₹{totalSavings}" badge, and "Best price guarantee" callout.
+  - **4. Removable Seat Chips & Connected Station Timeline**:
+    - "Your Seats" summary displays interactive seat pills with 1-click removal (`✕`), allowing users to deselect seats directly from the summary.
+    - Added connected station route timeline in the right booking column with a vertical dashed connecting line and custom colored route node pins.
+  - **5. Clean State Architecture (Zero React 19 Linter Warnings)**:
+    - Replaced state duplication with a single `selectedSeatIds: string[]` state and purely derived `selectedSeats` via `useMemo`.
+    - Wrapped handlers in `useCallback` to satisfy ESLint `react-hooks/set-state-in-effect` and `exhaustive-deps`.
+- **Verification**:
+  - `npm run build`: Bundled in 270ms across 21 chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings across the entire repository.
+
+
+## Phase 23 - User Authentication Flow, Reactive Profile Avatar, and Glassmorphic Profile Page (2026-11-21)
+- **Objective**: Implement the complete end-to-end user authentication lifecycle:
+  1. Redirect travelers back to the home page (`/`) upon sign-in or registration.
+  2. Dynamically replace "Sign In" and "Register" buttons in the top navbar with a 40px circular profile avatar button with live online status pip.
+  3. Interactive glassmorphic dropdown popup with user preview (avatar, name, email, verified badge), navigation links ("My Profile", "My Bookings / Trips", "Preferences & Settings"), and sign-out action.
+  4. Build a comprehensive, DPDP 2025 compliant glassmorphic Profile Page (`/profile`) showcasing traveler personal information, bus seat preferences, emergency contacts, JSON data export, and security session controls.
+- **Architectural & Design Enhancements**:
+  - **1. Reactive State Synchronization (`AuthContext` & `useAuth`)**:
+    - Created `frontend/src/context/authContextInstance.ts`, `frontend/src/context/AuthContext.tsx`, and `frontend/src/context/useAuth.ts` separating React context, provider component, and custom hook to strictly satisfy Vite Fast Refresh linter rules.
+    - Synchronized with `localStorage` across browser tabs via window storage listeners.
+    - Enhanced `StoredUser` interface in `frontend/src/utils/tokenStorage.ts` with typed fields (`phone`, `avatar`, `role`, `memberSince`, `isStudent`, `emergencyContactName`, `emergencyContactPhone`, `gender`, `seatPreference`, `whatsappNotifications`, `smsNotifications`).
+  - **2. Seamless Auth Redirects**:
+    - Updated `LoginPage.tsx` and `RegisterPage.tsx` to authenticate travelers with initial verified mock profile profiles and redirect directly to `/` (Home page) or preserved return intent.
+  - **3. Navbar & Mobile Menu Integration**:
+    - `Navbar.tsx`: Added circular profile button with fallback to uppercase user initials on brand navy gradient.
+    - Added click-away listener, Escape key dismiss, and smooth fade/slide micro-interactions for the profile dropdown.
+    - `MobileMenu.tsx`: Updated mobile drawer to present authenticated traveler card with direct "My Profile" and "Sign Out" actions.
+  - **4. Comprehensive Traveler Profile Page (`ProfilePage.tsx`)**:
+    - Built light-mode glassmorphic page mounted at lazy-loaded route `/profile` protected by `<ProtectedRoute>`.
+    - Hero Card: Howrah Bridge ambient background blur, 96px avatar with photo change toggle, role badges (`Verified Traveler`, `Student Privilege Pass`), and trip summary stats (4 journeys, ₹1,850 saved).
+    - Modular Sub-Tabs:
+      - **Personal Information**: Full Name, Primary Email (Verified), Phone Number (+91 SMS OTP Verified), Gender, Emergency Contact Name & Phone with inline Save micro-interaction and toast notification.
+      - **Travel & Seat Preferences**: Preferred Seat Position (Lower Deck Window, Upper Deck Sleeper, Aisle), Student Concession Pass toggle, WhatsApp real-time GPS & QR pass dispatch toggle, SMS 30-min alert toggle.
+      - **DPDP 2025 Privacy**: Data transparency card, "Download My Data (JSON)" export generator, and privacy policy links.
+      - **Security & Sessions**: Active session details and one-click "Log Out of OneGoBus" button.
+- **Verification**:
+  - `npm run build`: Bundled in 264ms across 26 code-split chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings across the entire repository.
+
+
+## Phase 24 - Complete One Go Bus Footer Redesign: Pixel-Accurate Reference Implementation (2026-11-21)
+- **Objective**: Completely rebuild the website footer to match the exact design specification provided in `media_1795202553622_7da2d823.jpg`, replacing the previous oversized floating card with an elegant full-width layout flowing naturally with the cream-and-white canvas.
+- **Architectural & Design Enhancements**:
+  - **1. Section One — Premium Dark Navy Journey CTA Banner**:
+    - Deep navy container (`#0B2341`, `rounded-[26px]`, horizontal padding `px-6 sm:px-12 lg:px-16`, vertical padding `py-8 sm:py-10`).
+    - Left text: `MADE FOR MOVING` orange label (`#FC7728`, uppercase, bold), ExtraBold white heading `Your next journey starts here.`, and soft white description `Explore routes across Kolkata and West Bengal.`
+    - Right illustration & action: Minimalist route illustration featuring location pin, smooth curved white path with orange waypoint dot (`#FC7728`), and white front-facing bus icon. Pill CTA button `Find buses →` with subtle hover slide animation navigating to `/results`.
+  - **2. Section Two — Brand Information & 5-Column Navigation Grid**:
+    - Column 1: Navy rounded-square bus emblem (`#0B2341`), exact brand text `One Go ` (Navy `#0B2341`) `Bus` (Orange `#FC7728`), mission description, and 3 light-neutral square buttons (`#F5F3EF`, radius 12px) for Instagram, LinkedIn, and GitHub.
+    - Column 2 (`EXPLORE`): Search Buses, Popular Routes, Live Tracking, Ask AI.
+    - Column 3 (`COMPANY`): About Us, Our Team, How It Works.
+    - Column 4 (`SUPPORT`): Help Center, FAQs, Cancellations & Refunds, Contact Support.
+    - Column 5 (`GET IN TOUCH`): Orange location pin with `Kolkata, West Bengal, India` and outlined white `Contact our team` button with envelope icon.
+  - **3. Section Three — Newsletter Subscription**:
+    - Thin `#EAE8E4` dividers above and below.
+    - Orange envelope icon, heading `Get route updates`, and subtitle `Occasional travel news, straight to your inbox.`
+    - High-accessibility email input and navy `#0B2341` `Subscribe` button with interactive validation and submission feedback toast.
+  - **4. Section Four — Bottom Footer Bar with Kolkata Skyline Line-Art**:
+    - Dynamic year copyright: `© 2026 One Go Bus. All rights reserved.`
+    - Centered legal links: `Privacy Policy` • `Terms of Service` • `Accessibility`.
+    - Delicate vector line-art illustration depicting Victoria Memorial dome & colonnade alongside the Howrah Bridge cantilever truss.
+    - Orange outlined heart icon and semibold label: `Made for West Bengal`.
+  - **5. Configuration & Code Cleanliness**:
+    - Updated `frontend/src/components/layout/footer.config.ts` with strongly-typed interfaces.
+    - Fully responsive across desktop (1920px, 1440px), tablet (1024px, 768px), and mobile (390px).
+- **Verification**:
+  - `npm run build`: Bundled in 296ms across 26 code-split chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings across the entire repository.
+
+
+## Phase 25 - Footer Instagram SVG Icon Rendering Bug Fix (2026-11-21)
+- **Problem**: In `frontend/src/components/layout/Footer.tsx`, the first social button (Instagram) rendered as a blank square while LinkedIn and GitHub appeared normally.
+- **Root Cause**:
+  1. The Instagram SVG had `className="w-5 h-5 fill-none stroke-currentColor"` where `stroke-currentColor` is not a valid Tailwind CSS class (the Tailwind utility is `stroke-current`, and standard SVG attribute is `stroke="currentColor"`).
+  2. Because `stroke-currentColor` failed to resolve, the browser defaulted to `stroke: none`, while `fill-none` explicitly removed the fill, making all SVG shapes (rect, circle, dot) completely invisible (`fill: none; stroke: none;`).
+  3. In contrast, LinkedIn and GitHub used explicit filled SVG paths with `fill="currentColor"`.
+- **Solution**:
+  - Replaced the stroked multi-shape Instagram SVG with the standard, high-contrast filled glyph SVG using explicit `fill="currentColor"` attribute and `className="w-5 h-5"`.
+  - Harmonized `linkedin` and `github` to also use standard explicit `fill="currentColor"` attributes.
+- **Verification**:
+  - `npm run build`: Bundled in 284ms across 26 code-split chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings across the entire repository.
+
+
+## Phase 26 - Navbar Profile Dropdown Visual Hierarchy & Contrast Enhancement (2026-11-21)
+- **Problem**: In `frontend/src/components/layout/Navbar.tsx`, when floating over vibrant illustrations (such as the orange Volvo coach bus on `HomePage.tsx`), the profile dropdown was excessively translucent (`glass` utility with 78% opacity). The background graphics bled through, degrading text contrast and making the menu items difficult to read.
+- **Root Cause**:
+  - The dropdown used `glass` which has `--glass-bg: rgba(255, 255, 255, 0.78)` and a light blur, which is inadequate for overlaying saturated, multi-color hero graphics.
+  - Inner user preview header used `bg-white/70`, resulting in compounded translucency and washed-out text.
+  - Menu options lacked visual structure, clear hover boundaries, and secondary metadata.
+- **Solution**:
+  - **High-Contrast Surface Layering**: Upgraded container to `bg-white/98 backdrop-blur-2xl border border-white/90 shadow-[0_24px_60px_-15px_rgba(11,35,65,0.22),0_4px_20px_rgba(11,35,65,0.08),inset_0_1px_0_rgba(255,255,255,1)]` and expanded width to `w-[300px] sm:w-[320px]`.
+  - **Elevated User Header Card**: Replaced washed-out box with a branded warm card (`bg-gradient-to-br from-[#FFF8F1] to-[#F5F3EF] border border-[#FC7728]/20`), 44px avatar with ring, bold typography, and green verified pill.
+  - **Dedicated Micro-Container Icon Wells**: Encased navigation icons in dedicated `w-8 h-8 rounded-lg bg-slate-100` containers with smooth hover transitions (`hover:bg-[#FFF0E6] hover:text-[#FC7728]`), title + descriptive subtitle, and right-aligned subtle chevron arrows.
+  - **Structured Sign Out Row**: Rose-themed icon container, clear hover styling, and clean divider separation.
+- **Verification**:
+  - `npm run build`: Bundled cleanly in 237ms across 26 code-split chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings across the entire repository.
+
+
+
+
+

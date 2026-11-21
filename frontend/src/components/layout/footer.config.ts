@@ -11,28 +11,34 @@ export interface FooterColumn {
 }
 
 export interface SocialLink {
-  platform: 'github' | 'linkedin' | 'instagram' | 'x';
+  platform: 'instagram' | 'linkedin' | 'github';
   href: string;
   ariaLabel: string;
 }
 
 export interface FooterConfig {
+  banner: {
+    tag: string;
+    title: string;
+    description: string;
+    ctaLabel: string;
+    ctaHref: string;
+  };
   brand: {
-    name: string;
-    tagline: string;
+    namePrefix: string;
+    nameHighlight: string;
     description: string;
     socials: SocialLink[];
   };
   columns: {
-    product: FooterColumn;
+    explore: FooterColumn;
     company: FooterColumn;
     support: FooterColumn;
     contact: {
       title: string;
-      address: string;
-      email: string;
-      phone: string;
-      hours: string;
+      location: string;
+      buttonLabel: string;
+      buttonHref: string;
     };
   };
   newsletter: {
@@ -43,83 +49,76 @@ export interface FooterConfig {
   };
   bottom: {
     copyright: string;
-    madeWith: string;
     links: FooterLink[];
+    madeFor: string;
   };
 }
 
-// TODO: Update these production values when deployment endpoints are ready
 export const footerConfig: FooterConfig = {
+  banner: {
+    tag: 'MADE FOR MOVING',
+    title: 'Your next journey starts here.',
+    description: 'Explore routes across Kolkata and West Bengal.',
+    ctaLabel: 'Find buses',
+    ctaHref: '/results',
+  },
   brand: {
-    name: 'OneGoBus',
-    // TODO: Customize brand tagline
-    tagline: 'Smart Bus Discovery. Smarter Journeys.',
-    // TODO: Customize elevator pitch
-    description:
-      'AI-powered next-gen transit platform for West Bengal. Real-time tracking, zero-fee booking, and guaranteed seat holds.',
+    namePrefix: 'One Go',
+    nameHighlight: 'Bus',
+    description: 'A simpler way to discover routes, choose seats and travel across West Bengal.',
     socials: [
-      // TODO: Replace with official OneGoBus social handles
-      { platform: 'x', href: 'https://x.com', ariaLabel: 'Follow OneGoBus on X (Twitter)' },
-      { platform: 'github', href: 'https://github.com', ariaLabel: 'OneGoBus on GitHub' },
-      { platform: 'linkedin', href: 'https://linkedin.com', ariaLabel: 'Connect with OneGoBus on LinkedIn' },
-      { platform: 'instagram', href: 'https://instagram.com', ariaLabel: 'Follow OneGoBus on Instagram' },
+      { platform: 'instagram', href: 'https://instagram.com', ariaLabel: 'One Go Bus on Instagram' },
+      { platform: 'linkedin', href: 'https://linkedin.com', ariaLabel: 'One Go Bus on LinkedIn' },
+      { platform: 'github', href: 'https://github.com', ariaLabel: 'One Go Bus on GitHub' },
     ],
   },
   columns: {
-    product: {
-      title: 'Product',
+    explore: {
+      title: 'EXPLORE',
       links: [
-        { label: 'Features', href: '/features' },
-        { label: 'How it Works', href: '/how-it-works' },
-        { label: 'Routes', href: '/routes' },
-        { label: 'Ask AI', href: '/ask-ai', badge: 'AI' },
-        { label: 'Pricing & Fares', href: '/features#pricing' },
+        { label: 'Search Buses', href: '/results' },
+        { label: 'Popular Routes', href: '/routes' },
+        { label: 'Live Tracking', href: '/results' },
+        { label: 'Ask AI', href: '/ask-ai' },
       ],
     },
     company: {
-      title: 'Company',
+      title: 'COMPANY',
       links: [
         { label: 'About Us', href: '/about' },
-        { label: 'Our Team', href: '/about#team' },
-        { label: 'Careers', href: '/about#careers' },
-        { label: 'Blog', href: '/about#blog' },
-        { label: 'Contact', href: '/contact' },
+        { label: 'Our Team', href: '/about' },
+        { label: 'How It Works', href: '/how-it-works' },
       ],
     },
     support: {
-      title: 'Support',
+      title: 'SUPPORT',
       links: [
-        { label: 'FAQ', href: '/faq' },
-        { label: 'Help Center', href: '/contact#help' },
-        { label: 'Cancellation & Refunds', href: '/faq#refunds' },
-        { label: 'Report an Issue', href: '/contact#report' },
+        { label: 'Help Center', href: '/faq' },
+        { label: 'FAQs', href: '/faq' },
+        { label: 'Cancellations & Refunds', href: '/terms' },
+        { label: 'Contact Support', href: '/contact' },
       ],
     },
     contact: {
-      title: 'Contact',
-      // TODO: Replace with permanent registered office address
-      address: 'Salt Lake Sector V, Kolkata, West Bengal 700091, India',
-      // TODO: Configure active support mailbox
-      email: 'support@onegobus.in',
-      // TODO: Configure customer hotline
-      phone: '+91 (033) 2400-GO-BUS',
-      // TODO: Configure business operating hours
-      hours: 'Mon – Sun: 6:00 AM – 11:00 PM IST',
+      title: 'GET IN TOUCH',
+      location: 'Kolkata, West Bengal, India',
+      buttonLabel: 'Contact our team',
+      buttonHref: '/contact',
     },
   },
   newsletter: {
-    title: 'Stay in the Loop',
-    description: 'Get route updates, festive specials, and exclusive student pass deals.',
-    placeholder: 'Enter your email address',
+    title: 'Get route updates',
+    description: 'Occasional travel news, straight to your inbox.',
+    placeholder: 'Email address',
     buttonText: 'Subscribe',
   },
   bottom: {
-    copyright: `© ${new Date().getFullYear()} OneGoBus Inc. All rights reserved.`,
-    madeWith: 'Made with ♥ in Kolkata, West Bengal',
+    copyright: `© ${new Date().getFullYear()} One Go Bus. All rights reserved.`,
     links: [
       { label: 'Privacy Policy', href: '/privacy' },
       { label: 'Terms of Service', href: '/terms' },
-      { label: 'Cookie Policy', href: '/privacy#cookies' },
+      { label: 'Accessibility', href: '/terms' },
     ],
+    madeFor: 'Made for West Bengal',
   },
 };
