@@ -1,5 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AppLayout } from './components/layout/AppLayout';
 
 // Lazy-loaded routes for code-splitting and sub-300ms initial bundle
@@ -11,6 +13,7 @@ const AskAiPage = lazy(() => import('./pages/AskAiPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const TermsPage = lazy(() => import('./pages/TermsPage'));
@@ -29,43 +32,55 @@ const PageLoader = () => (
 export function App() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          {/* Universal Glassmorphic Layout wrapping all pages */}
-          <Route element={<AppLayout />}>
-            {/* Primary Entry Point: OneGoBus Home */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/home" element={<Navigate to="/" replace />} />
+      <AuthProvider>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Universal Glassmorphic Layout wrapping all pages */}
+            <Route element={<AppLayout />}>
+              {/* Primary Entry Point: OneGoBus Home */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/home" element={<Navigate to="/" replace />} />
 
-            {/* Public Discovery Routes */}
-            <Route path="/features" element={<FeaturesPage />} />
-            <Route path="/how-it-works" element={<HowItWorksPage />} />
-            <Route path="/routes" element={<RoutesPage />} />
-            <Route path="/ask-ai" element={<AskAiPage />} />
-            <Route path="/about" element={<AboutPage />} />
+              {/* Public Discovery Routes */}
+              <Route path="/features" element={<FeaturesPage />} />
+              <Route path="/how-it-works" element={<HowItWorksPage />} />
+              <Route path="/routes" element={<RoutesPage />} />
+              <Route path="/ask-ai" element={<AskAiPage />} />
+              <Route path="/about" element={<AboutPage />} />
 
-            {/* Auth Routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+              {/* Auth Routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
-            {/* Support & Legal Routes */}
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/faq" element={<FaqPage />} />
+              {/* Authenticated Traveler Profile Route */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Bus Search Results */}
-            <Route path="/results" element={<ResultsPage />} />
+              {/* Support & Legal Routes */}
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/faq" element={<FaqPage />} />
 
-            {/* Sprint 0 System Health */}
-            <Route path="/system-status" element={<SystemStatusPage />} />
+              {/* Bus Search Results */}
+              <Route path="/results" element={<ResultsPage />} />
 
-            {/* 404 Fallback */}
-            <Route path="/404" element={<NotFoundPage />} />
-            <Route path="*" element={<Navigate to="/404" replace />} />
-          </Route>
-        </Routes>
-      </Suspense>
+              {/* Sprint 0 System Health */}
+              <Route path="/system-status" element={<SystemStatusPage />} />
+
+              {/* 404 Fallback */}
+              <Route path="/404" element={<NotFoundPage />} />
+              <Route path="*" element={<Navigate to="/404" replace />} />
+            </Route>
+          </Routes>
+        </Suspense>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

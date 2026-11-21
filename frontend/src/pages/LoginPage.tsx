@@ -1,6 +1,6 @@
 import { useState, type FC, type FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { tokenStorage } from '../utils/tokenStorage';
+import { useAuth } from '../context/useAuth';
 import { AuthLayout } from '../features/auth/AuthLayout';
 import { AuthField } from '../features/auth/AuthField';
 import { PasswordField } from '../features/auth/PasswordField';
@@ -11,6 +11,7 @@ export const LoginPage: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const { login } = useAuth();
   const [authMode, setAuthMode] = useState<'email' | 'phone'>('email');
   const [email, setEmail] = useState('rohan.wanderer@gmail.com');
   const [phone, setPhone] = useState('');
@@ -28,15 +29,28 @@ export const LoginPage: FC = () => {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      tokenStorage.setToken('onego_jwt_token_sample');
-      tokenStorage.setUser({
-        name: authMode === 'email'
-          ? email.split('@')[0].replace('.', ' ').replace(/(?:^|\s)\S/g, (a) => a.toUpperCase())
-          : 'Verified Commuter',
+      const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80';
+      const userName = authMode === 'email'
+        ? email.split('@')[0].replace('.', ' ').replace(/(?:^|\s)\S/g, (a) => a.toUpperCase())
+        : 'Rohan Sen';
+
+      login({
+        name: userName,
         email: authMode === 'email' ? email : `${phone}@phone.onego`,
+        phone: authMode === 'phone' ? (phone.startsWith('+91') ? phone : `+91 ${phone}`) : '+91 98301 24567',
+        avatar: defaultAvatar,
+        role: 'Verified Traveler',
+        memberSince: 'November 2026',
+        isStudent: false,
+        emergencyContactName: 'Priya Sen (Sister)',
+        emergencyContactPhone: '+91 98309 87654',
+        gender: 'Male',
+        seatPreference: 'lower_window',
+        whatsappNotifications: true,
+        smsNotifications: true,
       });
 
-      const destination = (location.state as { from?: { pathname: string } })?.from?.pathname || '/home';
+      const destination = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
       navigate(destination, { replace: true });
     }, 400);
   };

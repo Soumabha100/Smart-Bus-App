@@ -1,10 +1,6 @@
 import { useState, type FC } from 'react';
 import type { BusTicket } from './types';
-import { BusSeat } from '../../components/ui/BusSeat';
-import availableSeatImg from '../../assets/General_Seat_Available.png';
-import selectedSeatImg from '../../assets/General_Seat_Selected.png';
-import bookedSeatImg from '../../assets/General_Seat_Booked.png';
-import womenSeatImg from '../../assets/General_Seat_Women.png';
+import { BusSeat, SeatArmchairIcon } from '../../components/ui/BusSeat';
 
 interface TicketCardProps {
   ticket: BusTicket;
@@ -201,20 +197,20 @@ export const TicketCard: FC<TicketCardProps> = ({ ticket, onViewSeats, onContinu
 
             {/* Seat Color Legend */}
             <div className="flex flex-wrap items-center gap-2.5 text-xs font-semibold">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#F0FBF4] border border-[#16834A]/40 text-[#16834A]">
-                <img src={availableSeatImg} alt="" className="w-4 h-4 object-contain" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#DDF6DD] border border-[#A8DDAA] text-[#276749]">
+                <SeatArmchairIcon className="w-3.5 h-3.5 text-[#276749]" />
                 <span>Available</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#EAF3FF] border border-[#0B4DBB]/40 text-[#0B4DBB]">
-                <img src={selectedSeatImg} alt="" className="w-4 h-4 object-contain" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#FC7728] border border-[#E6651D] text-white">
+                <SeatArmchairIcon className="w-3.5 h-3.5 text-white" />
                 <span>Selected</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#FFF0F5] border border-[#C55473]/40 text-[#C55473]">
-                <img src={womenSeatImg} alt="" className="w-4 h-4 object-contain" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#F8D1DF] border border-[#EFA9BF] text-[#934C67]">
+                <SeatArmchairIcon className="w-3.5 h-3.5 text-[#934C67]" />
                 <span>Women Reserved</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#FCEEEF] border border-[#B94B53]/40 text-[#B94B53]">
-                <img src={bookedSeatImg} alt="" className="w-4 h-4 object-contain" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#E4E1E5] border border-[#C6C2C9] text-[#77747D]">
+                <SeatArmchairIcon className="w-3.5 h-3.5 text-[#77747D]" />
                 <span>Booked</span>
               </span>
             </div>

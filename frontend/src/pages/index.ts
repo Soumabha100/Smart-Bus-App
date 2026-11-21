@@ -11,5 +11,6 @@ export * from './PrivacyPage';
 export * from './TermsPage';
 export * from './FaqPage';
 export * from './ResultsPage';
+export * from './ProfilePage';
 export * from './NotFoundPage';
 export * from './SystemStatusPage';

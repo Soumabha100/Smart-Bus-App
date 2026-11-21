@@ -1,11 +1,26 @@
 import { useState, useEffect, useRef, type FC } from 'react';
-import { NavLink, Link } from 'react-router-dom';
-import { Sparkles, Menu } from 'lucide-react';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
+import {
+  Sparkles,
+  Menu,
+  User,
+  LogOut,
+  Ticket,
+  Settings,
+  ShieldCheck,
+  ChevronDown,
+  ChevronRight,
+} from 'lucide-react';
+import { useAuth } from '../../context/useAuth';
 import { MobileMenu } from './MobileMenu';
 
 export const Navbar: FC = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
 
   // Guarantee strict light mode and clear any stale dark preferences
   useEffect(() => {
@@ -25,6 +40,31 @@ export const Navbar: FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Close profile dropdown on outside click or escape
+  useEffect(() => {
+    if (!profileDropdownOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(e.target as Node)
+      ) {
+        setProfileDropdownOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setProfileDropdownOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [profileDropdownOpen]);
+
   const desktopLinks = [
     { label: 'Home', to: '/' },
     { label: 'Features', to: '/features' },
@@ -33,6 +73,22 @@ export const Navbar: FC = () => {
     { label: 'Ask AI', to: '/ask-ai', isAi: true },
     { label: 'About', to: '/about' },
   ];
+
+  const handleLogout = () => {
+    setProfileDropdownOpen(false);
+    logout();
+    navigate('/');
+  };
+
+  const initials = user?.name
+    ? user.name
+        .split(' ')
+        .filter(Boolean)
+        .map((part) => part[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    : 'U';
 
   return (
     <>
@@ -97,23 +153,197 @@ export const Navbar: FC = () => {
             ))}
           </div>
 
-          {/* RIGHT: AUTH CTAs */}
+          {/* RIGHT: AUTH CTAs OR LOGGED-IN PROFILE CIRCLE */}
           <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Desktop Auth Links */}
-            <div className="hidden sm:flex items-center gap-2">
-              <Link
-                to="/login"
-                className="px-3.5 py-2 text-xs sm:text-sm font-semibold text-brand hover:bg-surface-2 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/register"
-                className="px-4 py-2 text-xs sm:text-sm font-bold bg-brand hover:bg-brand-hover text-on-brand rounded-xl shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                Register
-              </Link>
-            </div>
+            {isAuthenticated && user ? (
+              /* Authenticated: Circle Profile Icon with Dropdown */
+              <div className="relative" ref={profileDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setProfileDropdownOpen((prev) => !prev)}
+                  aria-expanded={profileDropdownOpen}
+                  aria-haspopup="true"
+                  aria-label="User profile menu"
+                  className="flex items-center gap-1.5 p-1 rounded-full hover:bg-surface-2 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent group"
+                >
+                  <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-brand/20 group-hover:border-accent overflow-hidden shadow-xs transition-colors bg-[#0B2341] flex items-center justify-center">
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xs font-bold text-white tracking-wider">
+                        {initials}
+                      </span>
+                    )}
+                    {/* Live Online Pip */}
+                    <span
+                      className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white"
+                      title="Active"
+                    />
+                  </div>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 hidden sm:block ${
+                      profileDropdownOpen ? 'rotate-180 text-accent' : ''
+                    }`}
+                  />
+                </button>
+
+                {/* Profile Glassmorphic Dropdown Pop-up — High-Contrast Opaque Layering */}
+                {profileDropdownOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-full mt-3 w-[300px] sm:w-[320px] rounded-[22px] bg-white/98 backdrop-blur-2xl p-3 border border-white/90 shadow-[0_24px_60px_-15px_rgba(11,35,65,0.22),0_4px_20px_rgba(11,35,65,0.08),inset_0_1px_0_rgba(255,255,255,1)] flex flex-col gap-1.5 z-50 text-[#0B2341] animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-150 select-none"
+                  >
+                    {/* Header: Elevated Branded User Preview */}
+                    <div className="p-3 rounded-2xl bg-gradient-to-br from-[#FFF8F1] to-[#F5F3EF] border border-[#FC7728]/20 flex items-center gap-3.5 shadow-2xs">
+                      <div className="relative w-11 h-11 rounded-full bg-[#0B2341] text-white flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden ring-2 ring-white shadow-xs">
+                        {user.avatar ? (
+                          <img
+                            src={user.avatar}
+                            alt={user.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          initials
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-extrabold text-sm text-[#0B2341] truncate leading-tight">
+                          {user.name}
+                        </div>
+                        <div className="text-[11px] font-medium text-slate-500 truncate mt-0.5">
+                          {user.email}
+                        </div>
+                        <div className="mt-1.5 flex items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold shadow-2xs">
+                            <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                            <span>{user.role || 'Verified Traveler'}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="my-1 border-t border-slate-200/60" />
+
+                    {/* Navigation Items with Dedicated Icon Wells and Chevron Indicators */}
+                    <div className="space-y-1">
+                      {/* Menu Item: My Profile */}
+                      <Link
+                        to="/profile"
+                        role="menuitem"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="group flex items-center justify-between p-2 rounded-xl hover:bg-[#F5F3EF] transition-all duration-150 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-[#FFF0E6] flex items-center justify-center text-slate-600 group-hover:text-[#FC7728] transition-colors shadow-2xs">
+                            <User className="w-4 h-4" />
+                          </div>
+                          <div className="text-left">
+                            <div className="text-xs font-bold text-[#0B2341] group-hover:text-[#FC7728] transition-colors">
+                              My Profile
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-medium">
+                              Personal details &amp; identity
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-[#FC7728] group-hover:translate-x-0.5 transition-all" />
+                      </Link>
+
+                      {/* Menu Item: My Bookings / Find Buses */}
+                      <Link
+                        to="/results"
+                        role="menuitem"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="group flex items-center justify-between p-2 rounded-xl hover:bg-[#F5F3EF] transition-all duration-150 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-[#FFF0E6] flex items-center justify-center text-slate-600 group-hover:text-[#FC7728] transition-colors shadow-2xs">
+                            <Ticket className="w-4 h-4" />
+                          </div>
+                          <div className="text-left">
+                            <div className="text-xs font-bold text-[#0B2341] group-hover:text-[#FC7728] transition-colors">
+                              My Bookings / Trips
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-medium">
+                              Active holds &amp; past rides
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-[#FC7728] group-hover:translate-x-0.5 transition-all" />
+                      </Link>
+
+                      {/* Menu Item: Preferences & Settings */}
+                      <Link
+                        to="/profile#settings"
+                        role="menuitem"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="group flex items-center justify-between p-2 rounded-xl hover:bg-[#F5F3EF] transition-all duration-150 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-[#FFF0E6] flex items-center justify-center text-slate-600 group-hover:text-[#FC7728] transition-colors shadow-2xs">
+                            <Settings className="w-4 h-4" />
+                          </div>
+                          <div className="text-left">
+                            <div className="text-xs font-bold text-[#0B2341] group-hover:text-[#FC7728] transition-colors">
+                              Preferences &amp; Settings
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-medium">
+                              Seat choice &amp; DPDP privacy
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-[#FC7728] group-hover:translate-x-0.5 transition-all" />
+                      </Link>
+                    </div>
+
+                    <div className="my-1 border-t border-slate-200/60" />
+
+                    {/* Menu Item: Sign Out */}
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleLogout}
+                      className="group w-full flex items-center justify-between p-2 rounded-xl hover:bg-rose-50 transition-all duration-150 cursor-pointer text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-rose-50 group-hover:bg-rose-100 flex items-center justify-center text-rose-500 group-hover:text-rose-600 transition-colors shadow-2xs">
+                          <LogOut className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-rose-600 group-hover:text-rose-700 transition-colors">
+                            Sign Out
+                          </div>
+                          <div className="text-[10px] text-rose-400 font-medium">
+                            Log out of One Go Bus
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-rose-300 group-hover:text-rose-600 group-hover:translate-x-0.5 transition-all" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Unauthenticated: Desktop Sign In & Register Buttons */
+              <div className="hidden sm:flex items-center gap-2">
+                <Link
+                  to="/login"
+                  className="px-3.5 py-2 text-xs sm:text-sm font-semibold text-brand hover:bg-surface-2 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-4 py-2 text-xs sm:text-sm font-bold bg-brand hover:bg-brand-hover text-on-brand rounded-xl shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
 
             {/* Mobile Hamburger Button */}
             <button
@@ -138,3 +368,5 @@ export const Navbar: FC = () => {
     </>
   );
 };
+
+export default Navbar;
