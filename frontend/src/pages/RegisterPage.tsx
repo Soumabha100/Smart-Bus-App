@@ -4,6 +4,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, type RegisterFormData } from '../schemas/authSchema';
 import { tokenStorage } from '../utils/tokenStorage';
+import { registerUser } from '../api/authApi';
 import { AuthLayout } from '../features/auth/AuthLayout';
 import { AuthField } from '../features/auth/AuthField';
 import { PasswordField } from '../features/auth/PasswordField';
@@ -15,6 +16,7 @@ export const RegisterPage: FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phone, setPhone] = useState('');
   const [isStudent, setIsStudent] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const {
     register,
@@ -53,17 +55,61 @@ export const RegisterPage: FC = () => {
 
   const strength = getPasswordStrength(passwordValue);
 
-  const onSubmit = (data: RegisterFormData) => {
+  const onSubmit = async (data: RegisterFormData) => {
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      tokenStorage.setToken('onego_jwt_token_sample');
-      tokenStorage.setUser({
-        name: data.name,
-        email: data.email,
+    setServerError(null);
+
+    // Split Full Name into First Name & Last Name for backend API
+    const trimmedName = data.name.trim();
+    const spaceIndex = trimmedName.indexOf(' ');
+    const firstName = spaceIndex !== -1 ? trimmedName.substring(0, spaceIndex) : trimmedName;
+    const lastName = spaceIndex !== -1 ? trimmedName.substring(spaceIndex + 1).trim() : 'User';
+
+    const normalizedPhone = phone.trim() || '9876543210';
+
+    try {
+      const authResponse = await registerUser({
+        firstName,
+        lastName,
+        email: data.email.trim(),
+        phone: normalizedPhone,
+        password: data.password,
       });
-      navigate('/home');
-    }, 450);
+
+      const user = authResponse.user;
+      const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80';
+      const fullName = `${user.firstName} ${user.lastName}`.trim();
+
+      tokenStorage.setToken(authResponse.accessToken);
+      tokenStorage.setUser({
+        id: user.id,
+        name: fullName || data.name,
+        email: user.email,
+        phone: user.phone,
+        avatar: defaultAvatar,
+        role: isStudent ? 'Student Explorer' : 'Verified Traveler',
+        memberSince: 'November 2026',
+        isStudent: isStudent,
+        emergencyContactName: 'Family Contact',
+        emergencyContactPhone: '+91 98300 11223',
+        gender: 'Not Specified',
+        seatPreference: 'lower_window',
+        whatsappNotifications: true,
+        smsNotifications: true,
+      });
+
+      navigate('/home', { replace: true });
+    } catch (err: unknown) {
+      const errWithDetails = err as Error & { details?: { validationErrors?: Record<string, string> } };
+      if (errWithDetails.details?.validationErrors) {
+        const firstField = Object.keys(errWithDetails.details.validationErrors)[0];
+        setServerError(`${firstField}: ${errWithDetails.details.validationErrors[firstField]}`);
+      } else {
+        setServerError(errWithDetails.message || 'Registration failed. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -72,6 +118,17 @@ export const RegisterPage: FC = () => {
       title="Create account"
       subtitle="Join thousands of smart commuters in Bengal."
     >
+      {/* Server Error Alert */}
+      {serverError && (
+        <div className="w-full bg-danger-tint/90 border border-danger/40 text-on-danger-tint rounded-xl p-3 mb-3 flex items-start gap-2.5" role="alert">
+          <span className="material-symbols-outlined text-[18px] text-danger shrink-0 mt-0.5">error</span>
+          <div className="flex-1 text-xs">
+            <span className="font-bold">Registration failed:</span>
+            <p className="mt-0.5 opacity-90">{serverError}</p>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
         {/* Compact 2-Column Name & Phone for Balanced Height */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -179,3 +236,5 @@ export const RegisterPage: FC = () => {
     </AuthLayout>
   );
 };
+
+export default RegisterPage;

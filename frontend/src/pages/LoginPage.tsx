@@ -1,6 +1,7 @@
 import { useState, type FC, type FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { tokenStorage } from '../utils/tokenStorage';
+import { loginUser } from '../api/authApi';
 import { AuthLayout } from '../features/auth/AuthLayout';
 import { AuthField } from '../features/auth/AuthField';
 import { PasswordField } from '../features/auth/PasswordField';
@@ -16,29 +17,91 @@ export const LoginPage: FC = () => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('journey2024');
   const [showErrorBanner, setShowErrorBanner] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (authMode === 'email' && (!email || !password)) {
-      setShowErrorBanner(true);
-      return;
+    if (authMode === 'email') {
+      if (!email.trim() || !password) {
+        setErrorMessage('Please enter your registered email and password.');
+        setShowErrorBanner(true);
+        return;
+      }
+
+      setIsLoading(true);
+      setShowErrorBanner(false);
+
+      try {
+        const authResponse = await loginUser({
+          email: email.trim(),
+          password,
+        });
+
+        const user = authResponse.user;
+        const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80';
+        const fullName = `${user.firstName} ${user.lastName}`.trim();
+
+        tokenStorage.setToken(authResponse.accessToken);
+        tokenStorage.setUser({
+          id: user.id,
+          name: fullName || 'Verified Commuter',
+          email: user.email,
+          phone: user.phone || '+91 98301 24567',
+          avatar: defaultAvatar,
+          role: user.role === 'ADMIN' ? 'Administrator' : 'Verified Traveler',
+          memberSince: 'November 2026',
+          isStudent: false,
+          emergencyContactName: 'Priya Sen (Sister)',
+          emergencyContactPhone: '+91 98309 87654',
+          gender: 'Male',
+          seatPreference: 'lower_window',
+          whatsappNotifications: true,
+          smsNotifications: true,
+        });
+
+        const destination = (location.state as { from?: { pathname: string } })?.from?.pathname || '/home';
+        navigate(destination, { replace: true });
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Invalid email or password';
+        setErrorMessage(message);
+        setShowErrorBanner(true);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // Phone OTP mode fallback placeholder
+      if (!phone.trim()) {
+        setErrorMessage('Please enter your 10-digit mobile number.');
+        setShowErrorBanner(true);
+        return;
+      }
+
+      setIsLoading(true);
+      setTimeout(() => {
+        setIsLoading(false);
+        const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80';
+        tokenStorage.setToken('onego_phone_demo_token');
+        tokenStorage.setUser({
+          name: 'Rohan Sen',
+          email: `${phone.replace(/\s+/g, '')}@phone.onego`,
+          phone: phone.startsWith('+91') ? phone : `+91 ${phone}`,
+          avatar: defaultAvatar,
+          role: 'Verified Traveler',
+          memberSince: 'November 2026',
+          isStudent: false,
+          emergencyContactName: 'Priya Sen (Sister)',
+          emergencyContactPhone: '+91 98309 87654',
+          gender: 'Male',
+          seatPreference: 'lower_window',
+          whatsappNotifications: true,
+          smsNotifications: true,
+        });
+
+        const destination = (location.state as { from?: { pathname: string } })?.from?.pathname || '/home';
+        navigate(destination, { replace: true });
+      }, 400);
     }
-
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      tokenStorage.setToken('onego_jwt_token_sample');
-      tokenStorage.setUser({
-        name: authMode === 'email'
-          ? email.split('@')[0].replace('.', ' ').replace(/(?:^|\s)\S/g, (a) => a.toUpperCase())
-          : 'Verified Commuter',
-        email: authMode === 'email' ? email : `${phone}@phone.onego`,
-      });
-
-      const destination = (location.state as { from?: { pathname: string } })?.from?.pathname || '/home';
-      navigate(destination, { replace: true });
-    }, 400);
   };
 
   return (
@@ -82,7 +145,7 @@ export const LoginPage: FC = () => {
           <span className="material-symbols-outlined text-[18px] text-danger shrink-0 mt-0.5">error</span>
           <div className="flex-1 text-xs">
             <span className="font-bold">Authentication error:</span>
-            <p className="mt-0.5 opacity-90">Please enter your registered email and password.</p>
+            <p className="mt-0.5 opacity-90">{errorMessage || 'Please enter your registered email and password.'}</p>
           </div>
         </div>
       )}
@@ -181,3 +244,5 @@ export const LoginPage: FC = () => {
     </AuthLayout>
   );
 };
+
+export default LoginPage;

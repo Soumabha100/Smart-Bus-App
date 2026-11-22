@@ -1,11 +1,16 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
+import { tokenStorage } from '../utils/tokenStorage';
 import { Navbar } from '../components/layout/Navbar';
 import { PillButton } from '../components/ui/PillButton';
 import { GlassCard } from '../components/ui/GlassCard';
 
 export const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
+
+  if (tokenStorage.isAuthenticated()) {
+    return <Navigate to="/home" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-[#0C1321] text-[#DCE2F6] flex flex-col selection:bg-[#44E2CD]/30 selection:text-[#44E2CD] overflow-x-hidden">

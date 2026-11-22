@@ -5,6 +5,18 @@ export interface StoredUser {
   id?: string;
   name: string;
   email: string;
+  phone?: string;
+  avatar?: string;
+  role?: string;
+  memberSince?: string;
+  isStudent?: boolean;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  gender?: string;
+  seatPreference?: string;
+  whatsappNotifications?: boolean;
+  smsNotifications?: boolean;
+  [key: string]: unknown;
 }
 
 export const tokenStorage = {

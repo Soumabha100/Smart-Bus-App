@@ -24,7 +24,7 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         {/* Left: Brand Logo & Navigation */}
         <div className="flex items-center gap-8 lg:gap-12">
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link to={isAuthenticated ? "/home" : "/"} className="flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FF7A59] to-[#2DD4BF] p-0.5 shadow-[0_0_16px_rgba(255,122,89,0.35)] group-hover:scale-105 transition-transform flex items-center justify-center">
               <div className="w-full h-full bg-[#0B1220] rounded-[14px] flex items-center justify-center">
                 <span className="material-symbols-outlined text-[22px] text-[#FF7A59]">

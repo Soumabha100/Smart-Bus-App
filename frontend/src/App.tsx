@@ -9,14 +9,26 @@ import {
   SystemStatusPage,
 } from './pages';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { tokenStorage } from './utils/tokenStorage';
 
 export function App() {
+  const isAuth = tokenStorage.isAuthenticated();
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<OnboardingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/"
+          element={isAuth ? <Navigate to="/home" replace /> : <OnboardingPage />}
+        />
+        <Route
+          path="/login"
+          element={isAuth ? <Navigate to="/home" replace /> : <LoginPage />}
+        />
+        <Route
+          path="/register"
+          element={isAuth ? <Navigate to="/home" replace /> : <RegisterPage />}
+        />
         <Route
           path="/home"
           element={
