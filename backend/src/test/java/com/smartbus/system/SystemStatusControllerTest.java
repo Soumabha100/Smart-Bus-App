@@ -1,5 +1,7 @@
 package com.smartbus.system;
 
+import com.smartbus.auth.jwt.JwtAuthenticationFilter;
+import com.smartbus.auth.jwt.JwtTokenProvider;
 import com.smartbus.config.SecurityConfig;
 import com.smartbus.system.controller.SystemStatusController;
 import com.smartbus.system.dto.SystemStatusResponse;
@@ -20,7 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(SystemStatusController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, JwtAuthenticationFilter.class, JwtTokenProvider.class})
 class SystemStatusControllerTest {
 
     @Autowired
@@ -51,4 +53,3 @@ class SystemStatusControllerTest {
             .andExpect(jsonPath("$.databaseService").value("smart-bus-backend"));
     }
 }
-

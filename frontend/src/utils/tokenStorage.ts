@@ -18,6 +18,7 @@ export interface StoredUser {
   seatPreference?: 'lower_window' | 'upper_sleeper' | 'aisle' | 'any';
   whatsappNotifications?: boolean;
   smsNotifications?: boolean;
+  [key: string]: unknown;
 }
 
 export const tokenStorage = {
