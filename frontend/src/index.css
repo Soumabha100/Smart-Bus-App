@@ -44,8 +44,73 @@
   --accent-tint:#FFDBCB; --on-accent-tint:#341000;
   --success:#00522C; --success-tint:#E3F6EC;
   --danger:#BA1A1A; --danger-tint:#FFDAD6; --on-danger-tint:#93000A;
+
+  /* Glassmorphic Tokens (Light Mode Apple iOS Frosted Glass) */
+  --color-primary: #0B2341;
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.85);
+  --glass-blur: blur(20px);
+  --glass-shadow: 0 10px 35px rgba(11, 35, 65, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.95);
+  --glass-fallback-bg: #FFFFFF;
+
+  /* OneGo Bus – Seat Status & Colour Specifications */
+  /* 1. Available Seat - Green */
+  --seat-available: #16834A;
+  --seat-available-highlight: #27AE60;
+  --seat-available-bg: #F0FBF4;
+
+  /* 2. Selected Seat - Blue */
+  --seat-selected: #0B4DBB;
+  --seat-selected-highlight: #2563EB;
+  --seat-selected-bg: #EAF3FF;
+
+  /* 3. Booked Seat - Muted Red */
+  --seat-booked: #B94B53;
+  --seat-booked-highlight: #D96A70;
+  --seat-booked-bg: #FCEEEF;
+
+  /* 4. Unavailable Seat - Light Grey */
+  --seat-unavailable: #B8BDC5;
+  --seat-unavailable-highlight: #A8AFB9;
+  --seat-unavailable-bg: #F1F2F4;
+
+  /* 5. Women Reserved - Dusty Rose */
+  --seat-women: #C55473;
+  --seat-women-highlight: #E87999;
+  --seat-women-bg: #FFF0F5;
+
+  /* OneGo Bus Brand Colours */
+  --brand-navy: #0B2341;
+  --brand-orange: #FC7728;
+  --page-background: #FFF8F1;
+
+  /* OneGo Premium Design Tokens */
+  --onego-navy: #0B2341;
+  --onego-orange: #FC7728;
+  --onego-orange-hover: #E6651D;
+  --onego-cream: #FFF8F1;
+  --onego-page: #FBF9F5;
+  --onego-text-primary: #0B2341;
+  --onego-text-secondary: #64748B;
+
+  --glass-surface: rgba(255, 255, 255, 0.48);
+  --glass-surface-strong: rgba(255, 255, 255, 0.68);
+  --glass-border: rgba(255, 255, 255, 0.72);
+  --glass-shadow: 0 12px 36px rgba(11, 35, 65, 0.08);
 }
+
+.premium-glass-card {
+  background: rgba(255, 255, 255, 0.52);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 24px;
+  box-shadow: 0 12px 36px rgba(11, 35, 65, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
 @theme inline {
+  --color-primary: var(--brand);
   --color-canvas:var(--canvas); --color-surface:var(--surface); --color-surface-2:var(--surface-2);
   --color-surface-3:var(--surface-3); --color-surface-4:var(--surface-4); --color-surface-5:var(--surface-5);
   --color-line:var(--line); --color-ink:var(--ink); --color-ink-strong:var(--ink-strong); --color-ink-muted:var(--ink-muted);
@@ -57,28 +122,84 @@
   --font-sans:"Plus Jakarta Sans", system-ui, sans-serif;
 }
 
+/* Tailwind v4 Utility for Glassmorphism */
+@utility glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur) saturate(150%);
+  -webkit-backdrop-filter: var(--glass-blur) saturate(150%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+}
+
+/* Scrolled state enhancements (>8px) */
+.glass[data-scrolled="true"],
+[data-scrolled="true"].glass {
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-shadow: 0 14px 45px rgba(11, 35, 65, 0.12);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .glass {
+    background: var(--glass-fallback-bg) !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--glass-fallback-bg) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
 /* Glass card styling */
 .glass-card {
-  background: rgba(25, 32, 46, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface, #FFFFFF);
+  border: 1px solid var(--line, #E5E1D8);
 }
 
 .glass-card-light {
-  background: rgba(255, 247, 237, 0.85);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 122, 89, 0.15);
+  border: 1px solid rgba(252, 119, 40, 0.15);
+}
+
+/* Subtle ticket perforation styling */
+.ticket-card {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid var(--line, #E5E1D8);
+}
+
+.ticket-notch-top {
+  position: absolute;
+  top: -10px;
+  width: 20px;
+  height: 20px;
+  background: var(--canvas, #FBF9F5);
+  border-radius: 9999px;
+  border-bottom: 1px solid var(--line, #E5E1D8);
+  box-shadow: inset 0 -2px 3px rgba(0, 0, 0, 0.03);
+}
+
+.ticket-notch-bottom {
+  position: absolute;
+  bottom: -10px;
+  width: 20px;
+  height: 20px;
+  background: var(--canvas, #FBF9F5);
+  border-radius: 9999px;
+  border-top: 1px solid var(--line, #E5E1D8);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.03);
 }
 
 /* Perforated ticket edge effect */
 .ticket-stub {
   position: relative;
-  background: rgba(25, 32, 46, 0.85);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
+  background: var(--surface-2, #F5F3EF);
+  border: 1px solid var(--line, #E5E1D8);
+  border-radius: 20px;
 }
 
 /* Keyframe animations */
@@ -86,6 +207,77 @@
   to {
     stroke-dashoffset: 0;
   }
+}
+
+@keyframes modalBackdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalBackdropFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes modalScaleIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalScaleOut {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+}
+
+@keyframes sheetSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-modal-backdrop {
+  animation: modalBackdropFadeIn 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-modal-scale {
+  animation: modalScaleIn 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-modal-backdrop-in {
+  animation: modalBackdropFadeIn 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-modal-backdrop-out {
+  animation: modalBackdropFadeOut 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-modal-scale-in {
+  animation: modalScaleIn 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-modal-scale-out {
+  animation: modalScaleOut 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-sheet-up {
+  animation: sheetSlideUp 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes pulseGlow {
@@ -101,6 +293,36 @@
 
 .animate-pulse-glow {
   animation: pulseGlow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* OneGo Seat Micro-Animations */
+@keyframes seatPop {
+  0% {
+    transform: scale(0.92);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes seatSelectedPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(11, 77, 187, 0.25), 0 4px 12px rgba(11, 77, 187, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.45), 0 8px 18px rgba(37, 99, 235, 0.35);
+  }
+}
+
+.animate-seat-pop {
+  animation: seatPop 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.seat-selected-pulse {
+  animation: seatSelectedPulse 2.4s ease-in-out infinite;
 }
 
 /* Accessibility: prefers-reduced-motion */

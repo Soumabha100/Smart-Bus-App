@@ -2,6 +2,7 @@ import { useState, type FC, type FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { tokenStorage } from '../utils/tokenStorage';
 import { loginUser } from '../api/authApi';
+import { useAuth } from '../context/useAuth';
 import { AuthLayout } from '../features/auth/AuthLayout';
 import { AuthField } from '../features/auth/AuthField';
 import { PasswordField } from '../features/auth/PasswordField';
@@ -12,6 +13,7 @@ export const LoginPage: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const { login } = useAuth();
   const [authMode, setAuthMode] = useState<'email' | 'phone'>('email');
   const [email, setEmail] = useState('rohan.wanderer@gmail.com');
   const [phone, setPhone] = useState('');
@@ -60,7 +62,24 @@ export const LoginPage: FC = () => {
           smsNotifications: true,
         });
 
-        const destination = (location.state as { from?: { pathname: string } })?.from?.pathname || '/home';
+        const destination = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
+        login({
+          id: user.id,
+          name: fullName || 'Verified Commuter',
+          email: user.email,
+          phone: user.phone || '+91 98301 24567',
+          avatar: defaultAvatar,
+          role: user.role === 'ADMIN' ? 'Administrator' : 'Verified Traveler',
+          memberSince: 'November 2026',
+          isStudent: false,
+          emergencyContactName: 'Priya Sen (Sister)',
+          emergencyContactPhone: '+91 98309 87654',
+          gender: 'Male',
+          seatPreference: 'lower_window',
+          whatsappNotifications: true,
+          smsNotifications: true,
+        }, authResponse.accessToken);
+
         navigate(destination, { replace: true });
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Invalid email or password';
@@ -81,8 +100,8 @@ export const LoginPage: FC = () => {
       setTimeout(() => {
         setIsLoading(false);
         const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80';
-        tokenStorage.setToken('onego_phone_demo_token');
-        tokenStorage.setUser({
+        const destination = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
+        login({
           name: 'Rohan Sen',
           email: `${phone.replace(/\s+/g, '')}@phone.onego`,
           phone: phone.startsWith('+91') ? phone : `+91 ${phone}`,
@@ -96,9 +115,8 @@ export const LoginPage: FC = () => {
           seatPreference: 'lower_window',
           whatsappNotifications: true,
           smsNotifications: true,
-        });
+        }, 'onego_phone_demo_token');
 
-        const destination = (location.state as { from?: { pathname: string } })?.from?.pathname || '/home';
         navigate(destination, { replace: true });
       }, 400);
     }
@@ -115,11 +133,10 @@ export const LoginPage: FC = () => {
         <button
           type="button"
           onClick={() => setAuthMode('email')}
-          className={`min-h-[42px] py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all ${
-            authMode === 'email'
-              ? 'bg-brand text-on-brand border-brand shadow-sm'
-              : 'bg-surface-2/60 border-line/50 text-ink-muted hover:text-ink-strong'
-          }`}
+          className={`min-h-[42px] py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all ${authMode === 'email'
+            ? 'bg-brand text-on-brand border-brand shadow-sm'
+            : 'bg-surface-2/60 border-line/50 text-ink-muted hover:text-ink-strong'
+            }`}
         >
           <span className="material-symbols-outlined text-[16px]">mail</span>
           <span>Email &amp; Password</span>
@@ -128,11 +145,10 @@ export const LoginPage: FC = () => {
         <button
           type="button"
           onClick={() => setAuthMode('phone')}
-          className={`min-h-[42px] py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all ${
-            authMode === 'phone'
-              ? 'bg-brand text-on-brand border-brand shadow-sm'
-              : 'bg-surface-2/60 border-line/50 text-ink-muted hover:text-ink-strong'
-          }`}
+          className={`min-h-[42px] py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all ${authMode === 'phone'
+            ? 'bg-brand text-on-brand border-brand shadow-sm'
+            : 'bg-surface-2/60 border-line/50 text-ink-muted hover:text-ink-strong'
+            }`}
         >
           <span className="material-symbols-outlined text-[16px]">smartphone</span>
           <span>Phone OTP</span>

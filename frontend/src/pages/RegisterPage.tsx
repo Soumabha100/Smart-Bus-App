@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, type RegisterFormData } from '../schemas/authSchema';
-import { tokenStorage } from '../utils/tokenStorage';
 import { registerUser } from '../api/authApi';
+import { useAuth } from '../context/useAuth';
 import { AuthLayout } from '../features/auth/AuthLayout';
 import { AuthField } from '../features/auth/AuthField';
 import { PasswordField } from '../features/auth/PasswordField';
@@ -13,6 +13,7 @@ import { AuthSocialButtons } from '../features/auth/AuthSocialButtons';
 
 export const RegisterPage: FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phone, setPhone] = useState('');
   const [isStudent, setIsStudent] = useState(false);
@@ -65,7 +66,9 @@ export const RegisterPage: FC = () => {
     const firstName = spaceIndex !== -1 ? trimmedName.substring(0, spaceIndex) : trimmedName;
     const lastName = spaceIndex !== -1 ? trimmedName.substring(spaceIndex + 1).trim() : 'User';
 
-    const normalizedPhone = phone.trim() || '9876543210';
+    // Normalize phone number (backend expects 10-15 digits)
+    const cleanedDigits = phone.replace(/\D/g, '');
+    const normalizedPhone = cleanedDigits.length >= 10 ? cleanedDigits : '9830124567';
 
     try {
       const authResponse = await registerUser({
@@ -80,12 +83,11 @@ export const RegisterPage: FC = () => {
       const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80';
       const fullName = `${user.firstName} ${user.lastName}`.trim();
 
-      tokenStorage.setToken(authResponse.accessToken);
-      tokenStorage.setUser({
+      const userData = {
         id: user.id,
         name: fullName || data.name,
         email: user.email,
-        phone: user.phone,
+        phone: user.phone || normalizedPhone,
         avatar: defaultAvatar,
         role: isStudent ? 'Student Explorer' : 'Verified Traveler',
         memberSince: 'November 2026',
@@ -93,12 +95,15 @@ export const RegisterPage: FC = () => {
         emergencyContactName: 'Family Contact',
         emergencyContactPhone: '+91 98300 11223',
         gender: 'Not Specified',
-        seatPreference: 'lower_window',
+        seatPreference: 'lower_window' as const,
         whatsappNotifications: true,
         smsNotifications: true,
-      });
+      };
 
-      navigate('/home', { replace: true });
+      // Call login from useAuth to update both React state and localStorage
+      login(userData, authResponse.accessToken);
+
+      navigate('/', { replace: true });
     } catch (err: unknown) {
       const errWithDetails = err as Error & { details?: { validationErrors?: Record<string, string> } };
       if (errWithDetails.details?.validationErrors) {
