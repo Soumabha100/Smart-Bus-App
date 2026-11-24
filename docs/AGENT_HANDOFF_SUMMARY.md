@@ -19,7 +19,7 @@ Consult [`AGENTS.md`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart
    - Primary Accent Orange: `#FC7728` / `#A04100`
    - Ink Strong / Muted: `#000D21` / `#44474E`
    - Glass System: `@utility glass` in `frontend/src/index.css` (`--glass-bg`, `--glass-border`, `--glass-blur`).
-6. **DPDP 2025 Privacy Guardrails:** No PII transmitted to LLMs. Spring AI is propose-only; seat confirmation and payment require user-confirmed REST calls.
+6. **Privacy & AI Agent Guardrails:** No PII transmitted to LLMs. Spring AI is propose-only; seat confirmation and payment require user-confirmed REST calls.
 
 ---
 
@@ -118,7 +118,7 @@ Consult [`AGENTS.md`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart
 | :--- | :--- |
 | [`frontend/src/context/AuthContext.tsx`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart-Bus-Application/frontend/src/context/AuthContext.tsx) | Reactive AuthProvider component syncing auth state across windows and localStorage. |
 | [`frontend/src/context/useAuth.ts`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart-Bus-Application/frontend/src/context/useAuth.ts) | Custom React hook providing `user`, `isAuthenticated`, `login`, `logout`, and `updateUser`. |
-| [`frontend/src/pages/ProfilePage.tsx`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart-Bus-Application/frontend/src/pages/ProfilePage.tsx) | Complete light-mode glassmorphic traveler profile view with DPDP 2025 compliance and JSON export. |
+| [`frontend/src/pages/ProfilePage.tsx`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart-Bus-Application/frontend/src/pages/ProfilePage.tsx) | Complete light-mode glassmorphic traveler profile view with Personal Information, Travel Preferences, and Security controls. |
 | [`frontend/src/components/layout/Navbar.tsx`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart-Bus-Application/frontend/src/components/layout/Navbar.tsx) | Floating pill navbar with responsive profile circle avatar button and glassmorphic dropdown. |
 | [`frontend/src/components/layout/MobileMenu.tsx`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart-Bus-Application/frontend/src/components/layout/MobileMenu.tsx) | Responsive mobile drawer with authenticated user banner and sign-out action. |
 | [`frontend/src/features/results/SeatSelectionModal.tsx`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart-Bus-Application/frontend/src/features/results/SeatSelectionModal.tsx) | The primary full-screen seat booking modal component (3 columns, glassmorphism, dynamic pricing, animations). |

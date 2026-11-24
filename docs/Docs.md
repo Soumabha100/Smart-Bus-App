@@ -77,7 +77,17 @@ The website footer has been completely redesigned to match the pixel-accurate re
 
 - **Reactive State (`AuthContext` & `useAuth`):** Decoupled context definition (`authContextInstance.ts`), provider component (`AuthContext.tsx`), and hook (`useAuth.ts`) to satisfy Vite Fast Refresh.
 - **Top Navbar Profile Dropdown:** Replaces "Sign In" and "Register" buttons with a circular 40px avatar with online status indicator. The dropdown menu uses a 98% opaque frosted glass surface (`bg-white/98 backdrop-blur-2xl`) with multi-layered drop shadows, branded user header card, structured icon wells, title/subtitle metadata, and subtle chevron indicators to guarantee complete contrast even over busy hero graphics. Options: `My Profile`, `My Bookings / Trips`, `Preferences & Settings`, and `Sign Out`.
-- **Profile Page (`/profile`):** Protected route displaying personal details (editable), bus seat preferences, DPDP 2025 compliance statement with JSON data export, and security sessions.
+- **Profile Page (`/profile` — Phase 27 & 28 Redesign):**
+  - **Heritage Panoramic Banner:** Integrated high-resolution WebP artwork (`kolkata-profile-banner.webp`, 15.6 kB) representing Kolkata culture (Victoria Memorial, Ganges riverboat, Howrah Bridge cantilever, iconic yellow/blue bus, autumn foliage, and vintage lamppost).
+  - **Minimalist Hero Identity:** Minimal, high-contrast presentation containing avatar with camera badge, user name ("Soumabha Majumder"), emerald "Verified Traveler" pill, and a frosted glass contact capsule (`bg-white/85 backdrop-blur-md`) with email and phone. The remaining 70% of the banner remains completely clear and unobstructed.
+  - **Traveler Milestones & Perks Strip:** Dedicated 4-card metric strip directly below the banner displaying `Member Since` (tenure), `Completed Trips`, `OneGo AI Savings`, and `Favorite Corridor` with dedicated colored icon micro-containers and bold ink typography (4-column desktop, 2x2 mobile grid).
+  - **Smooth Gradient Seam:** Zero-seam linear gradient mask (`#FCEBD7 0%` through transparent `66%`) ensuring crystal-clear text contrast on any viewport width.
+  - **Mobile Stacking:** Dedicated scenic window on top with top-right Sign Out button, overlapping centered avatar (`-mt-12`), and cleanly stacked details with zero text collision over the artwork.
+  - **Tabs & Interactive Functionality:** 3 functional tabs (`Personal Information`, `Travel Preferences`, `Security & Sessions`) with live form saving, preference toggling, and active session monitoring.
+- **Backend-Synchronized Sign Out Flow & Modal (Phase 29):**
+  - **Spring Boot Backend Endpoint:** Implemented `@PostMapping("/logout")` in `AuthController.java` expiring HTTP-only session cookies (`onego_token`, maxAge=0).
+  - **Asynchronous Frontend Dispatch:** Added `logoutUser()` in `frontend/src/api/authApi.ts` invoked asynchronously inside `AuthContext.tsx` before local token purging.
+  - **Sign Out Confirmation Modal (`SignOutModal.tsx`):** Pixel-accurate premium dialog matching reference design with dimmed backdrop (`bg-[#000D21]/60 backdrop-blur-xs`), smooth pop-in animation (`zoom-in-95 ease-out`), warm cream Kolkata heritage artwork header (`kolkata-profile-banner.webp`), circular close button, max-width 480px with 16px mobile margins, initial keyboard focus on "Stay signed in", ESC-key dismiss with focus restoration to opener, and deep navy `#0B2341` primary action disabled while request is pending. Universally connected across Profile banner, Profile Security tab, Navbar profile dropdown, and Mobile menu drawer.
 
 ---
 

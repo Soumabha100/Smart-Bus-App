@@ -6,9 +6,14 @@ import { useAuth } from '../../context/useAuth';
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenSignOutModal?: () => void;
 }
 
-export const MobileMenu: FC<MobileMenuProps> = ({ isOpen, onClose }) => {
+export const MobileMenu: FC<MobileMenuProps> = ({
+  isOpen,
+  onClose,
+  onOpenSignOutModal,
+}) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
@@ -65,8 +70,12 @@ export const MobileMenu: FC<MobileMenuProps> = ({ isOpen, onClose }) => {
 
   const handleLogout = () => {
     onClose();
-    logout();
-    navigate('/');
+    if (onOpenSignOutModal) {
+      onOpenSignOutModal();
+    } else {
+      logout();
+      navigate('/');
+    }
   };
 
   const initials = user?.name

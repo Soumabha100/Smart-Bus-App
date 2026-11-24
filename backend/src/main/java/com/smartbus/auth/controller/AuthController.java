@@ -50,6 +50,20 @@ public class AuthController {
         return ResponseEntity.ok(authResponse);
     }
 
+    @PostMapping("/logout")
+    @Operation(summary = "Sign out user", description = "Clears session authentication cookies and terminates user session")
+    public ResponseEntity<Void> logout(HttpServletResponse response) {
+        ResponseCookie cookie = ResponseCookie.from("onego_token", "")
+            .httpOnly(true)
+            .secure(false)
+            .path("/")
+            .maxAge(0)
+            .sameSite("Lax")
+            .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        return ResponseEntity.noContent().build();
+    }
+
     private void attachAuthCookie(HttpServletResponse response, String token) {
         ResponseCookie cookie = ResponseCookie.from("onego_token", token)
             .httpOnly(true)

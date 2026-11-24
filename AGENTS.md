@@ -30,9 +30,9 @@
 
 ---
 
-## 3. DPDP 2025 Privacy & AI Agent Guardrails
+## 3. Privacy & AI Agent Guardrails
 - **Propose-Only Tools:** The Spring AI agent may search trips, explain rules, and propose seat holds. It can NEVER charge money or finalize bookings directly. Final booking/payment requires a user-confirmed REST call.
-- **Data Minimization (DPDP Rules 2025):** Never send passenger PII (names, phone numbers, email addresses) to third-party LLMs.
+- **Data Minimization:** Never send passenger PII (names, phone numbers, email addresses) to third-party LLMs.
 - **SQL / Prompt Injection Defense:** All user inputs and vector RAG chunks are treated as untrusted data.
 
 ---
@@ -57,3 +57,10 @@
 - **Performance & Code Splitting:**
   - All page routes MUST be lazy-loaded using `React.lazy()` and `Suspense`.
   - No heavy icon fonts or animation libraries — strictly inline SVGs and tree-shaken `lucide-react` icons.
+- **Profile Page Architecture (Phase 27 & 28 Kolkata Heritage Panorama & Milestones):**
+  - **Banner Surface:** Minimalist, uncluttered rounded card (`rounded-3xl border border-[#EAE8E4] bg-[#FCEBD7] shadow-sm`) incorporating the authentic 1552x236 Kolkata heritage illustration (`kolkata-profile-banner.webp`).
+  - **Hero Banner Identity:** Clean presentation containing only user avatar (with camera badge), name ("Soumabha Majumder"), emerald "Verified Traveler" badge, and a high-contrast frosted glass contact capsule (`bg-white/85 backdrop-blur-md`) for email and phone. Sign Out button is cleanly pinned to the top-right. Over 70% of the banner remains completely clear to showcase Victoria Memorial, River Ganges, Howrah Bridge, and the vintage Kolkata bus without text collisions.
+  - **Traveler Milestones Strip:** Dedicated 4-card quick perks bar below the banner: `Member Since` (tenure), `Completed Trips` (count), `OneGo AI Savings` (rupee savings), and `Favorite Corridor` (frequent route). Responsive 4-column layout on desktop, 2x2 grid on mobile.
+  - **Mobile Layout:** Dedicated top scenic illustration window (`h-36 object-cover object-right`) with the Sign Out button pinned at the top-right. Avatar overlaps cleanly (`-mt-12`) with user details and contact capsule stacked below.
+  - **Information Architecture:** 3 interactive tabs (`Personal Information`, `Travel Preferences`, `Security & Sessions`) with full reactive updates and zero layout shift.
+  - **Universal Backend-Synced Sign Out Flow & Premium Modal (Phases 29, 32 & 33):** All sign-out touchpoints across the entire application—including the desktop banner button, Security tab danger zone, floating pill Navbar profile dropdown menu, and mobile drawer (`MobileMenu.tsx`)—open the dedicated confirmation modal (`SignOutModal.tsx`) with dimmed backdrop, spring pop-in transition, zero-shift scroll lock, and ESC-key dismiss. Dialog features a warm cream header with Kolkata heritage artwork (`kolkata-profile-banner.webp`), Howrah Bridge and vintage bus, live `One Go Bus` brand badge, top-right circular close button, max width 480px with 16px mobile margins, initial keyboard focus on "Stay signed in", opener focus restoration on dismissal, and disabled state while pending. Confirming initiates an asynchronous `POST /api/v1/auth/logout` call to Spring Boot (clearing HTTP-only cookies) prior to clearing localStorage session credentials and routing to `/`.

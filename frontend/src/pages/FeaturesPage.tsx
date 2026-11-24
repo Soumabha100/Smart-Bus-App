@@ -16,8 +16,8 @@ export const FeaturesPage: FC = () => {
     },
     {
       icon: <ShieldCheck className="w-6 h-6 text-success" />,
-      title: 'DPDP 2025 Certified',
-      description: 'Passenger privacy by design. Strict zero-PII transmission to external AI models.',
+      title: 'Safe &amp; Verified Travel',
+      description: 'Passenger privacy by design. Safe encrypted transactions and verified operator networks.',
     },
     {
       icon: <Clock className="w-6 h-6 text-brand" />,

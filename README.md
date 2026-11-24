@@ -99,4 +99,4 @@ npm run dev
    - **Repositories:** Pure Spring Data JPA interfaces.
 2. **DTOs:** All request and response objects MUST be immutable Java `record` types.
 3. **No Hardcoded Secrets:** All credentials must come from environment variables.
-4. **DPDP 2025 Privacy:** Never pass passenger PII (names, phone numbers, emails) to AI models.
+4. **Privacy & Data Protection:** Never pass passenger PII (names, phone numbers, emails) to AI models.

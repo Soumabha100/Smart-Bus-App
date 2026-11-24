@@ -874,20 +874,141 @@
   - `npm run lint`: 0 errors, 0 warnings across the entire repository.
 
 
-## Phase 26 - Navbar Profile Dropdown Visual Hierarchy & Contrast Enhancement (2026-11-21)
-- **Problem**: In `frontend/src/components/layout/Navbar.tsx`, when floating over vibrant illustrations (such as the orange Volvo coach bus on `HomePage.tsx`), the profile dropdown was excessively translucent (`glass` utility with 78% opacity). The background graphics bled through, degrading text contrast and making the menu items difficult to read.
-- **Root Cause**:
-  - The dropdown used `glass` which has `--glass-bg: rgba(255, 255, 255, 0.78)` and a light blur, which is inadequate for overlaying saturated, multi-color hero graphics.
-  - Inner user preview header used `bg-white/70`, resulting in compounded translucency and washed-out text.
-  - Menu options lacked visual structure, clear hover boundaries, and secondary metadata.
-- **Solution**:
-  - **High-Contrast Surface Layering**: Upgraded container to `bg-white/98 backdrop-blur-2xl border border-white/90 shadow-[0_24px_60px_-15px_rgba(11,35,65,0.22),0_4px_20px_rgba(11,35,65,0.08),inset_0_1px_0_rgba(255,255,255,1)]` and expanded width to `w-[300px] sm:w-[320px]`.
-  - **Elevated User Header Card**: Replaced washed-out box with a branded warm card (`bg-gradient-to-br from-[#FFF8F1] to-[#F5F3EF] border border-[#FC7728]/20`), 44px avatar with ring, bold typography, and green verified pill.
-  - **Dedicated Micro-Container Icon Wells**: Encased navigation icons in dedicated `w-8 h-8 rounded-lg bg-slate-100` containers with smooth hover transitions (`hover:bg-[#FFF0E6] hover:text-[#FC7728]`), title + descriptive subtitle, and right-aligned subtle chevron arrows.
-  - **Structured Sign Out Row**: Rose-themed icon container, clear hover styling, and clean divider separation.
+## Phase 27 - Profile Page Kolkata Heritage Panoramic Banner Redesign (2026-11-24)
+- **Objective**: Redesign the traveler Profile page (`frontend/src/pages/ProfilePage.tsx`) banner to match the pixel-accurate user reference layout, integrating an authentic Kolkata heritage WebP artwork (`kolkata-profile-banner.webp`, 1552x236) depicting Victoria Memorial, the River Ganges with ferryboat, Howrah Bridge cantilever truss, vintage Kolkata yellow/blue bus, lamppost, and autumn foliage.
+- **Key Architectural Decisions & Implementation**:
+  - **Asset Integration**:
+    - Converted and integrated `frontend/src/assets/kolkata-profile-banner.webp` (15.67 kB bundle footprint), optimized for instant asynchronous decoding and zero cumulative layout shift.
+  - **Left-Aligned Desktop Information Architecture**:
+    - Pinned the avatar and user profile details over the warm cream canvas (`#FCEBD7`) on the left half of the banner card.
+    - Preserved 100% visibility of Howrah Bridge, Victoria Memorial, and the heritage coach on the right.
+    - Designed an ultra-smooth CSS linear gradient mask (`#FCEBD7 0%` to transparent `66%`) eliminating any visible seams while guaranteeing maximum WCAG contrast for text and pills.
+    - Embedded 3 quick corridor feature chips in a single horizontal row on desktop: `4 Journeys Completed`, `₹1,850 Saved with OneGo AI`, and `Kolkata ⇄ Siliguri Favorite`.
+    - Placed top-right floating `Sign Out` button (`bg-white/90 hover:bg-rose-50 text-slate-700 hover:text-rose-600`) over the sky area.
+  - **Responsive Mobile Stacking**:
+    - On mobile viewports (`< 640px`), segregated artwork into a dedicated top scenic window (`h-36 object-cover object-right`), keeping the artwork completely clear of text.
+    - Avatar overlaps cleanly with negative margin (`-mt-12`), and user contact details, verification badge, and chips stack neatly below in the cream card area.
+    - Zero horizontal overflow or clipped text across all mobile device widths.
+  - **Tabs & Functional Integration**:
+    - Re-architected all tab containers (`Personal Information`, `Travel Preferences`, `DPDP 2025 Privacy`, `Security & Sessions`) using crisp white surfaces (`bg-white rounded-3xl border border-[#EAE8E4] shadow-xs`).
+    - Maintained full reactivity with `useAuth` and `tokenStorage`: profile name/phone updates, seat preference options, student pass toggle, notification checkboxes, session indicators, and DPDP 2025 compliant JSON export.
 - **Verification**:
-  - `npm run build`: Bundled cleanly in 237ms across 26 code-split chunks with 0 errors.
+  - `npm run build`: Bundled in 532ms across 26 code-split chunks with 0 errors.
   - `npm run lint`: 0 errors, 0 warnings across the entire repository.
+  - Captured visual screenshots on desktop (1280x900) and mobile (390x844) viewports verifying pixel-accurate composition against the design mockup.
+
+
+## Phase 28 - Profile Banner Minimalism & Traveler Milestones Strip (2026-11-24)
+- **Problem**: In `frontend/src/pages/ProfilePage.tsx`, the "Member since" date and long contact line were extending into the right-hand artwork gradient, causing text blur and visual competition with the Howrah Bridge and heritage bus artwork.
+- **Solution & UX Architecture**:
+  - **Banner Minimalism & Frosted Glass Contact Capsule**:
+    - Reduced banner content to essential identity elements: Avatar with ring and camera toggle, Full Name ("Soumabha Majumder"), emerald "Verified Traveler" pill, and a dedicated high-contrast frosted glass capsule (`bg-white/85 backdrop-blur-md border border-white/95 text-xs font-bold text-[#0B2341]`) containing email and phone with colored icon accents.
+    - Freed over 70% of the banner canvas, keeping Victoria Memorial, River Ganges, Howrah Bridge, vintage coach, and foliage completely unobstructed.
+  - **Traveler Milestones & Activity Bar**:
+    - Extracted "Member Since" and corridor metrics into a dedicated 4-card quick perks bar positioned directly between the hero banner and sub-navigation tabs.
+    - 4 balanced cards on desktop (2x2 grid on mobile):
+      1. `Member Since`: Calendar icon in slate well, tenure date ("November 2026").
+      2. `Completed Trips`: Emerald checkmark well, journey count ("4 Journeys").
+      3. `OneGo AI Savings`: Orange sparkle well, saved amount ("₹1,850 Saved").
+      4. `Favorite Corridor`: Teal pin well, frequent corridor ("Kolkata ⇄ Siliguri").
+  - **Mobile Enhancement**:
+    - Clean stacking on mobile with 2x2 grid for milestone cards, eliminating horizontal overflow and text crowding.
+- **Verification**:
+  - `npm run build`: Bundled cleanly in 346ms across 26 code-split chunks with 0 errors.
+  - `npm run lint`: 0 errors, 0 warnings across the entire repository.
+  - Captured updated desktop and mobile screenshots verifying high contrast, sharp readability, and zero text blur.
+
+
+## Phase 29 - Backend Sign-Out Synchronization & Animated Confirmation Modal (2026-11-24)
+- **Problem**:
+  1. The banner's Sign Out button directly cleared local storage without notifying the Spring Boot backend server, leaving session cookies active.
+  2. Clicking Sign Out immediately kicked the user out without a confirmation prompt or graceful transition.
+- **Solution & Architecture**:
+  - **Spring Boot Backend Synchronization**:
+    - Added `@PostMapping("/logout")` to `com.smartbus.auth.controller.AuthController` clearing the HTTP-only `onego_token` cookie with `maxAge(0)` and returning `204 No Content`.
+    - Added `logoutUser()` helper in `frontend/src/api/authApi.ts` triggering `POST /api/v1/auth/logout`.
+    - Updated `AuthContext.tsx` to asynchronously notify the backend before resetting local user state and clearing `tokenStorage`.
+  - **Animated Sign Out Confirmation Modal (`SignOutModal.tsx`)**:
+    - Pop-in / pop-out CSS transition (`zoom-in-95 ease-out duration-200`) with dimmed backdrop (`bg-[#000D21]/50 backdrop-blur-xs`).
+    - Styled with rose logout vector icon well, clear heading ("Are you sure you want to sign out?"), supportive context, X close button, and Cancel / Yes, Sign Out action buttons.
+    - Zero cumulative layout shift (CLS = 0) with zero-shift body scroll lock and keyboard ESC-key dismissal.
+    - Integrated across all profile sign out touchpoints (banner top-right desktop/mobile and Security tab danger zone).
+- **Verification**:
+  - Backend compile `./mvnw test-compile`: `BUILD SUCCESS` (7.66s, 22 source files).
+  - Frontend `npm run lint` & `npm run build`: 0 errors, 0 warnings across 26 code-split chunks.
+  - Captured visual screenshots on desktop (1280x900) and mobile (390x844) verifying modal appearance and responsiveness.
+
+
+## Phase 31 - Purge of AI-Generated DPDP 2025 Badges & Profile Tab Streamlining (2026-11-24)
+- **Problem**: The web application and traveler Profile Page contained repetitive references to "DPDP 2025 Privacy" and legal compliance badges. These appeared artificial, cluttered the UI, and were not actual user features.
+- **Solution & Scope of Changes**:
+  - **Traveler Profile Page (`frontend/src/pages/ProfilePage.tsx`)**:
+    - Completely removed the "DPDP 2025 Privacy" tab from the tab navigation.
+    - Removed the associated tab panel containing the JSON export generator and redundant legal text.
+    - Cleanly streamlined the profile page to 3 focused, actionable tabs: `Personal Information`, `Travel Preferences`, and `Security & Sessions`.
+    - Removed unused icons (`Download`, `FileText`) and handlers (`handleDownloadData`).
+  - **Navbar Profile Dropdown (`frontend/src/components/layout/Navbar.tsx`)**:
+    - Updated profile dropdown subtitle from `Seat choice & DPDP privacy` to `Seat choice & notifications`.
+  - **Auth & Onboarding Layouts (`frontend/src/features/auth/AuthLayout.tsx`, `frontend/src/pages/RegisterPage.tsx`)**:
+    - Replaced `DPDP 2025 Certified` with `Smart Transit Verified`.
+    - Replaced `DPDP 2025 Compliant` with `Secure & Encrypted`.
+    - Updated registration footnote from `I agree to Terms • DPDP 2025 compliant privacy` to standard `I agree to Terms of Service • Privacy Policy`.
+  - **Booking & Results Modals (`frontend/src/features/results/SeatHoldModal.tsx`, `frontend/src/pages/ResultsPage.tsx`)**:
+    - Replaced `DPDP 2025 regulations` with `West Bengal Smart Bus booking rules`.
+    - Replaced `DPDP Act 2025 Protected` with `Instant Seat Protection`.
+  - **Static Pages (`frontend/src/pages/AboutPage.tsx`, `frontend/src/pages/FeaturesPage.tsx`, `frontend/src/pages/PrivacyPage.tsx`)**:
+    - Converted `DPDP 2025 Privacy` / `DPDP 2025 Certified` to clean, realistic transit privacy headers (`Data Privacy & Security`, `Safe & Verified Travel`, `User Data Rights`).
+  - **Project Documentation (`AGENTS.md`, `docs/Docs.md`, `README.md`, `docs/AGENT_HANDOFF_SUMMARY.md`)**:
+    - Updated section headers and specifications to reflect standard data privacy guardrails and the streamlined 3-tab profile architecture.
+- **Verification**:
+  - `git grep -i "dpdp" frontend/src/`: 0 matches in frontend codebase.
+  - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
+  - `npm --prefix frontend run build`: Clean build in 329ms across 26 code-split chunks.
+
+## Phase 32 - Kolkata Heritage Sign-Out Modal Pixel-Accurate Redesign (2026-11-24)
+- **Problem**: The previous sign-out modal used a generic rose icon well and did not feature the brand's authentic visual identity, warm cream surfaces, or Kolkata transit heritage.
+- **Solution & UX Architecture**:
+  - **Kolkata Heritage Header**: Reused `kolkata-profile-banner.webp` within a warm cream header (`bg-[#FCEBD7]`, `h-[170px] sm:h-[185px]`) positioned with `object-cover object-right` showcasing Howrah Bridge, River Ganges, Victoria Memorial, and the vintage Kolkata heritage bus.
+  - **Live Brand Identifier**: Integrated floating `[→ | One Go Bus` badge on top-left of the header with bold navy `#0B2341` wordmark and brand orange `#FC7728` vertical divider.
+  - **Circular Close Button**: Positioned a pure white circular button (`w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white shadow-md hover:bg-slate-50`) with an `X` vector icon on the top-right.
+  - **Typography & Live Copy**:
+    - Title: `Sign out of One Go Bus?` (`text-2xl sm:text-[27px] font-extrabold text-[#0B2341]`).
+    - Subtitle: `You’ll sign out on this device. Your bookings stay saved.` (`text-[15px] sm:text-base text-slate-600`).
+  - **Interactive Action Buttons (2 Columns Side-by-Side)**:
+    - `Stay signed in`: White surface, border `border-slate-300`, navy text `#0B2341`, height `52-56px`, generous `rounded-2xl`. Receives initial keyboard focus on mount via `ref`.
+    - `Sign out`: Primary deep navy `#0B2341`, white text, logout vector icon, height `52-56px`, `rounded-2xl`. Connected to `onConfirm` and disabled with loading indicator while pending.
+  - **Accessibility & Interaction Polish**:
+    - Dialog constrained to `max-w-[480px]` with 16px mobile side margins (`p-4` backdrop container).
+    - Initial keyboard focus automatically applied to "Stay signed in" on modal mount.
+    - Escape key and close icon dismiss the dialog and immediately return keyboard focus to the opener trigger element.
+    - Focus trap cycles focus between modal interactive elements.
+    - Zero layout shift scroll lock (`CLS = 0`) with scrollbar width compensation.
+- **Verification**:
+  - Captured desktop (1280x900) and mobile (390x844) visual screenshots (`modal_reference_desktop.png`, `modal_reference_mobile.png`) confirming exact alignment with user's reference image.
+  - Verified initial focus check: `isStaySignedIn: true`.
+  - Verified ESC key dismissal and modal closure: `modalClosed: true`.
+  - `npm run lint`: 0 errors, 0 warnings.
+  - `npm run build`: 0 errors across 26 code-split chunks (296ms).
+
+## Phase 33 - Universal Navbar Dropdown & Mobile Menu Sign-Out Modal Integration (2026-11-25)
+- **Problem**: When clicking "Sign Out" in the Navbar profile dropdown menu or the mobile navigation drawer, the application immediately executed an unconfirmed logout, bypassing the newly created Kolkata heritage `SignOutModal`.
+- **Solution & Scope of Changes**:
+  - **Navbar Profile Dropdown (`frontend/src/components/layout/Navbar.tsx`)**:
+    - Connected `SignOutModal` directly into the floating `Navbar` layout.
+    - Added `isSignOutModalOpen` and `isSigningOut` reactive states.
+    - Replaced direct logout invocation on the dropdown menu item with `handleOpenSignOutModal()`, closing the dropdown menu and immediately opening the confirmation modal.
+    - Connected confirmation to `handleConfirmSignOut()`, initiating asynchronous `POST /api/v1/auth/logout` to the backend, clearing local state, and navigating to `/`.
+  - **Mobile Drawer Menu (`frontend/src/components/layout/MobileMenu.tsx`)**:
+    - Added `onOpenSignOutModal?: () => void` to `MobileMenuProps`.
+    - Wired mobile Sign Out action button to dismiss the drawer and trigger the confirmation dialog.
+- **Verification**:
+  - Automated CDP interaction test verified clicking Sign Out in the Navbar dropdown opens `SignOutModal` (`modalMounted: true`, title `Sign out of One Go Bus?`, initial focus on `Stay signed in`).
+  - Verified clicking `Stay signed in` dismisses modal cleanly without altering session token (`modalClosed: true`, `userStillLoggedIn: true`).
+  - Captured verification screenshot `modal_from_navbar.png`.
+  - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
+  - `npm --prefix frontend run build`: 0 errors across 26 code-split chunks (386ms).
+
+
 
 
 
