@@ -46,7 +46,7 @@ export const AuthLayout: FC<AuthLayoutProps> = ({
 
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-accent-tint/80 border border-accent/20 text-[11px] font-bold text-on-accent-tint">
                   <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" aria-hidden="true" />
-                  <span>DPDP 2025 Certified</span>
+                  <span>Smart Transit Verified</span>
                 </div>
               </div>
 
@@ -144,7 +144,7 @@ export const AuthLayout: FC<AuthLayoutProps> = ({
           <span className="opacity-40">&bull;</span>
           <span className="inline-flex items-center gap-1 text-ink-muted">
             <span className="w-1.5 h-1.5 rounded-full bg-success" />
-            DPDP 2025 Compliant
+            Secure &amp; Encrypted
           </span>
         </p>
       </footer>

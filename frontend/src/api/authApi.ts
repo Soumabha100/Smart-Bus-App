@@ -77,3 +77,17 @@ export async function loginUser(payload: LoginPayload): Promise<AuthResponse> {
 
   return data as AuthResponse;
 }
+
+export async function logoutUser(): Promise<void> {
+  try {
+    await fetch('/api/v1/auth/logout', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+  } catch (err) {
+    console.warn('Backend logout notification failed or timed out:', err);
+  }
+}
+

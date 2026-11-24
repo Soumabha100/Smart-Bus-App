@@ -576,7 +576,7 @@ export const ResultsPage: FC = () => {
         />
       )}
 
-      {/* 9. BOOKING CONFIRMED STAGING MODAL (DPDP 2025 COMPLIANT PASSENGER DETAILS PROMPT) */}
+      {/* 9. BOOKING CONFIRMED STAGING MODAL (PASSENGER DETAILS PROMPT) */}
       {bookingConfirmedInfo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-modal-backdrop">
           <div className="w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 border border-[#E5E1D8] shadow-2xl animate-modal-scale relative text-[#0B2341]">
@@ -642,7 +642,7 @@ export const ResultsPage: FC = () => {
                 security
               </span>
               <p className="leading-relaxed">
-                <strong>DPDP Act 2025 Protected:</strong> Zero personal data leakage. Your seats are held in memory for 7 minutes while you proceed to passenger details.
+                <strong>Instant Seat Protection:</strong> Zero double booking. Your seats are held in memory for 7 minutes while you proceed to passenger details.
               </p>
             </div>
 

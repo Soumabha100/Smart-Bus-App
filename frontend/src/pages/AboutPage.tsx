@@ -25,9 +25,9 @@ export const AboutPage: FC = () => {
 
         <div className="glass rounded-3xl p-6 sm:p-8 shadow-xs">
           <ShieldCheck className="w-8 h-8 text-success mb-4" />
-          <h2 className="text-lg font-bold text-ink-strong">DPDP 2025 Privacy</h2>
+          <h2 className="text-lg font-bold text-ink-strong">Data Privacy &amp; Security</h2>
           <p className="text-xs sm:text-sm text-ink-muted mt-2 leading-relaxed">
-            Full compliance with India&apos;s Digital Personal Data Protection Act. We never sell your personal information or location history.
+            State-of-the-art encryption and strict data minimization. We never sell your personal information or location history.
           </p>
         </div>
 

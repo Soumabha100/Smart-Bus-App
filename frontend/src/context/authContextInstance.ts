@@ -5,7 +5,7 @@ export interface AuthContextType {
   user: StoredUser | null;
   isAuthenticated: boolean;
   login: (userData: StoredUser, token?: string) => void;
-  logout: () => void;
+  logout: () => Promise<void> | void;
   updateUser: (partialData: Partial<StoredUser>) => void;
 }
 

@@ -13,12 +13,15 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { MobileMenu } from './MobileMenu';
+import { SignOutModal } from '../auth/SignOutModal';
 
 export const Navbar: FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -74,10 +77,28 @@ export const Navbar: FC = () => {
     { label: 'About', to: '/about' },
   ];
 
-  const handleLogout = () => {
+  const handleOpenSignOutModal = () => {
     setProfileDropdownOpen(false);
-    logout();
-    navigate('/');
+    setIsSignOutModalOpen(true);
+  };
+
+  const handleCloseSignOutModal = () => {
+    if (!isSigningOut) {
+      setIsSignOutModalOpen(false);
+    }
+  };
+
+  const handleConfirmSignOut = async () => {
+    try {
+      setIsSigningOut(true);
+      await logout();
+      navigate('/');
+    } catch {
+      navigate('/');
+    } finally {
+      setIsSigningOut(false);
+      setIsSignOutModalOpen(false);
+    }
   };
 
   const initials = user?.name
@@ -290,7 +311,7 @@ export const Navbar: FC = () => {
                                         Preferences &amp; Settings
                                       </div>
                                       <div className="text-[10px] text-slate-400 font-medium">
-                                        Seat choice &amp; DPDP privacy
+                                        Seat choice &amp; notifications
                                       </div>
                                     </div>
                                   </div>
@@ -304,7 +325,7 @@ export const Navbar: FC = () => {
                               <button
                                 type="button"
                                 role="menuitem"
-                                onClick={handleLogout}
+                                onClick={handleOpenSignOutModal}
                                 className="group w-full flex items-center justify-between p-2 rounded-xl hover:bg-rose-50 transition-all duration-150 cursor-pointer text-left"
                               >
                                 <div className="flex items-center gap-3">
@@ -362,6 +383,15 @@ export const Navbar: FC = () => {
                 <MobileMenu
                   isOpen={mobileMenuOpen}
                   onClose={() => setMobileMenuOpen(false)}
+                  onOpenSignOutModal={() => setIsSignOutModalOpen(true)}
+                />
+
+                {/* Sign Out Confirmation Modal */}
+                <SignOutModal
+                  isOpen={isSignOutModalOpen}
+                  onClose={handleCloseSignOutModal}
+                  onConfirm={handleConfirmSignOut}
+                  isLoading={isSigningOut}
                 />
               </>
               );

@@ -92,7 +92,7 @@ export const SeatHoldModal: FC<SeatHoldModalProps> = ({
         </div>
 
         <p className="text-[11px] text-[#64748B] leading-relaxed mb-6">
-          In accordance with <strong>DPDP 2025 regulations</strong> &amp; West Bengal Smart Bus rules,
+          In accordance with <strong>West Bengal Smart Bus booking rules</strong>,
           your seat is held exclusively for 7 minutes without price spikes while you finalize your booking.
         </p>
 

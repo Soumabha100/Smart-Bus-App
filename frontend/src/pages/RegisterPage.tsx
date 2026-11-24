@@ -208,7 +208,7 @@ export const RegisterPage: FC = () => {
             defaultChecked
             className="mt-0.5 rounded border-line text-brand focus:ring-brand w-4 h-4 cursor-pointer"
           />
-          <span className="text-[11px]">I agree to Terms &bull; DPDP 2025 compliant privacy</span>
+          <span className="text-[11px]">I agree to Terms of Service &bull; Privacy Policy</span>
         </label>
 
         {/* Submit Button */}

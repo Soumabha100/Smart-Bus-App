@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, type FC, type ReactNode } from 'react';
 import { tokenStorage, type StoredUser } from '../utils/tokenStorage';
 import { AuthContext } from './authContextInstance';
+import { logoutUser } from '../api/authApi';
 
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<StoredUser | null>(() => tokenStorage.getUser());
@@ -23,10 +24,16 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     setIsAuthenticated(true);
   }, []);
 
-  const logout = useCallback(() => {
-    tokenStorage.clear();
-    setUser(null);
-    setIsAuthenticated(false);
+  const logout = useCallback(async () => {
+    try {
+      await logoutUser();
+    } catch (err) {
+      console.warn('Failed to notify backend on logout:', err);
+    } finally {
+      tokenStorage.clear();
+      setUser(null);
+      setIsAuthenticated(false);
+    }
   }, []);
 
   const updateUser = useCallback((partialData: Partial<StoredUser>) => {

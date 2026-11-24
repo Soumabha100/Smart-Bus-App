@@ -11,7 +11,7 @@ export const PrivacyPage: FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-extrabold text-ink-strong">Privacy Policy</h1>
-            <p className="text-xs text-ink-muted">Compliant with DPDP Rules 2025</p>
+            <p className="text-xs text-ink-muted">Passenger Data Protection &amp; Confidentiality</p>
           </div>
         </div>
 
@@ -30,9 +30,9 @@ export const PrivacyPage: FC = () => {
         </section>
 
         <section className="space-y-2 text-xs sm:text-sm text-ink-muted leading-relaxed">
-          <h2 className="text-base font-bold text-ink-strong">3. Your Rights as a Data Principal</h2>
+          <h2 className="text-base font-bold text-ink-strong">3. User Data Rights</h2>
           <p>
-            Under India&apos;s Digital Personal Data Protection Act 2025, you have the right to access, rectify, or demand the complete erasure of your travel history and account records at any time via support@onegobus.in.
+            You have the right to access, rectify, or demand the complete erasure of your travel history and account records at any time by contacting support@onegobus.in.
           </p>
         </section>
       </div>
