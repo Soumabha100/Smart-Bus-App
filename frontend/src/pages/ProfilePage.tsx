@@ -1,4 +1,4 @@
-import { useState, type FC, type FormEvent } from 'react';
+import { lazy, Suspense, useEffect, useState, type FC, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   User,
@@ -21,8 +21,9 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
-import { SignOutModal } from '../components/auth/SignOutModal';
-import kolkataBannerImg from '../assets/kolkata-profile-banner.webp';
+import { kolkataBannerImg, preloadKolkataBanner } from '../utils/preloadKolkataBanner';
+
+const SignOutModal = lazy(() => import('../components/auth/SignOutModal'));
 
 export const ProfilePage: FC = () => {
   const navigate = useNavigate();
@@ -91,10 +92,18 @@ export const ProfilePage: FC = () => {
   };
 
   // Sign Out Confirmation Modal State
+  const [hasOpenedSignOutModal, setHasOpenedSignOutModal] = useState(false);
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
+  // Pre-decode 8000x2664 banner WebP and warm SignOutModal chunk once mounted
+  useEffect(() => {
+    void preloadKolkataBanner();
+    void import('../components/auth/SignOutModal');
+  }, []);
+
   const handleOpenSignOutModal = () => {
+    setHasOpenedSignOutModal(true);
     setIsSignOutModalOpen(true);
   };
 
@@ -146,38 +155,46 @@ export const ProfilePage: FC = () => {
         <span className="text-[#0B2341] font-bold">Profile</span>
       </nav>
 
-      {/* 1. HERO PROFILE CARD WITH 1552x236 KOLKATA HERITAGE BANNER */}
-      <section className="relative rounded-3xl overflow-hidden border border-[#EAE8E4] shadow-[0_8px_30px_rgba(11,35,65,0.06)] bg-[#FCEBD7] transition-all">
-        {/* Banner Artwork on Desktop / Tablet (Right-Anchored, keeping Howrah Bridge, Victoria Memorial, River & Vintage Bus visible) */}
-        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden hidden sm:block">
-          <img
-            src={kolkataBannerImg}
-            alt="Kolkata Heritage Panorama - Victoria Memorial, Howrah Bridge and Vintage Bus"
-            className="w-full h-full object-cover object-right"
-            loading="eager"
-            decoding="async"
-          />
-          {/* Seamless full-width gradient transition from warm cream on the left to transparent on the right */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                'linear-gradient(to right, #FCEBD7 0%, #FCEBD7 32%, rgba(252, 235, 215, 0.95) 42%, rgba(252, 235, 215, 0.6) 52%, rgba(252, 235, 215, 0) 66%)',
-            }}
-          />
+      {/* 1. HERO PROFILE CARD WITH 8000x2664 (3:1) KOLKATA HERITAGE BANNER */}
+      <section className="relative rounded-3xl overflow-hidden border border-[#EAE8E4] shadow-[0_8px_30px_rgba(11,35,65,0.06)] bg-[#FEE6D3] sm:min-h-[208px] lg:min-h-[228px] flex flex-col justify-center transition-all">
+        {/* Banner Artwork on Desktop / Tablet: Aspect-matched 3:1 right-anchored frame so foliage, bridge & bus tires remain 100% uncropped */}
+        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden hidden sm:flex justify-end bg-[#FEE6D3]">
+          <div className="relative h-full aspect-[3/1] shrink-0">
+            <img
+              src={kolkataBannerImg}
+              alt="Kolkata Heritage Panorama - Victoria Memorial, Howrah Bridge and Vintage Bus"
+              width={8000}
+              height={2664}
+              className="w-full h-full object-cover object-right transform-gpu"
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+            />
+            {/* Seamless left-edge feather into the warm cream canvas */}
+            <div
+              className="absolute inset-y-0 left-0 w-1/2 lg:w-[42%] pointer-events-none"
+              style={{
+                background:
+                  'linear-gradient(to right, #FEE6D3 0%, rgba(254, 230, 211, 0.9) 38%, rgba(254, 230, 211, 0) 100%)',
+              }}
+            />
+          </div>
         </div>
 
-        {/* Banner Artwork for Mobile (Dedicated scenic top window keeping artwork completely clear of text) */}
-        <div className="sm:hidden relative w-full h-36 overflow-hidden bg-[#FCEBD7]">
+        {/* Banner Artwork for Mobile (Aspect-matched scenic top window keeping full bus & bridge clear of text) */}
+        <div className="sm:hidden relative w-full aspect-[12/5] min-h-[148px] max-h-[176px] overflow-hidden bg-[#FEE6D3]">
           <img
             src={kolkataBannerImg}
             alt="Kolkata Heritage Panorama"
-            className="w-full h-full object-cover object-right pointer-events-none"
+            width={8000}
+            height={2664}
+            className="w-full h-full object-cover object-right pointer-events-none transform-gpu"
             loading="eager"
             decoding="async"
+            fetchPriority="high"
           />
-          {/* Subtle bottom gradient into mobile card surface */}
-          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#FCEBD7] to-transparent pointer-events-none" />
+          {/* Subtle bottom gradient blending smoothly into mobile card surface */}
+          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#FEE6D3] via-[#FEE6D3]/60 to-transparent pointer-events-none" />
 
           {/* Mobile Sign Out Button pinned at top-right over the sky */}
           <button
@@ -731,13 +748,17 @@ export const ProfilePage: FC = () => {
         </div>
       )}
 
-      {/* Sign Out Confirmation Modal */}
-      <SignOutModal
-        isOpen={isSignOutModalOpen}
-        onClose={handleCloseSignOutModal}
-        onConfirm={handleConfirmSignOut}
-        isLoading={isSigningOut}
-      />
+      {/* Sign Out Confirmation Modal (Lazy-loaded & pre-warmed) */}
+      {hasOpenedSignOutModal && (
+        <Suspense fallback={null}>
+          <SignOutModal
+            isOpen={isSignOutModalOpen}
+            onClose={handleCloseSignOutModal}
+            onConfirm={handleConfirmSignOut}
+            isLoading={isSigningOut}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };

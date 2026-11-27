@@ -1,15 +1,15 @@
-# OneGoBus — Complete Agent Handoff & Technical Context Document
+# One Go Bus — Complete Agent Handoff & Technical Context Document
 
 > **Target Audience:** Incoming AI Agent / Developer working in VS Code.  
-> **Repository:** `West Bengal AI Smart Bus Booking Platform (OneGoBus)`  
+> **Repository:** `West Bengal AI Smart Bus Booking Platform (One Go Bus)`  
 > **Active Git Branch:** `feature/onego-theme-auth-ui`  
 > **Timestamp:** November 2026
 
 ---
 
 ## 1. Pinned Architecture & Core Rules (STRICT — Never Violate)
-Consult [`AGENTS.md`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart-Bus-Application/AGENTS.md) for full details:
-1. **Official Brand:** **OneGoBus** (all older names like Roamly, BusWise, BusSathi, ApnaBus are strictly deprecated).
+Consult [`AGENTS.md`](../AGENTS.md) for full details:
+1. **Official Brand:** **One Go Bus** (all deprecated prototype names are retired; always use **One Go Bus**).
 2. **Frontend Stack:** React 19, TypeScript, Vite, Tailwind CSS v4, Lucide-React (`lucide-react`), TanStack Query, shadcn/ui.
 3. **Backend Stack:** Java 25 (LTS), Spring Boot 4.1.x with Virtual Threads, PostgreSQL 18 with `pgvector` (Neon), Redis (Upstash) for 7-minute atomic seat locks. *Do not modify backend unless explicitly requested.*
 4. **Dependency Guardrail:** Never add any Maven dependency or npm package without explicit user permission. Zero heavy animation packages (no Framer Motion or Lottie) — strictly hardware-accelerated CSS keyframes.
@@ -87,7 +87,7 @@ Consult [`AGENTS.md`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart
    - Interactive glassmorphic dropdown popup with click-away listener and Escape key dismiss.
    - Menu items: `My Profile` (`/profile`), `My Bookings / Trips` (`/results`), `Preferences & Settings` (`/profile#settings`), and `Sign Out` (rose-red hover, clears session, redirects to `/`).
    - `MobileMenu.tsx` fully synchronized with mobile profile preview and sign-out controls.
-3. **Dedicated OneGoBus Profile Page (`ProfilePage.tsx`)**:
+3. **Dedicated One Go Bus Profile Page (`ProfilePage.tsx`)**:
    - Mounted at lazy-loaded route `/profile` protected by `<ProtectedRoute>`.
    - Hero Card with Howrah Bridge ambient background blur, 96px avatar with photo change toggle, role badges (`Verified Traveler`, `Student Privilege Pass`), and trip counters.
    - Sub-Tabs: Personal Information (editable with save toast), Travel & Seat Preferences, DPDP 2025 Privacy (JSON data download), Security & Active Sessions.
@@ -126,7 +126,7 @@ Consult [`AGENTS.md`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart
 | [`frontend/src/features/results/TicketCard.tsx`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart-Bus-Application/frontend/src/features/results/TicketCard.tsx) | Individual bus search result card that opens the modal via "Select Seats". |
 | [`frontend/src/index.css`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart-Bus-Application/frontend/src/index.css) | Design tokens (`--glass-surface`, `--onego-navy`, `--onego-orange`), keyframe animations (`modalScaleIn`, `modalBackdropFadeIn`), and glass utility classes. |
 | [`frontend/src/assets/howrah-bridge-sunrise.jpg`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart-Bus-Application/frontend/src/assets/howrah-bridge-sunrise.jpg) | High-res photographic sunrise background of Howrah Bridge behind the bus (201 KB). |
-| [`frontend/src/assets/onego-luxury-coach.png`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart-Bus-Application/frontend/src/assets/onego-luxury-coach.png) | High-res transparent PNG of OneGoBus Volvo luxury coach bus (498 KB). |
+| [`frontend/src/assets/onego-luxury-coach.png`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart-Bus-Application/frontend/src/assets/onego-luxury-coach.png) | High-res transparent PNG of One Go Bus Volvo luxury coach bus (498 KB). |
 | [`docs/PROJECT_LOG.md`](file:///Users/soumabhamajumder/Documents/Projects/AI-Smart-Bus-Application/docs/PROJECT_LOG.md) | Exhaustive sprint & phase changelog (Phases 1 through 23). |
 
 ---

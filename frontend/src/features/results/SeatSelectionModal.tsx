@@ -28,6 +28,8 @@ interface SeatSelectionModalProps {
   ticket: BusTicket;
   origin: string;
   destination: string;
+  journeyDateDisplay?: string;
+  initialSelectedSeatIds?: string[];
   onClose: () => void;
   onConfirmBooking: (ticket: BusTicket, selectedSeats: SelectedSeatInfo[]) => void;
 }
@@ -73,6 +75,8 @@ export const SeatSelectionModal: FC<SeatSelectionModalProps> = ({
   ticket,
   origin,
   destination,
+  journeyDateDisplay,
+  initialSelectedSeatIds = [],
   onClose,
   onConfirmBooking,
 }) => {
@@ -87,8 +91,8 @@ export const SeatSelectionModal: FC<SeatSelectionModalProps> = ({
   const isSleeperBus = ticket.busType?.toLowerCase().includes('sleeper') ?? true;
   const sleeperPrice = isSleeperBus ? basePrice : Math.round(basePrice * 1.15);
 
-  // Selected Seats State (Default starts with L2 and L3 in Row 2)
-  const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>(['L2', 'L3']);
+  // Selected Seats State (starts empty unless editing an existing selection)
+  const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>(initialSelectedSeatIds);
 
   // Purely derived selected seats array with dynamic price and type
   const selectedSeats: SelectedSeatInfo[] = useMemo(() => {
@@ -487,7 +491,7 @@ export const SeatSelectionModal: FC<SeatSelectionModalProps> = ({
                 <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-700">
                   <div className="flex items-center gap-1.5">
                     <CalendarDays className="w-3.5 h-3.5 text-[#FC7728]" strokeWidth={2} />
-                    <span>Friday, 20 Nov</span>
+                    <span>{journeyDateDisplay || 'Selected date'}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Clock3 className="w-3.5 h-3.5 text-[#FC7728]" strokeWidth={2} />

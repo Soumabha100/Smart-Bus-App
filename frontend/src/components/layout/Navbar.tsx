@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type FC } from 'react';
+import { lazy, Suspense, useState, useEffect, useRef, type FC } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import {
   Sparkles,
@@ -13,17 +13,36 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { MobileMenu } from './MobileMenu';
-import { SignOutModal } from '../auth/SignOutModal';
+import { preloadKolkataBanner } from '../../utils/preloadKolkataBanner';
+
+const SignOutModal = lazy(() => import('../auth/SignOutModal'));
+
+const preloadSignOutAssets = () => {
+  void import('../auth/SignOutModal');
+  void preloadKolkataBanner();
+};
 
 export const Navbar: FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [hasOpenedSignOutModal, setHasOpenedSignOutModal] = useState(false);
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Idle preload SignOutModal chunk and banner image only for signed-in users
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(preloadSignOutAssets, { timeout: 2000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const timer = window.setTimeout(preloadSignOutAssets, 1200);
+    return () => window.clearTimeout(timer);
+  }, [isAuthenticated]);
 
   // Guarantee strict light mode and clear any stale dark preferences
   useEffect(() => {
@@ -78,7 +97,9 @@ export const Navbar: FC = () => {
   ];
 
   const handleOpenSignOutModal = () => {
+    preloadSignOutAssets();
     setProfileDropdownOpen(false);
+    setHasOpenedSignOutModal(true);
     setIsSignOutModalOpen(true);
   };
 
@@ -180,7 +201,12 @@ export const Navbar: FC = () => {
                         <div className="relative" ref={profileDropdownRef}>
                           <button
                             type="button"
-                            onClick={() => setProfileDropdownOpen((prev) => !prev)}
+                            onClick={() => {
+                              preloadSignOutAssets();
+                              setProfileDropdownOpen((prev) => !prev);
+                            }}
+                            onMouseEnter={preloadSignOutAssets}
+                            onFocus={preloadSignOutAssets}
                             aria-expanded={profileDropdownOpen}
                             aria-haspopup="true"
                             aria-label="User profile menu"
@@ -383,16 +409,24 @@ export const Navbar: FC = () => {
                 <MobileMenu
                   isOpen={mobileMenuOpen}
                   onClose={() => setMobileMenuOpen(false)}
-                  onOpenSignOutModal={() => setIsSignOutModalOpen(true)}
+                  onOpenSignOutModal={() => {
+                    preloadSignOutAssets();
+                    setHasOpenedSignOutModal(true);
+                    setIsSignOutModalOpen(true);
+                  }}
                 />
 
-                {/* Sign Out Confirmation Modal */}
-                <SignOutModal
-                  isOpen={isSignOutModalOpen}
-                  onClose={handleCloseSignOutModal}
-                  onConfirm={handleConfirmSignOut}
-                  isLoading={isSigningOut}
-                />
+                {/* Sign Out Confirmation Modal (Lazy-loaded & pre-decoded) */}
+                {hasOpenedSignOutModal && (
+                  <Suspense fallback={null}>
+                    <SignOutModal
+                      isOpen={isSignOutModalOpen}
+                      onClose={handleCloseSignOutModal}
+                      onConfirm={handleConfirmSignOut}
+                      isLoading={isSigningOut}
+                    />
+                  </Suspense>
+                )}
               </>
               );
 };

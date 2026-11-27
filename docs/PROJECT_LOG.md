@@ -1,4 +1,4 @@
-# Roamly Project Log
+# One Go Bus Project Log
 
 ## Phase 0 - Discover (2026-11-13)
 - **Files Read & Audited**:
@@ -105,12 +105,12 @@
   10. Integration Path: Changes integrated via Git branches and GitHub Pull Requests.
 
 ## Phase 5 - Replacement of HomePage with Stitch AI Travel Intelligence Dashboard (2026-11-13)
-- **Stitch Design ID**: `8136311009390191591` ("ROAMLY — AI Travel Intelligence Dashboard")
+- **Stitch Design ID**: `8136311009390191591` ("One Go Bus — AI Travel Intelligence Dashboard")
 - **Files Modified**:
   - `frontend/src/pages/HomePage.tsx`: Completely replaced the obsolete HomePage visual implementation with the new Stitch AI Travel Intelligence Dashboard layout while maintaining existing route `/home`, auth guard integration (`ProtectedRoute`), and user session handling (`tokenStorage`).
 - **Layout & Components Implemented**:
   1. **Top Fixed Navigation Header**:
-     - Modern ROAMLY logo with bus insignia.
+     - Modern One Go Bus logo with bus insignia.
      - Navigation items: `Dashboard` (active tab), `Route Planning` (scrolls to planner), `My Bookings` (navigates to `/results`), `AI Assistant` (opens Copilot drawer), and `Risk Reports` (scrolls to intelligence panel).
      - Live indicator: `AI Engine Online` badge with pulsing teal dot.
      - Interactive Notifications popover showcasing live radar and vehicle status alerts.
@@ -150,11 +150,11 @@
      - Glowing rotating hubs for Kolkata and Siliguri, animated active bus particle, and intermediate hub nodes (Digha, Durgapur, Asansol, Malda, Darjeeling).
      - Floating dynamic cards for Siliguri Gateway Hub (21°C, NH10 Open) and Esplanade Central (Gate 03).
      - Interactive map controls (Zoom In, Zoom Out, Reset Center).
-  5. **Interactive "Ask ROAMLY" AI Copilot**:
+  5. **Interactive "Ask One Go Bus" AI Copilot**:
      - Floating capsule action button in bottom right corner.
      - Interactive AI chat drawer providing immediate simulated guidance for sleeper berth queries, rest stop amenities, highway delays, and ticket advice.
   6. **Telemetry Footer**:
-     - ROAMLY AI Predictive Travel Telemetry status and Global Radar Node #402-A metadata.
+     - One Go Bus AI Predictive Travel Telemetry status and Global Radar Node #402-A metadata.
 - **Design System Fidelity**:
   - Main background `#0B1020`, Sidebar `#111827`, Card `#192235`, Secondary Card `#202B40`.
   - Primary coral `#FF8066`, Secondary teal `#19C6B5` / `#42DCCA`, Mint `#75E5D0`.
@@ -165,14 +165,14 @@
   - `npm run lint` executed successfully (0 errors).
   - Preserved all other pages, components, backend infrastructure, and two-developer collaboration rules.
 
-## Phase 6 - Implementation of Roamly Smart Bus Journey Planner Stitch Design (2026-11-13)
-- **Stitch Design ID**: `11128684862382041494` ("Roamly - Smart Bus Journey Planner")
+## Phase 6 - Implementation of One Go Bus Smart Bus Journey Planner Stitch Design (2026-11-13)
+- **Stitch Design ID**: `11128684862382041494` ("One Go Bus - Smart Bus Journey Planner")
 - **Design Theme**: Nocturne Transit (`#0D1320` canvas, `#FF6B4A` primary coral, `#43EDCD` / `#00D2B4` radiant teal, `Sora` & `Inter` typography).
 - **Files Modified**:
   - `frontend/src/pages/HomePage.tsx`: Faithfully implemented the updated Stitch homepage design in a single responsive component supporting both Desktop (1440 × 1024) and Mobile (390 × 844) viewports.
 - **Components & Features Implemented**:
   1. **Fixed Navigation Bar (`h-20`)**:
-     - Brand insignia with glowing bus emblem, "Roamly" heading, and "VOYAGE SYSTEMS" tracking subtitle.
+     - Brand insignia with glowing bus emblem, "One Go Bus" heading, and "VOYAGE SYSTEMS" tracking subtitle.
      - Desktop links: `Book Journeys` (active elevated state), `Live Tracker`, `Explore Routes`, `My Bookings`, and `Offers`.
      - Mobile hamburger toggle drawer with full responsive navigation.
      - Live `24/7 Telematics Support` indicator with pulsing teal dot.
@@ -197,11 +197,11 @@
      - 4 high-demand route cards (Bengaluru → Goa, Mumbai → Pune, Delhi → Manali, Hyderabad → BLR) with fleet categories, star ratings, schedules, and direct "Book Seat" actions wired to `/results`.
   5. **Weekend Escapes & Curated Getaways**:
      - Bento-style 3-card grid (Ooty & Nilgiri Heights, Gokarna Quiet Shores, Hampi Ruins & River) with travel windows and starting fares.
-  6. **Roamly Copilot AI Assistant**:
+  6. **One Go Bus Copilot AI Assistant**:
      - Natural language query search bar with prompt chips ("Solo female quiet sleeper to Hyderabad", "Fastest AC bus Mumbai to Pune").
      - Real-time parsed parameters response box.
   7. **Comprehensive Footer**:
-     - Popular Highline Routes, Smart Route AI Guarantee, Safety Protocols, and Roamly Mobile Suite with store badges.
+     - Popular Highline Routes, Smart Route AI Guarantee, Safety Protocols, and One Go Bus Mobile Suite with store badges.
 - **Responsive Adaptations**:
   - Desktop (1440 × 1024): 2-column input grid with centered floating swap button, 4-column metric bar, 4-column fleet grid, and 3-column bento getaways.
   - Mobile (390 × 844): Naturally stacks inputs and schedules vertically, swap button centers cleanly, touch targets meet accessibility standards (44px+), zero horizontal scrolling (`overflow-x-hidden`).
@@ -213,7 +213,7 @@
 
 ## Phase 7 - One Go Bus Light Theme & Stitch Auth UI (2026-11-15)
 - **Branch**: `feature/onego-theme-auth-ui`
-- **Branding**: Rebranded from obsolete names (Roamly/BusSathi) to **One Go Bus**.
+- **Branding**: Standardized platform branding across themes and components to **One Go Bus**.
 - **Stitch Project ID**: `9772835342865580419`
 - **Tokens Added**:
   - `frontend/src/index.css`: Added complete light mode token dictionary in `:root` and `@theme inline` (`--canvas`, `--surface`, `--surface-2..5`, `--line`, `--ink`, `--ink-strong`, `--ink-muted`, `--brand`, `--accent`, `--accent-bright`, `--accent-tint`, `--success`, `--danger`, `--font-sans`).
@@ -235,18 +235,18 @@
   - All new files kept modular and under 85 lines (pages under 185 lines).
   - No changes to backend, routing, or existing dark theme components on other pages.
 
-## Phase 8 - BusSathi Finalized 4th Stitch Homepage Design (2026-11-16)
+## Phase 8 - One Go Bus Finalized 4th Stitch Homepage Design (2026-11-16)
 - **Branch**: `feature/frontend-Design`
 - **Stitch Project ID**: `3249928304240990338`
-- **Selected Screen**: Screen No. 4 (Latest/Finalized) — `3182ad4da42b4a0d85c76a30f6379413` ("BusSathi — Variant 3: Dedicated Sathi Copilot Slide-Over Drawer").
+- **Selected Screen**: Screen No. 4 (Latest/Finalized) — `3182ad4da42b4a0d85c76a30f6379413` ("One Go Bus — Variant 3: Dedicated Copilot Slide-Over Drawer").
 - **Exclusions Enforced**: Strictly avoided earlier Screen 1 (basic), Screen 2 (dropdowns only), and Screen 3 (calendar only).
 - **Files Changed**:
   - `frontend/src/pages/HomePage.tsx`: Fully replaced with the finalized 4th Stitch homepage design.
 - **Core Architecture & Features Implemented**:
   1. **Sticky Header (`h-[76px]`)**:
-     - BusSathi logo emblem (navy `#082E78` container with white bus glyph + saffron wheel accents) + wordmark "BusSathi" with orange accent and subtitle "Travel Smart. Pay Less."
+     - One Go Bus logo emblem (navy `#082E78` container with white bus glyph + saffron wheel accents) + wordmark "One Go Bus" with orange accent and subtitle "Travel Smart. Pay Less."
      - Desktop navigation links (`Home` active pill, `Routes`, `Offers`, `Bus Pass`, `Help & Support`).
-     - Dedicated **Sathi Copilot Button** (`#082E78`, sparkle star, AI badge) with slide-over drawer trigger.
+     - Dedicated **One Go AI Copilot Button** (`#082E78`, sparkle star, AI badge) with slide-over drawer trigger.
      - Notification bell with unread dot indicator and traveler account profile with dropdown.
      - Responsive mobile hamburger menu.
   2. **Hero Section (`min-h-[500px]`)**:
@@ -268,7 +268,7 @@
      - Quick route prefill actions on each card.
   6. **Benefits Banner (Deep Navy `#082E78`)**:
      - 4 pillars: Reliable & Safe, Easy Booking, Great Value, Help When You Need It.
-  7. **How BusSathi Works**:
+  7. **How One Go Bus Works**:
      - 3 connected steps: Choose Your Route, Set Preferences, Find Your Ride.
   8. **Student Travel Special**:
      - Campus commute banner offering flat ₹150 OFF with code `CAMPUSCOMMUTE`.
@@ -278,7 +278,7 @@
       - 5-column navigation with company links, trip planner, customer care, and legal guidelines.
   11. **Dedicated Sathi Copilot Slide-Over Drawer (Variant 3 Specific)**:
       - Slide-over panel (max-w-[440px]) with backdrop, live fleet connection status, and conversation stream.
-      - Bengali transit welcome ("নমস্কার! Welcome to BusSathi 🙏") + Trending deal card (Kolkata → Siliguri ₹750 with Quick Apply action).
+      - Bengali transit welcome ("নমস্কার! Welcome to One Go Bus 🙏") + Trending deal card (Kolkata → Siliguri ₹750 with Quick Apply action).
       - Suggested prompt chips ("Compare AC vs Non-AC", "40% student pass", "Luggage policy", "Cheapest < ₹300").
       - Interactive query responses, voice input button animation, and clear chat utility.
 - **Verification**:
@@ -286,7 +286,7 @@
   - `npm run build`: Production build succeeded (`tsc -b && vite build` in 1.18s).
   - Zero changes to other pages, authentication, backend code, database, or environment configs.
 
-## BusSathi Hero Section — Seamless Panoramic Background Extension Behind Heading (2026-11-16)
+## One Go Bus Hero Section — Seamless Panoramic Background Extension Behind Heading (2026-11-16)
 - **Files Changed**:
   - `frontend/src/assets/hero_bussathi_design4.webp`: Created a seamless panoramic composite (2048×768 WebP, 165 KB) that extends the Bengal landscape canvas to the left behind the heading while preserving the right-side artwork.
   - `frontend/src/pages/HomePage.tsx`:
@@ -302,7 +302,7 @@
   - `npm --prefix frontend run build`: Succeeded in 1.90s, bundling `hero_bussathi_design4-B8mpKiTV.webp` (165.40 kB).
   - All collaboration rules and file protection constraints respected.
 
-## BusSathi Asset Bundling & Explore Cards Local Integration (2026-11-16)
+## One Go Bus Asset Bundling & Explore Cards Local Integration (2026-11-16)
 - **Files Changed**:
   - `frontend/src/assets/explore_bus.webp`: Local WebP asset for Card 1 (Express Highway Bus).
   - `frontend/src/assets/explore_voucher.webp`: Local WebP asset for Card 2 (Ticket Voucher).
@@ -314,7 +314,7 @@
   - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
   - `npm --prefix frontend run build`: Succeeded in 2.02s, bundling all 6 WebP assets cleanly into `dist/assets/`.
 
-## BusSathi Hero Header — 100% Stitch Specification Realignment (2026-11-16)
+## One Go Bus Hero Header — 100% Stitch Specification Realignment (2026-11-16)
 - **Files Changed**:
   - `frontend/src/pages/HomePage.tsx`:
     - Container height adjusted to exact Stitch specification: `h-[340px] md:h-[370px] lg:h-[390px] flex flex-col justify-start bg-[#f9f9ff]`.
@@ -328,7 +328,7 @@
   - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
   - `npm --prefix frontend run build`: Succeeded in 1.66s.
 
-## BusSathi Above-the-Fold Optimization — redBus-Inspired Booking Form Placement (2026-11-16)
+## One Go Bus Above-the-Fold Optimization — redBus-Inspired Booking Form Placement (2026-11-16)
 - **Files Changed**:
   - `frontend/src/assets/hero_bussathi_compact.webp`: Tailored panoramic Kolkata transit asset (1376×718 WebP, 171 KB) with optimized sky headroom, ensuring Howrah Bridge, Victoria Memorial dome, Hooghly river ferry, bus, and road remain 100% visible.
   - `frontend/src/pages/HomePage.tsx`:
@@ -348,21 +348,21 @@
   - `npm --prefix frontend run build`: Succeeded in 1.43s, bundling `hero_bussathi_compact-C_GjuR6o.webp` cleanly into `dist/assets/`.
   - Zero modifications to other pages, routes, authentication, or backend code.
 
-## BusSathi Finalized Compact Top Section Re-creation (2026-11-16)
+## One Go Bus Finalized Compact Top Section Re-creation (2026-11-16)
 - **Visual Reference**: Finalized design screenshot (`media_1794842958896_a1eecd72.jpg`, reference URL `bussathi-compact-booking-demo-2026.vibrantoffer4.chatgpt.site`).
 - **Scope Boundary Strictly Followed**:
   - Replaced ONLY the three requested top sections:
     1. Navigation Bar (Floating pill navbar)
     2. Hero Section (Compact banner with right-bottom Kolkata artwork)
     3. Bus Search Form (4-row compact card up to the "Search Buses" CTA button)
-  - Everything below the "Search Buses" button (Section 3: Explore More, Popular Routes, Offers, Bus Pass, FAQ, Footer, Sathi Copilot drawer, all modals) remains 100% UNCHANGED.
+  - Everything below the "Search Buses" button (Section 3: Explore More, Popular Routes, Offers, Bus Pass, FAQ, Footer, One Go AI Copilot drawer, all modals) remains 100% UNCHANGED.
   - Excluded the website editor's floating "Edit site" control.
 - **Files Changed**:
   - `frontend/src/pages/HomePage.tsx`:
     - **Floating Pill Navbar**: `max-w-[1520px] mx-auto h-[64px] rounded-full bg-[#FCFEFF]/95 backdrop-blur-[18px] border border-[#CEDDF3] shadow-[0_4px_20px_rgba(11,61,146,0.06)] px-4 sm:px-6 sticky top-3 z-40`.
-      - Logo: 43×43px rounded-[13px] bg `#0B3D92`, "Bus" navy + "Sathi" orange font-black text-[23px] with "Travel Smart. Pay Less." muted blue.
+      - Logo: 43×43px rounded-[13px] bg `#0B3D92`, One Go Bus wordmark font-black text-[23px] with "Travel Smart. Pay Less." muted blue.
       - Center navigation: Active Home gradient pill (`bg-gradient-to-r from-[#104FBD] to-[#082E78]` text white, rounded-[25px], home icon), Routes, Offers, Bus Pass, Help & Support with material icons.
-      - Actions: Sathi Copilot AI pill button (`#082454`, `✦`, orange AI badge), notification bell with orange dot, profile avatar button with dropdown menu.
+      - Actions: One Go AI Copilot pill button (`#082454`, `✦`, orange AI badge), notification bell with orange dot, profile avatar button with dropdown menu.
     - **Compact Hero Section**: `max-w-[1560px] mx-auto px-4 sm:px-[22px] mt-2.5 h-[250px] rounded-[24px] bg-white border border-[#E2ECF8] overflow-hidden`.
       - Right-bottom aligned Kolkata illustration: `hero_bussathi_compact.webp` at 116% container height, keeping Howrah Bridge, Victoria Memorial dome, Hooghly river ferry, bus, and road perfectly sharp and uncropped.
       - Scrim: Soft horizontal gradient scrim from white to transparent on left.
@@ -380,7 +380,7 @@
   - `npm --prefix frontend run build`: Succeeded in 2.32s with zero TypeScript or Vite errors.
   - All interactive features (dropdowns, calendar picker, time selector, budget slider, route search, copilot trigger, and profile menu) fully functional.
 
-## BusSathi Top Section Viewport Height Responsiveness Optimization (2026-11-16)
+## One Go Bus Top Section Viewport Height Responsiveness Optimization (2026-11-16)
 - **Problem**: On Windows laptops with 125%/150% scaling or 1366×768 displays (effective inner browser viewport height ~460px–520px), the "Search Buses" CTA button was getting partially cropped off at the bottom.
 - **Solution & CSS Adjustments**:
   - **Floating Navbar**: Compacted height to `h-[50px] sm:h-[54px] lg:h-[58px]` with `top-1 sm:top-2` and refined icon & brand scale (`34px–38px`).
@@ -395,7 +395,7 @@
   - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
   - `npm --prefix frontend run build`: Succeeded in 3.68s.
 
-## BusSathi Homepage Visual Alignment & One Continuous Hero Section Fix (2026-11-16)
+## One Go Bus Homepage Visual Alignment & One Continuous Hero Section Fix (2026-11-16)
 - **Visual Differences Resolved**:
   1. **Continuous Hero Section**:
      - Removed any split appearance between left text and right illustration.
@@ -403,7 +403,7 @@
      - Kolkata illustration positioned as an absolute background layer (`absolute inset-0 z-0 w-full h-full`) behind the content using `object-[center_80%] sm:object-[center_82%] md:object-[center_83%]`, preserving Howrah Bridge, Victoria Memorial dome, Hooghly river ferry, bus wheels on the road, and the asphalt road along the bottom edge without cropping landmarks.
      - Smooth horizontal gradient scrim (`bg-gradient-to-r from-white via-white/90 via-28% md:via-white/75 md:via-42% lg:via-white/55 lg:via-50% to-transparent w-full md:w-[70%] lg:w-[62%]`) providing soft readability for "Where to next?" and popular route pills on the left while smoothly fading to transparent with zero hard vertical division.
   2. **Preserved Navbar**:
-     - Floating pill navbar preserved 100% with branding, navigation links, Sathi Copilot AI button, notification bell, and user profile avatar.
+     - Floating pill navbar preserved 100% with branding, navigation links, One Go AI Copilot button, notification bell, and user profile avatar.
   3. **Search Form Dimensions & Alignment**:
      - Search card wrapper width set to `max-w-[1220px] w-full mx-auto` with ~20px horizontal page padding (`px-4 sm:px-5 lg:px-[20px]`).
      - Rounded corners set to `rounded-[23px]`.
@@ -416,7 +416,7 @@
   - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
   - `npm --prefix frontend run build`: Built successfully in 2.50s.
 
-## Phase 9 - OneGoBus Universal Glassmorphic Layout & Route Architecture (2026-11-17)
+## Phase 9 - One Go Bus Universal Glassmorphic Layout & Route Architecture (2026-11-17)
 - **Objective**: Deprecate legacy dark mode Onboarding page, establish `HomePage.tsx` as primary app entry point (`/`), and introduce unified glassmorphic `Navbar` and `Footer` wrapped around all parent application views.
 - **Tokens & CSS Utility Added** (`frontend/src/index.css`):
   - Defined CSS glass variables in `:root` strictly for light mode (`--glass-bg: rgba(255, 255, 255, 0.78)`, `--glass-border: rgba(255, 255, 255, 0.85)`, `--glass-blur: blur(20px)`, `--glass-shadow: 0 10px 35px rgba(11, 35, 65, 0.08)`, `--glass-highlight: rgba(255, 255, 255, 0.95)`, `--glass-fallback-bg: #FFFFFF`).
@@ -462,7 +462,7 @@
     - Set layout background to `bg-transparent` on auth routes and `bg-canvas` on discovery/marketing routes.
     - Excluded the heavy 5-column marketing footer on auth pages (`{!isAuthPage && <Footer />}`).
   - **Micro-Footer Integrated (`AuthLayout.tsx`)**:
-    - Embedded a lightweight, single-line micro-footer docked over the neutral asphalt section: `© 2026 OneGoBus • West Bengal AI Smart Bus Booking Platform • Privacy • Terms • DPDP 2025 Compliant`.
+    - Embedded a lightweight, single-line micro-footer docked over the neutral asphalt section: `© 2026 One Go Bus • West Bengal AI Smart Bus Booking Platform • Privacy • Terms • DPDP 2025 Compliant`.
     - Zero vertical scrollbar on standard desktop screens (100vh fit).
   - **Preserved Artwork & Alignment**:
     - 100% of the artwork (heritage express coach, Howrah Bridge, Dakshineswar Kali Temple, Victoria Memorial, Goddess Durga idol, autumn flame tree) is unclipped and clearly visible.
@@ -473,7 +473,7 @@
 
 
 ## Phase 11 - Desktop Bus Search Results Light Mode Redesign (2026-11-17)
-- **Objective**: Replace the legacy dark mode search results page (`frontend/src/pages/ResultsPage.tsx`) with the modern light mode design from Stitch project `9772835342865580419` (Node ID: `bd8344ff3d534669bafe7eea90604b47` - "OneGoBus - Desktop Bus Search Results").
+- **Objective**: Replace the legacy dark mode search results page (`frontend/src/pages/ResultsPage.tsx`) with the modern light mode design from Stitch project `9772835342865580419` (Node ID: `bd8344ff3d534669bafe7eea90604b47` - "One Go Bus - Desktop Bus Search Results").
 - **Design Specifications & Tokens Implemented**:
   - **Color Palette & Glassmorphic Surface**:
     - Canvas: `--canvas: #FBF9F5` (warm cream background).
@@ -514,8 +514,8 @@
 
 ## Phase 12 - Seat Selection Modal (Desktop & Mobile Light Mode) & OneGoHold™ (2026-11-18)
 - **Objective**: Implement the dedicated full-screen / responsive sheet Seat Selection Modal based on Stitch project `9772835342865580419`:
-  - **Desktop Screen**: `projects/9772835342865580419/screens/13a355a4fb44436b8b133a2b76e1f65d` ("OneGoBus - Seat Selection Modal (Desktop Light)")
-  - **Mobile Screen**: `projects/9772835342865580419/screens/dce2b070c6034041b93a50314ff81778` ("OneGoBus - Seat Selection Modal (Mobile Light)")
+  - **Desktop Screen**: `projects/9772835342865580419/screens/13a355a4fb44436b8b133a2b76e1f65d` ("One Go Bus - Seat Selection Modal (Desktop Light)")
+  - **Mobile Screen**: `projects/9772835342865580419/screens/dce2b070c6034041b93a50314ff81778` ("One Go Bus - Seat Selection Modal (Mobile Light)")
 - **Animation Architecture**:
   - Engineered hardware-accelerated CSS spring animations (`cubic-bezier(0.16, 1, 0.3, 1)`) matching Framer Motion's physics-based fluid spring feel:
     - `.animate-modal-backdrop`: Smooth fade-in overlay with backdrop blur.
@@ -541,7 +541,7 @@
     - Visual Gallery: 3 high-resolution vehicle photos (Fleet exterior, Luxury cabin, Sanitized berths).
     - 6 Quick Highlight Badges: On-Time Record, USB Charging, Free 5G WiFi, Emergency SOS, Clean Linens, Air Suspension.
     - Interactive Policy Tabs: Highlights, Cancellation, Reschedule, Boarding Points.
-    - OneGoBus AI Trip Intelligence callout detailing rest stops, dinner halt at NH-12 Shaktigarh, and traffic advisories.
+    - One Go Bus AI Trip Intelligence callout detailing rest stops, dinner halt at NH-12 Shaktigarh, and traffic advisories.
   - **Sticky Bottom Checkout Bar**:
     - Live selected seat chips with deck indicator (`L3 (lower)`, `U2 (upper)`), price badge, and 1-click removal (`✕`).
     - Dynamic total payable fare calculation with inclusive tax notice and 7-minute lock status.
@@ -554,7 +554,7 @@
   - `npm run lint`: 0 errors, 0 warnings.
 
 
-## Phase 13 - OneGo Bus 3D Seat Status Specifications & Asset Integration (2026-11-18)
+## Phase 13 - One Go Bus 3D Seat Status Specifications & Asset Integration (2026-11-18)
 - **Objective**: Replace standard seat squares and boxes across Lower and Upper Decks with high-quality 3D illustrated seat PNG assets, integrating the user-specified 5-tier seat status and color specifications:
   1. **Available**: Outline `#16834A`, Highlight `#27AE60`, Background `#F0FBF4` (`General_Seat_Available.png`). Clickable to select.
   2. **Selected**: Outline `#0B4DBB`, Highlight `#2563EB`, Background `#EAF3FF` (`General_Seat_Selected.png`). Active user choice with spring pop animation.
@@ -688,7 +688,7 @@
 - **Architectural & Design Enhancements**:
   - **1. Premium Glassmorphic Modal Window**:
     - Frosted glass container (`rounded-[28px]`, `background: linear-gradient(135deg, rgba(255, 248, 241, 0.94) 0%, rgba(255, 237, 228, 0.88) 50%, rgba(254, 245, 238, 0.92) 100%)`, `backdrop-filter: blur(28px) saturate(150%)`, border `1px solid rgba(255, 255, 255, 0.8)`).
-    - Top header with OneGoBus brand wordmark, vertical separator, "Choose your seats" frosted pill, and circular `✕` close button.
+    - Top header with One Go Bus brand wordmark, vertical separator, "Choose your seats" frosted pill, and circular `✕` close button.
   - **2. Column 1 (Left - Bus Showcase & Journey Details)**:
     - Authentic inline vector silhouette of Kolkata's landmark **Howrah Bridge** rendered as a soft atmospheric backdrop.
     - User's branded Volvo luxury coach bus (`onego-luxury-coach.png`) with ambient lighting and ground shadow.
@@ -824,7 +824,7 @@
       - **Personal Information**: Full Name, Primary Email (Verified), Phone Number (+91 SMS OTP Verified), Gender, Emergency Contact Name & Phone with inline Save micro-interaction and toast notification.
       - **Travel & Seat Preferences**: Preferred Seat Position (Lower Deck Window, Upper Deck Sleeper, Aisle), Student Concession Pass toggle, WhatsApp real-time GPS & QR pass dispatch toggle, SMS 30-min alert toggle.
       - **DPDP 2025 Privacy**: Data transparency card, "Download My Data (JSON)" export generator, and privacy policy links.
-      - **Security & Sessions**: Active session details and one-click "Log Out of OneGoBus" button.
+      - **Security & Sessions**: Active session details and one-click "Log Out of One Go Bus" button.
 - **Verification**:
   - `npm run build`: Bundled in 264ms across 26 code-split chunks with 0 errors.
   - `npm run lint`: 0 errors, 0 warnings across the entire repository.
@@ -1007,6 +1007,61 @@
   - Captured verification screenshot `modal_from_navbar.png`.
   - `npm --prefix frontend run lint`: 0 errors, 0 warnings.
   - `npm --prefix frontend run build`: 0 errors across 26 code-split chunks (386ms).
+
+## Phase 34 - High-Resolution 8000x2664 (3:1) Kolkata Banner Framing & Instant Performance Optimization (2026-11-26)
+- **Problem**: The replaced `kolkata-profile-banner.webp` upgraded to an `8000x2664` (`3:1` aspect ratio, `675.32 kB`) panoramic illustration with warmer `#FEE6D3` cream tones. Inside the full-width `1086x184` profile banner, `object-cover` caused top/bottom cropping of the overhanging orange blossoms and vintage bus tires, while static import in `Navbar.tsx` bundled/referenced the modal and banner image on unauthenticated routes and caused first-open decode overhead.
+- **Solution & Scope of Changes**:
+  - **Aspect-Matched 3:1 Profile Banner (`frontend/src/pages/ProfilePage.tsx`)**:
+    - Updated desktop banner container to `bg-[#FEE6D3] sm:min-h-[208px] lg:min-h-[228px]` with a right-anchored `aspect-[3/1]` artwork wrapper (`678x226px` at 1280px desktop = exact `3.00` ratio) and seamless `#FEE6D3` left feather gradient (`w-1/2 lg:w-[42%]`), keeping blossoms, Howrah Bridge, Victoria Memorial, and bus tires 100% uncropped.
+    - Updated mobile top scenic window to `aspect-[12/5] min-h-[148px] max-h-[176px]` with `#FEE6D3` bottom blend.
+    - Added explicit `width={8000} height={2664}`, `fetchPriority="high"`, `decoding="async"`, and `transform-gpu`.
+  - **Aspect-Matched 3:1 Modal Header (`frontend/src/components/auth/SignOutModal.tsx`)**:
+    - Tuned header container to `h-[148px] sm:h-[164px]` (`478x164` = `2.91:1` on desktop) on `#FEE6D3`, added left cream legibility gradient (`w-[52%]`) behind `[→ | One Go Bus`, and enabled GPU-composited animations (`transform-gpu will-change-[transform,opacity]`).
+  - **Zero-Overhead Lazy Loading & Pre-Decoding (`frontend/src/utils/preloadKolkataBanner.ts`, `Navbar.tsx`, `ProfilePage.tsx`)**:
+    - Created cached `preloadKolkataBanner()` helper calling `img.decode()` once.
+    - Converted `SignOutModal` imports in `Navbar.tsx` and `ProfilePage.tsx` to `React.lazy()` + `<Suspense>`, eliminating unauthenticated landing-page overhead while pre-warming on `requestIdleCallback` and hover/focus when authenticated.
+- **Verification**:
+  - `npm --prefix frontend run lint` & `npm --prefix frontend run build`: 0 errors, 0 warnings; `SignOutModal` split cleanly into `5.34 kB` chunk (`359ms` build).
+  - Headless Chrome verification confirmed:
+    - Unauthenticated `/` loads `0` SignOut/banner resources (`[]`).
+    - Desktop banner renders at exact `3.00:1` (`678x226`), modal header at `2.91:1` (`478x164`), and visual screenshots (`after_profile_desktop.png`, `after_modal_desktop.png`, `after_modal_mobile.png`, `after_profile_mobile.png`) verify zero cropping and crisp contrast.
+
+## Phase 35 - Search Results Page Complete Redesign, Date/Filter Fixes & Mobile Sheet (2026-11-26)
+- **Objective**: Redesign `/results` for calm, fast comparison where users can fit two complete bus cards with `View seats` visible at `1440x900`, fix all broken filter/sort/date logic, and sync URL search parameters from HomePage through booking handoff.
+- **Files Created / Updated**:
+  - `frontend/src/features/results/types.ts`: Canonical `CoachTypeId`, `DepartureSlotId`, `SortOption`, `OperatorId`, `DateFareSummary`, and `PriceBounds`.
+  - `frontend/src/features/results/journeyDate.ts`: Pure Asia/Kolkata `YYYY-MM-DD` calendar utilities across month/year boundaries (`2026-11-12` to `2027-02-28`), numeric duration/time parsing, `computeArrivalDayOffset`, and `en-IN` INR formatting.
+  - `frontend/src/features/results/inventory.ts`: Route-keyed and date-aware West Bengal fixture catalog (`Kolkata->Siliguri`, `Kolkata->Digha`, `Howrah->Digha`, `Kolkata->Bolpur`, `Durgapur->Kolkata`, `Malda->Siliguri`), empty-day & empty-route support, async lookup abstraction, starting fare derivation, and canonical operator/coach groupings.
+  - `frontend/src/features/results/RouteIllustration.tsx`: Permanent full-bleed right-anchored panoramic banner (`Results-Page-Banner.webp`, `4000x1332` `3:1`, `object-cover object-[right_68%]` on `#FEFDF7` desktop and `aspect-[3/1]` scenic mobile window) rendered across **all** routes and destinations with seamless left cream-white feathering and frosted `Edit search` button.
+  - `frontend/src/features/results/DateStrip.tsx`: Compact `68-80px` scrollable date/fare bar with solid `#0B2341` active tile, `<`/`>` window controls, and accessible Escape-dismissible calendar popover.
+  - `frontend/src/features/results/FilterSidebar.tsx`: Extracted shared `FilterPanelContent` used by both desktop `264px` sidebar and mobile Filters sheet; dynamically derived price range slider, distinct canonical coach types, 6-hour departure windows, and collapsible Boarding, Dropping, Amenities, Operators, and optional Travel mood sections.
+  - `frontend/src/features/results/TicketCard.tsx`: Uniform fixed-column desktop grid + 3-row mobile stack with `tabular-nums`, dynamic `+1 day` badge, sold-out state handling, primary `View seats` CTA (`bg-accent`), lower amenities strip, and expandable `Bus details` panel.
+  - `frontend/src/pages/ResultsPage.tsx`, `HomePage.tsx`, `SeatSelectionModal.tsx`, `SeatHoldModal.tsx`, `frontend/src/index.css`: URL query param sync + `location.state` fallback, `Edit search` prefill back to `/`, stale-request cancellation, `.no-scrollbar` utility, zero fictional held seat `L6`, dynamic selected date passed into booking modals, and honest `Seats selected` summary dialog.
+- **Verification**:
+  - `npm --prefix frontend run lint && npm --prefix frontend run build`: 0 errors, 0 warnings (`333ms`).
+  - Headless Chrome E2E verification across `1440x900`, `1280x800`, `768px`, and `390px` viewports confirmed 2 full cards + `View seats` visible above the fold at `1440x900`, zero horizontal overflow, month-boundary navigation, numeric `Fastest` sorting (`9h 45m` before `11h 00m`), distinct `AC Sleeper` filtering, Back/Forward restoration, empty route & empty day messaging, mobile Filters sheet, and 2nd-bus seat selection modal date accuracy.
+
+## Phase 36 - Perforated Ticket Card Redesign & Large-List Performance Optimization (2026-11-27)
+- **Objective**: Redesign `TicketCard.tsx` to match the alternating perforated ticket reference (`media_1795801822668_64ec47e4.jpg`) with vertical/horizontal CSS cutout seams, `#FFF5EB` peach / `#EEF5FD` blue alternating fare stubs & initials badges, `#FF883E` tangerine `View seats →` CTA, and fast rendering on large bus lists.
+- **Files Changed**:
+  - `frontend/src/index.css`: Added `.ticket-perf-item` (`content-visibility: auto; contain-intrinsic-size: auto 168px`) and pure CSS semicircular cutout utilities (`.ticket-notch-top`, `.ticket-notch-bottom`, `.ticket-notch-left`, `.ticket-notch-right`) matching `--canvas`.
+  - `frontend/src/features/results/types.ts`: Made `rating` and `reviewsCount` optional to safely support services without ratings.
+  - `frontend/src/features/results/TicketCard.tsx`: Implemented `React.memo`-wrapped `78% / 22%` ticket layout (`rounded-2xl`), alternating `peach` (`#FFF5EB`) / `blue` (`#EEF5FD`) stub + initials badge tints, aligned departure/duration/arrival columns (`tabular-nums`, inline duration label, `+1 day`), deduplicated lower amenities row ending at the ticket seam, expandable `Bus details`, disabled sold-out handling, bright tangerine `#FF883E` / `#0B2341` `View seats →` button (`44-46px`), and responsive `< md` horizontal perforated stub.
+  - `frontend/src/pages/ResultsPage.tsx`: Passed alternating `variant` props and stabilized card callbacks with `useCallback`.
+- **Verification**:
+  - `npm --prefix frontend run lint && npm --prefix frontend run build`: 0 errors, 0 warnings (`364ms`).
+  - Headless Chrome check (`1440x900`, `1024x768`, `390x844`): Verified alternating `#FFF5EB` / `#EEF5FD` stub colors, exact `x = 401px` vertical alignment across cards 1–3, two full cards above fold at `1440x900` (`card2Bottom: 829`), `AC`/`Sleeper` deduplicated from footer, `Bus details` expansion, `Sold out` disabled button, zero horizontal overflow across all widths, and `View seats` opening `SeatSelectionModal`.
+
+## Phase 37 - Live Dynamic Asia/Kolkata Date Strip & Rolling 90-Day Booking Window (2026-11-27)
+- **Problem**: `journeyDate.ts` hardcoded `DEFAULT_JOURNEY_DATE = '2026-11-17'` and fixed `BOOKING_WINDOW_START` / `BOOKING_WINDOW_END` strings, causing `ResultsPage` and `DateStrip` to display stale November 15–20 dates instead of advancing dynamically with the current calendar day.
+- **Solution (Scoped to Results & DateStrip; HomePage untouched)**:
+  - `frontend/src/features/results/journeyDate.ts`: Replaced fixed constants with live `Asia/Kolkata` functions `getDefaultJourneyDate()`, `getBookingWindowStart()`, and `getBookingWindowEnd()` (`today` through `today + 90 days`), and computed month/year dynamically inside `parseJourneyDateInput()`.
+  - `frontend/src/features/results/DateStrip.tsx`: Updated prev/next arrow disable checks and calendar picker month/year bounds to read dynamically from `getBookingWindowStart()` and `getBookingWindowEnd()`.
+  - `frontend/src/pages/ResultsPage.tsx`: Added live `todayKolkataIso` sync on `focus`, `visibilitychange`, and 60s interval for automatic midnight rollover, defaulting searches without a valid upcoming date to `getDefaultJourneyDate()`.
+  - `frontend/src/features/results/inventory.ts`: Replaced the past empty-date marker (`2026-11-22`) with a rolling `+30 days` empty maintenance day so today and upcoming days always render active fares.
+- **Verification**:
+  - `npm --prefix frontend run lint && npm --prefix frontend run build`: 0 errors, 0 warnings (`290ms`).
+  - Dynamic Chrome test verified `/results` defaults to live `Asia/Kolkata` today, shifts dates cleanly via `Next dates`, and rolls forward automatically to `+1 day` when system `Date` advances to tomorrow.
 
 
 
