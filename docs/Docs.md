@@ -2,7 +2,7 @@
 
 > **Repository:** West Bengal AI Smart Bus Booking Platform (One Go Bus)  
 > **Active Branch:** `feature/onego-theme-auth-ui`  
-> **Last Updated:** November 2026 (Phase 24)
+> **Last Updated:** November 2026 (Phase 37)
 
 ---
 
@@ -77,20 +77,38 @@ The website footer has been completely redesigned to match the pixel-accurate re
 
 - **Reactive State (`AuthContext` & `useAuth`):** Decoupled context definition (`authContextInstance.ts`), provider component (`AuthContext.tsx`), and hook (`useAuth.ts`) to satisfy Vite Fast Refresh.
 - **Top Navbar Profile Dropdown:** Replaces "Sign In" and "Register" buttons with a circular 40px avatar with online status indicator. The dropdown menu uses a 98% opaque frosted glass surface (`bg-white/98 backdrop-blur-2xl`) with multi-layered drop shadows, branded user header card, structured icon wells, title/subtitle metadata, and subtle chevron indicators to guarantee complete contrast even over busy hero graphics. Options: `My Profile`, `My Bookings / Trips`, `Preferences & Settings`, and `Sign Out`.
-- **Profile Page (`/profile` — Phase 27 & 28 Redesign):**
-  - **Heritage Panoramic Banner:** Integrated high-resolution WebP artwork (`kolkata-profile-banner.webp`, 15.6 kB) representing Kolkata culture (Victoria Memorial, Ganges riverboat, Howrah Bridge cantilever, iconic yellow/blue bus, autumn foliage, and vintage lamppost).
-  - **Minimalist Hero Identity:** Minimal, high-contrast presentation containing avatar with camera badge, user name ("Soumabha Majumder"), emerald "Verified Traveler" pill, and a frosted glass contact capsule (`bg-white/85 backdrop-blur-md`) with email and phone. The remaining 70% of the banner remains completely clear and unobstructed.
+- **Profile Page (`/profile` — Phase 27, 28 & 34 Redesign):**
+  - **Heritage Panoramic Banner:** Integrated high-resolution 8000x2664 (3:1) WebP artwork (`kolkata-profile-banner.webp`) in an aspect-matched right-anchored `aspect-[3/1]` desktop frame (`sm:min-h-[208px] lg:min-h-[228px]`, `#FEE6D3` surface) representing Kolkata culture (Victoria Memorial, Ganges riverboat, Howrah Bridge cantilever, iconic yellow/blue bus, overhanging orange blossoms, and vintage lamppost) with zero vertical cropping.
+  - **Minimalist Hero Identity:** Minimal, high-contrast presentation containing avatar with camera badge, user name ("Soumabha Majumder"), emerald "Verified Traveler" pill, and a frosted glass contact capsule (`bg-white/85 backdrop-blur-md`) with email and phone. Over 65% of the artwork remains completely clear and unobstructed.
   - **Traveler Milestones & Perks Strip:** Dedicated 4-card metric strip directly below the banner displaying `Member Since` (tenure), `Completed Trips`, `OneGo AI Savings`, and `Favorite Corridor` with dedicated colored icon micro-containers and bold ink typography (4-column desktop, 2x2 mobile grid).
-  - **Smooth Gradient Seam:** Zero-seam linear gradient mask (`#FCEBD7 0%` through transparent `66%`) ensuring crystal-clear text contrast on any viewport width.
-  - **Mobile Stacking:** Dedicated scenic window on top with top-right Sign Out button, overlapping centered avatar (`-mt-12`), and cleanly stacked details with zero text collision over the artwork.
+  - **Smooth Gradient Seam & Performance Pre-Decoding:** Seamless `#FEE6D3` left-edge feather mask, explicit `width={8000} height={2664}`, `fetchPriority="high"`, `decoding="async"`, and cached `img.decode()` pre-warming via `preloadKolkataBanner.ts`.
+  - **Mobile Stacking:** Dedicated `aspect-[12/5]` (`min-h-[148px] max-h-[176px]`) scenic window on top with top-right Sign Out button, overlapping centered avatar (`-mt-12`), and cleanly stacked details with zero text collision over the artwork.
   - **Tabs & Interactive Functionality:** 3 functional tabs (`Personal Information`, `Travel Preferences`, `Security & Sessions`) with live form saving, preference toggling, and active session monitoring.
-- **Backend-Synchronized Sign Out Flow & Modal (Phase 29):**
+- **Backend-Synchronized Sign Out Flow & Modal (Phases 29, 32, 33 & 34):**
   - **Spring Boot Backend Endpoint:** Implemented `@PostMapping("/logout")` in `AuthController.java` expiring HTTP-only session cookies (`onego_token`, maxAge=0).
   - **Asynchronous Frontend Dispatch:** Added `logoutUser()` in `frontend/src/api/authApi.ts` invoked asynchronously inside `AuthContext.tsx` before local token purging.
-  - **Sign Out Confirmation Modal (`SignOutModal.tsx`):** Pixel-accurate premium dialog matching reference design with dimmed backdrop (`bg-[#000D21]/60 backdrop-blur-xs`), smooth pop-in animation (`zoom-in-95 ease-out`), warm cream Kolkata heritage artwork header (`kolkata-profile-banner.webp`), circular close button, max-width 480px with 16px mobile margins, initial keyboard focus on "Stay signed in", ESC-key dismiss with focus restoration to opener, and deep navy `#0B2341` primary action disabled while request is pending. Universally connected across Profile banner, Profile Security tab, Navbar profile dropdown, and Mobile menu drawer.
+  - **Sign Out Confirmation Modal (`SignOutModal.tsx`):** Code-split (`React.lazy`) pixel-accurate dialog pre-warmed on idle/hover when authenticated, featuring dimmed backdrop (`bg-[#000D21]/60 backdrop-blur-xs`), GPU-composited pop-in animation (`zoom-in-95 ease-out transform-gpu`), warm cream `#FEE6D3` 3:1 Kolkata heritage header (`h-[148px] sm:h-[164px]`) with left brand legibility feather, circular close button, max-width 480px with 16px mobile margins, initial keyboard focus on "Stay signed in", ESC-key dismiss with focus restoration to opener, and deep navy `#0B2341` primary action disabled while request is pending. Universally connected across Profile banner, Profile Security tab, Navbar profile dropdown, and Mobile menu drawer.
 
 ---
 
-## 4. Verification & Quality Gates
-- **Build Verification:** `npm --prefix frontend run build` compiles in ~290ms across 26 chunks with 0 errors.
+## 4. Redesigned Search Results Page (`/results` — Phase 35)
+
+- **URL & State Synchronization (`ResultsPage.tsx`, `HomePage.tsx`, `journeyDate.ts`):**
+  - Supports validated `from`, `to`, and Asia/Kolkata `YYYY-MM-DD` `date` query parameters (plus optional `passengers`, `coach`, `maxPrice`, `time`) with `location.state` fallback so refresh, shared links, `history.back()` / `history.forward()`, and `Edit search` prefilling restore the exact search without `toISOString()` local-midnight drift.
+- **Editorial Header, Bengal Panorama & Date Strip (`RouteIllustration.tsx`, `DateStrip.tsx`):**
+  - Compact route header (`sm:min-h-[120px] lg:min-h-[128px]`, `#FEFDF7` warm-white surface) with single `h1`, Asia/Kolkata formatted date, optional passenger/coach count only when known, permanent full-bleed right-anchored panoramic artwork (`Results-Page-Banner.webp`, `4000x1332` `3:1`, Howrah Bridge -> North Bengal tea gardens & coach) rendered across **all** routes and destinations with seamless `#FEFDF7` feathering, crisp mobile top scenic window (`aspect-[3/1]`), and frosted `Edit search` button.
+  - Scrollable `DateStrip` (`68-80px` desktop) generating nearby days dynamically from today's live `Asia/Kolkata` date across a rolling 90-day booking window (`getBookingWindowStart()` to `getBookingWindowEnd()`), automatically rolling forward on date change/midnight, displaying each day's derived lowest starting fare (`₹`), `No buses` on confirmed empty days, solid navy `#0B2341` selection fill, prev/next chevrons, and accessible calendar picker popover.
+- **Grid, Filters & Perforated Ticket Cards (`FilterSidebar.tsx`, `TicketCard.tsx`, `inventory.ts`, `index.css` — Phase 36):**
+  - Desktop two-column grid (`lg:grid-cols-[264px_minmax(0,1fr)] gap-6`) showing two complete bus cards and their tangerine `View seats →` (`#FF883E` bg, bold `#0B2341` text) CTAs above the fold at `1440×900`.
+  - Perforated `78% / 22%` ticket layout (`rounded-2xl`): white main section with thin horizontal footer divider ending at the vertical dashed seam, pure CSS semicircular top/bottom cutouts (`clip-path`) matching `--canvas`, alternating odd `#FFF5EB` peach and even `#EEF5FD` blue fare stubs + initials badges (`SP`, `GT`, etc.).
+  - Deduplicated footer amenities (hiding `AC` / `Sleeper` / `Seater` when already displayed in `coachTypeLabel`), compact `Wi-Fi`, `Charging`, `Water`, optional missing rating guard, `Bus details ›` expandable panel, and responsive `< 768px` mobile horizontal dashed seam with left/right cutouts.
+  - Optimized for large inventories using `React.memo(TicketCard)`, `useCallback` handlers, and CSS `content-visibility: auto` (`.ticket-perf-item`).
+  - Mobile `< lg` Filters drawer sheet with active filter badge, Escape/close focus return, and `Show N buses` apply button.
+  - Canonical `coachTypeId` (`ac-sleeper` vs `ac-seater`), canonical `OPERATOR_GROUPS` matching, working `amenities` filtering, numeric `parseDurationMinutes()` sorting for `Fastest`, and dynamic schedule-derived `+1 day` arrival offsets.
+  - Stale-request safe `fetchDeparturesForSearch`, loading/retry and empty-date states, and honest `Seats selected` handoff preserving `journeyDateDisplay` through `SeatSelectionModal` and `SeatHoldModal` without unsubstantiated promises or fictional held seats.
+
+---
+
+## 5. Verification & Quality Gates
+- **Build Verification:** `npm --prefix frontend run build` compiles cleanly with 0 errors across 27 code-split chunks (including lazy `SignOutModal` chunk).
 - **Lint Verification:** `npm --prefix frontend run lint` passes with 0 errors and 0 warnings.

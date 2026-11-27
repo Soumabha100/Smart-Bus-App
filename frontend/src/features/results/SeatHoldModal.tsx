@@ -6,6 +6,7 @@ interface SeatHoldModalProps {
   seatId: string;
   origin: string;
   destination: string;
+  journeyDateDisplay?: string;
   onClose: () => void;
   onConfirmed: () => void;
 }
@@ -15,6 +16,7 @@ export const SeatHoldModal: FC<SeatHoldModalProps> = ({
   seatId,
   origin,
   destination,
+  journeyDateDisplay,
   onClose,
   onConfirmed,
 }) => {
@@ -61,7 +63,7 @@ export const SeatHoldModal: FC<SeatHoldModalProps> = ({
           {ticket.operator}
         </h3>
         <p className="text-xs text-[#64748B] mb-4">
-          {ticket.busType} • {ticket.departureTime} Departure
+          {ticket.busType} • {journeyDateDisplay ? `${journeyDateDisplay} • ` : ''}{ticket.departureTime} Departure
         </p>
 
         {/* Details Box */}

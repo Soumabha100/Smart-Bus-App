@@ -1,674 +1,981 @@
-import { useState, useMemo, type FC } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { FilterSidebar } from '../features/results/FilterSidebar';
+import { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  ArrowRight,
+  Bus,
+  CalendarDays,
+  Pencil,
+  RotateCcw,
+  SlidersHorizontal,
+  Sparkles,
+  X,
+} from 'lucide-react';
 import { DateStrip } from '../features/results/DateStrip';
-import { TicketCard } from '../features/results/TicketCard';
+import {
+  FilterPanelContent,
+  FilterSidebar,
+} from '../features/results/FilterSidebar';
+import { RouteIllustration } from '../features/results/RouteIllustration';
 import { SeatHoldModal } from '../features/results/SeatHoldModal';
-import { SeatSelectionModal, type SelectedSeatInfo } from '../features/results/SeatSelectionModal';
-import type { BusTicket, FilterState } from '../features/results/types';
+import {
+  SeatSelectionModal,
+  type SelectedSeatInfo,
+} from '../features/results/SeatSelectionModal';
+import { TicketCard } from '../features/results/TicketCard';
+import {
+  OPERATOR_GROUPS,
+  buildDateFareSummaries,
+  countActiveFilters,
+  fetchDeparturesForSearch,
+} from '../features/results/inventory';
+import {
+  addDaysIso,
+  clampToBookingWindow,
+  formatDateCompact,
+  formatDateHeader,
+  formatInr,
+  getBookingWindowEnd,
+  getBookingWindowStart,
+  getDefaultJourneyDate,
+  getDefaultWindowStartForDate,
+  getTodayKolkataIso,
+  getVisibleDateWindow,
+  parseDurationMinutes,
+  parseJourneyDateInput,
+  parseTimeMinutes,
+} from '../features/results/journeyDate';
+import type {
+  BusTicket,
+  DepartureSlotId,
+  FilterState,
+  PriceBounds,
+  SortOption,
+} from '../features/results/types';
 
-const MOCK_BUSES: BusTicket[] = [
-  {
-    id: 'shyamoli-1',
-    operator: 'Shyamoli Paribahan',
-    busType: 'Volvo Multi-Axle AC Sleeper (2+1) • Smooth Air Suspension',
-    rating: 4.6,
-    reviewsCount: 1240,
-    departureTime: '20:30',
-    originStation: 'Esplanade Stand D',
-    originDetails: 'Near Eden Gardens Metro Gate 2',
-    arrivalTime: '08:00',
-    destinationStation: 'Siliguri Junction',
-    destinationDetails: 'Main Bus Stand (Next Day)',
-    duration: '11h 30m',
-    onTimeRate: '98% On-Time Record',
-    originalPrice: 950,
-    price: 749,
-    seatsLeft: 12,
-    tag: 'AI Pick: Sleep Well',
-    subtag: 'NH-12 Inspected',
-    operatorType: 'private',
-    moodMatch: 'Sleep well',
-    departureSlot: 'night',
-    boardingPoint: 'Esplanade / Dharmatala',
-    droppingPoint: 'Siliguri Junction Stand',
-    amenities: ['Charging', 'Blanket', 'Free WiFi', 'Water', 'Live GPS'],
-  },
-  {
-    id: 'royal-1',
-    operator: 'Royal Cruiser Express',
-    busType: 'Bharat Benz AC Seater (2+2) • Extra Calf Support',
-    rating: 4.4,
-    reviewsCount: 850,
-    departureTime: '21:15',
-    originStation: 'Babughat Stand',
-    originDetails: 'Gate 2 Near Strand Road',
-    arrivalTime: '08:00',
-    destinationStation: 'Tenzing Norgay Terminus',
-    destinationDetails: 'Platform 12 (Next Day)',
-    duration: '10h 45m',
-    onTimeRate: 'Non-stop Highway Transit',
-    originalPrice: 720,
-    price: 620,
-    seatsLeft: 4,
-    tag: '⚡ 10h 45m Fastest',
-    subtag: 'Ergonomic Recliner',
-    operatorType: 'private',
-    moodMatch: 'Fastest',
-    departureSlot: 'night',
-    boardingPoint: 'Babughat Bus Stand',
-    droppingPoint: 'Tenzing Norgay Bus Terminus',
-    amenities: ['Charging', 'Water', 'Live GPS'],
-  },
-  {
-    id: 'greenline-1',
-    operator: 'Greenline Travels',
-    busType: 'Scania AC Multi-Axle Sleeper • Complimentary Breakfast Included',
-    rating: 4.8,
-    reviewsCount: 2410,
-    departureTime: '22:00',
-    originStation: 'Airport Gate 1',
-    originDetails: 'VIP Flyover Departure Bay',
-    arrivalTime: '09:00',
-    destinationStation: 'Siliguri ISBT',
-    destinationDetails: 'Bypass Hub Gate 4 (Next Day)',
-    duration: '11h 00m',
-    onTimeRate: 'Complimentary Breakfast',
-    originalPrice: 880,
-    price: 799,
-    seatsLeft: 19,
-    tag: '★ Top Rated Operator',
-    subtag: 'Clean Sanitized Bedding',
-    operatorType: 'private',
-    moodMatch: 'Scenic route',
-    departureSlot: 'night',
-    boardingPoint: 'Airport Gate No. 1',
-    droppingPoint: 'ISBT Bypass Corridor',
-    amenities: ['Free WiFi', 'Blanket', 'Water', 'Charging', 'Live GPS'],
-  },
-  {
-    id: 'nbstc-1',
-    operator: 'NBSTC Royal Heritage',
-    busType: 'Superfast Express AC • Official State Transport Corporation',
-    rating: 4.2,
-    reviewsCount: 3120,
-    departureTime: '20:00',
-    originStation: 'Esplanade NBSTC Terminus',
-    originDetails: 'Platform 4 (Dharmatala)',
-    arrivalTime: '07:30',
-    destinationStation: 'Tenzing Norgay Stand',
-    destinationDetails: 'NBSTC Bay A (Next Day)',
-    duration: '11h 30m',
-    onTimeRate: 'Strict Schedule Adherence',
-    originalPrice: 520,
-    price: 520,
-    seatsLeft: 16,
-    tag: 'Govt of West Bengal',
-    subtag: 'Dedicated Driver-Relay',
-    operatorType: 'government',
-    moodMatch: 'Budget friendly',
-    departureSlot: 'night',
-    boardingPoint: 'Esplanade / Dharmatala',
-    droppingPoint: 'Tenzing Norgay Bus Terminus',
-    amenities: ['Live GPS', 'Water'],
-  },
-  {
-    id: 'sbstc-1',
-    operator: 'SBSTC North Bengal Express',
-    busType: 'AC 2+2 Semi-Sleeper • State Express Fleet',
-    rating: 4.3,
-    reviewsCount: 980,
-    departureTime: '19:30',
-    originStation: 'Babughat Depot',
-    originDetails: 'SBSTC Main Bay',
-    arrivalTime: '06:45',
-    destinationStation: 'Siliguri Junction',
-    destinationDetails: 'Platform 3 (Next Day)',
-    duration: '11h 15m',
-    onTimeRate: 'Safe State Driver Protocol',
-    originalPrice: 650,
-    price: 580,
-    seatsLeft: 8,
-    tag: 'State Express',
-    subtag: 'Govt of WB',
-    operatorType: 'government',
-    moodMatch: 'Budget friendly',
-    departureSlot: 'night',
-    boardingPoint: 'Babughat Bus Stand',
-    droppingPoint: 'Siliguri Junction Stand',
-    amenities: ['Charging', 'Live GPS'],
-  },
-  {
-    id: 'wbtc-1',
-    operator: 'WBTC Himalayan Queen',
-    busType: 'Volvo Luxury Seater • Panoramic Vista Windows',
-    rating: 4.5,
-    reviewsCount: 1450,
-    departureTime: '06:15',
-    originStation: 'Esplanade Terminal',
-    originDetails: 'Kolkata Central Hub',
-    arrivalTime: '17:30',
-    destinationStation: 'Siliguri Junction Stand',
-    destinationDetails: 'Junction Bus Terminal',
-    duration: '11h 15m',
-    onTimeRate: 'Daytime Scenic Highway Run',
-    originalPrice: 850,
-    price: 760,
-    seatsLeft: 14,
-    tag: 'Day Vista Coach',
-    subtag: 'Scenic NH-12 Run',
-    operatorType: 'government',
-    moodMatch: 'Scenic route',
-    departureSlot: 'morning',
-    boardingPoint: 'Esplanade / Dharmatala',
-    droppingPoint: 'Siliguri Junction Stand',
-    amenities: ['Free WiFi', 'Charging', 'Water', 'Live GPS'],
-  },
-];
+interface SearchLocationState {
+  from?: string;
+  to?: string;
+  date?: string;
+  passengers?: number | string;
+  coach?: string;
+  budget?: number;
+  time?: string;
+  mood?: string;
+}
+
+function mapHomeTimeToSlots(timeStr?: string | null): DepartureSlotId[] {
+  if (!timeStr) return [];
+  const lower = timeStr.toLowerCase();
+  if (lower.includes('morning')) return ['morning'];
+  if (lower.includes('afternoon')) return ['afternoon'];
+  if (lower.includes('evening')) return ['evening'];
+  if (lower.includes('night')) return ['night'];
+  return [];
+}
+
+function parseOptionalPassengerCount(raw?: string | number | null): number | null {
+  if (raw === undefined || raw === null || raw === '') return null;
+  const num = Number(raw);
+  if (Number.isInteger(num) && num >= 1 && num <= 9) return num;
+  return null;
+}
 
 export const ResultsPage: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const state = (location.state as { from?: string; to?: string; date?: string; mood?: string }) || {};
+  const locState = (location.state as SearchLocationState | null) || {};
 
-  const origin = state.from || 'Kolkata';
-  const destination = state.to || 'Siliguri';
-  const [selectedDateId, setSelectedDateId] = useState('2026-11-14');
+  // Track live Asia/Kolkata date so open tabs roll forward seamlessly at midnight or tab focus
+  const [todayKolkataIso, setTodayKolkataIso] = useState<string>(() => getTodayKolkataIso());
 
-  const [activeModalData, setActiveModalData] = useState<{
-    ticket: BusTicket;
-    seatId: string;
+  useEffect(() => {
+    const syncToday = () => {
+      const latest = getTodayKolkataIso();
+      setTodayKolkataIso((prev) => (prev === latest ? prev : latest));
+    };
+    window.addEventListener('focus', syncToday);
+    document.addEventListener('visibilitychange', syncToday);
+    const intervalId = window.setInterval(syncToday, 60_000);
+    return () => {
+      window.removeEventListener('focus', syncToday);
+      document.removeEventListener('visibilitychange', syncToday);
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  // Single authoritative search resolution: URL params > location.state > live today defaults
+  const origin = (searchParams.get('from') || locState.from || 'Kolkata').trim();
+  const destination = (searchParams.get('to') || locState.to || 'Siliguri').trim();
+
+  const rawDateInput = searchParams.get('date') || locState.date;
+  const parsedDateIso = parseJourneyDateInput(rawDateInput);
+  const selectedDateIso = parsedDateIso
+    ? clampToBookingWindow(parsedDateIso)
+    : getDefaultJourneyDate();
+
+  const knownPassengers = parseOptionalPassengerCount(
+    searchParams.get('passengers') ?? locState.passengers
+  );
+  const knownCoachPref = (searchParams.get('coach') || locState.coach || '').trim() || null;
+
+  const submittedBudgetRaw = searchParams.get('maxPrice') ?? locState.budget;
+  const submittedBudget =
+    submittedBudgetRaw !== null &&
+    submittedBudgetRaw !== undefined &&
+    !Number.isNaN(Number(submittedBudgetRaw)) &&
+    Number(submittedBudgetRaw) > 0
+      ? Number(submittedBudgetRaw)
+      : null;
+
+  const submittedSlots = mapHomeTimeToSlots(searchParams.get('time') || locState.time);
+
+  // Ensure URL query parameters reflect the active route and validated YYYY-MM-DD day
+  useEffect(() => {
+    const urlFrom = searchParams.get('from');
+    const urlTo = searchParams.get('to');
+    const urlDate = searchParams.get('date');
+
+    if (urlFrom !== origin || urlTo !== destination || urlDate !== selectedDateIso) {
+      const next = new URLSearchParams(searchParams);
+      next.set('from', origin);
+      next.set('to', destination);
+      next.set('date', selectedDateIso);
+      if (knownPassengers !== null) next.set('passengers', String(knownPassengers));
+      if (knownCoachPref) next.set('coach', knownCoachPref);
+      setSearchParams(next, { replace: true });
+    }
+  }, [
+    origin,
+    destination,
+    selectedDateIso,
+    knownPassengers,
+    knownCoachPref,
+    searchParams,
+    setSearchParams,
+  ]);
+
+  // Visible 6-day window anchored cleanly without effect-induced cascading renders
+  const [manualWindow, setManualWindow] = useState<{
+    startIso: string;
+    forSelectedDateIso: string;
   } | null>(null);
+  const windowStartIso =
+    manualWindow && manualWindow.forSelectedDateIso === selectedDateIso
+      ? manualWindow.startIso
+      : getDefaultWindowStartForDate(selectedDateIso);
 
+  // Departures fetch state with stale-request protection and zero synchronous effect setState
+  const currentQueryKey = `${origin}::${destination}::${selectedDateIso}`;
+  const [retryTick, setRetryTick] = useState(0);
+  const [searchResultState, setSearchResultState] = useState<{
+    queryKey: string;
+    retryTick: number;
+    departures: BusTicket[];
+    error: string | null;
+  } | null>(null);
+  const latestRequestSeqRef = useRef(0);
+
+  // Booking & modal states (reset on journey change)
   const [selectedBusForModal, setSelectedBusForModal] = useState<BusTicket | null>(null);
+  const [editingSeatIds, setEditingSeatIds] = useState<string[]>([]);
   const [bookingConfirmedInfo, setBookingConfirmedInfo] = useState<{
     ticket: BusTicket;
     seats: SelectedSeatInfo[];
+    dateIso: string;
+  } | null>(null);
+  const [activeHoldDemoData, setActiveHoldDemoData] = useState<{
+    ticket: BusTicket;
+    seatId: string;
+  } | null>(null);
+  const [activeDemoHoldStatus, setActiveDemoHoldStatus] = useState<{
+    operator: string;
+    seatId: string;
+    dateIso: string;
   } | null>(null);
 
-  const [heldSeat, setHeldSeat] = useState<string>('L6');
+  // Mobile filters drawer + focus return
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const mobileFilterTriggerRef = useRef<HTMLButtonElement>(null);
 
-  const [filters, setFilters] = useState<FilterState>({
-    mood: state.mood || 'Sleep well',
-    maxPrice: 800,
-    departureSlots: ['night'],
-    busTypes: ['AC Sleeper (2+1)', 'AC Semi-Sleeper / Recliner'],
-    boardingPoints: ['Esplanade / Dharmatala', 'Babughat Bus Stand'],
-    droppingPoints: ['Tenzing Norgay Bus Terminus', 'Siliguri Junction Stand'],
+  useEffect(() => {
+    const controller = new AbortController();
+    const requestSeq = ++latestRequestSeqRef.current;
+
+    fetchDeparturesForSearch(
+      { origin, destination, dateIso: selectedDateIso },
+      controller.signal
+    )
+      .then((departures) => {
+        if (requestSeq !== latestRequestSeqRef.current) return;
+        setSearchResultState({
+          queryKey: currentQueryKey,
+          retryTick,
+          departures,
+          error: null,
+        });
+      })
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+        if (requestSeq !== latestRequestSeqRef.current) return;
+        setSearchResultState({
+          queryKey: currentQueryKey,
+          retryTick,
+          departures: [],
+          error: 'Unable to load departures for this date. Please retry.',
+        });
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [origin, destination, selectedDateIso, currentQueryKey, retryTick]);
+
+  const isLoading =
+    !searchResultState ||
+    searchResultState.queryKey !== currentQueryKey ||
+    searchResultState.retryTick !== retryTick;
+  const fetchError = !isLoading ? searchResultState.error : null;
+  const routeDepartures = useMemo(
+    () => (!isLoading && searchResultState ? searchResultState.departures : []),
+    [isLoading, searchResultState]
+  );
+
+  // Dynamic price bounds from available route departures
+  const priceBounds: PriceBounds = useMemo(() => {
+    if (routeDepartures.length === 0) {
+      return { min: 200, max: 1500 };
+    }
+    const prices = routeDepartures.map((b) => b.price);
+    const min = Math.floor(Math.min(...prices) / 10) * 10;
+    const max = Math.ceil(Math.max(...prices) / 10) * 10;
+    return { min, max: Math.max(min, max) };
+  }, [routeDepartures]);
+
+  const [explicitMaxPrice, setExplicitMaxPrice] = useState<number | null>(submittedBudget);
+  const [rawFilters, setRawFilters] = useState<Omit<FilterState, 'maxPrice'>>(() => ({
+    mood: 'All',
+    departureSlots: submittedSlots,
+    coachTypeIds: [],
+    boardingPoints: [],
+    droppingPoints: [],
     amenities: [],
-    operators: ['NBSTC (Govt of WB)', 'SBSTC & WBTC', 'Shyamoli Paribahan'],
+    operatorIds: [],
     sortBy: 'best',
-  });
+  }));
 
-  const handleResetFilters = () => {
-    setFilters({
+  const filters: FilterState = useMemo(
+    () => ({
+      ...rawFilters,
+      maxPrice: explicitMaxPrice !== null ? Math.min(explicitMaxPrice, priceBounds.max) : priceBounds.max,
+    }),
+    [rawFilters, explicitMaxPrice, priceBounds.max]
+  );
+
+  const handleFiltersChange = useCallback(
+    (updater: (prev: FilterState) => FilterState) => {
+      const next = updater(filters);
+      if (next.maxPrice !== filters.maxPrice) {
+        setExplicitMaxPrice(next.maxPrice < priceBounds.max ? next.maxPrice : null);
+      }
+      setRawFilters({
+        mood: next.mood,
+        departureSlots: next.departureSlots,
+        coachTypeIds: next.coachTypeIds,
+        boardingPoints: next.boardingPoints,
+        droppingPoints: next.droppingPoints,
+        amenities: next.amenities,
+        operatorIds: next.operatorIds,
+        sortBy: next.sortBy,
+      });
+    },
+    [filters, priceBounds.max]
+  );
+
+  const handleResetFilters = useCallback(() => {
+    setExplicitMaxPrice(null);
+    setRawFilters((prev) => ({
       mood: 'All',
-      maxPrice: 1500,
       departureSlots: [],
-      busTypes: [],
+      coachTypeIds: [],
       boardingPoints: [],
       droppingPoints: [],
       amenities: [],
-      operators: [],
-      sortBy: 'best',
-    });
-  };
+      operatorIds: [],
+      sortBy: prev.sortBy,
+    }));
+  }, []);
 
-  const filteredBuses = useMemo(() => {
-    return MOCK_BUSES.filter((bus) => {
-      // Mood filter
-      if (filters.mood !== 'All' && bus.moodMatch !== filters.mood) {
-        return false;
-      }
-      // Max price
-      if (bus.price > filters.maxPrice) {
-        return false;
-      }
-      // Departure slot
-      if (filters.departureSlots.length > 0 && !filters.departureSlots.includes(bus.departureSlot)) {
-        return false;
-      }
-      // Bus type
-      if (filters.busTypes.length > 0 && !filters.busTypes.some((bt) => bus.busType.includes(bt.split(' ')[0]))) {
-        return false;
-      }
-      // Boarding point
-      if (filters.boardingPoints.length > 0 && !filters.boardingPoints.includes(bus.boardingPoint)) {
-        return false;
-      }
-      // Dropping point
-      if (filters.droppingPoints.length > 0 && !filters.droppingPoints.includes(bus.droppingPoint)) {
-        return false;
-      }
-      // Operator
-      if (
-        filters.operators.length > 0 &&
-        !filters.operators.some((op) => bus.operator.toLowerCase().includes(op.split(' ')[0].toLowerCase()))
-      ) {
-        return false;
-      }
-      return true;
-    }).sort((a, b) => {
-      if (filters.sortBy === 'cheapest') return a.price - b.price;
-      if (filters.sortBy === 'earliest') return a.departureTime.localeCompare(b.departureTime);
-      if (filters.sortBy === 'fastest') return a.duration.localeCompare(b.duration);
-      if (filters.sortBy === 'rating') return b.rating - a.rating;
-      return b.rating - a.rating; // best default
-    });
-  }, [filters]);
-
-  const handleContinueBooking = (ticket: BusTicket, seatId: string) => {
-    setActiveModalData({ ticket, seatId });
-  };
-
-  const handleOpenSeatModal = (ticket: BusTicket) => {
-    setSelectedBusForModal(ticket);
-  };
-
-  const handleConfirmSeatBooking = (ticket: BusTicket, selectedSeats: SelectedSeatInfo[]) => {
-    const seatList = selectedSeats.map((s) => s.id).join(', ');
-    setHeldSeat(seatList);
+  // Clear stale seat selections when route or journey date changes
+  const clearStaleSeatState = useCallback(() => {
     setSelectedBusForModal(null);
-    setBookingConfirmedInfo({ ticket, seats: selectedSeats });
+    setEditingSeatIds([]);
+    setBookingConfirmedInfo(null);
+    setActiveHoldDemoData(null);
+    setActiveDemoHoldStatus(null);
+  }, []);
+
+  const handleSelectDate = useCallback(
+    (nextDateIso: string) => {
+      if (nextDateIso === selectedDateIso) return;
+      clearStaleSeatState();
+      const endIso = addDaysIso(windowStartIso, 5);
+      if (nextDateIso >= windowStartIso && nextDateIso <= endIso) {
+        setManualWindow({ startIso: windowStartIso, forSelectedDateIso: nextDateIso });
+      } else {
+        setManualWindow(null);
+      }
+      const next = new URLSearchParams(searchParams);
+      next.set('from', origin);
+      next.set('to', destination);
+      next.set('date', nextDateIso);
+      setSearchParams(next);
+    },
+    [
+      selectedDateIso,
+      clearStaleSeatState,
+      windowStartIso,
+      searchParams,
+      origin,
+      destination,
+      setSearchParams,
+    ]
+  );
+
+  const handleShiftWindow = useCallback(
+    (deltaDays: number) => {
+      const minStart = getBookingWindowStart();
+      const maxStart = addDaysIso(getBookingWindowEnd(), -5);
+      const candidate = addDaysIso(windowStartIso, deltaDays);
+      const clamped =
+        candidate < minStart
+          ? minStart
+          : candidate > maxStart
+          ? maxStart
+          : candidate;
+      setManualWindow({ startIso: clamped, forSelectedDateIso: selectedDateIso });
+    },
+    [windowStartIso, selectedDateIso]
+  );
+
+  const handleEditSearch = () => {
+    const params = new URLSearchParams({
+      from: origin,
+      to: destination,
+      date: selectedDateIso,
+    });
+    navigate(`/?${params.toString()}`, {
+      state: {
+        from: origin,
+        to: destination,
+        date: selectedDateIso,
+      },
+    });
   };
 
-  const handleConfirmedBooking = () => {
-    if (activeModalData) {
-      setHeldSeat(activeModalData.seatId);
-      alert(
-        `🎉 OneGoHold™ Activated! Seat ${activeModalData.seatId} on ${activeModalData.ticket.operator} is reserved for 7 minutes.`
-      );
-      setActiveModalData(null);
-    }
+  // Filtered and numerically sorted bus list
+  const filteredBuses = useMemo(() => {
+    const effectiveMaxPrice = Math.min(filters.maxPrice, priceBounds.max);
+
+    return routeDepartures
+      .filter((bus) => {
+        if (filters.mood !== 'All' && bus.moodMatch !== filters.mood) {
+          return false;
+        }
+        if (bus.price > effectiveMaxPrice) {
+          return false;
+        }
+        if (
+          filters.departureSlots.length > 0 &&
+          !filters.departureSlots.includes(bus.departureSlot)
+        ) {
+          return false;
+        }
+        if (
+          filters.coachTypeIds.length > 0 &&
+          !filters.coachTypeIds.includes(bus.coachTypeId)
+        ) {
+          return false;
+        }
+        if (
+          filters.boardingPoints.length > 0 &&
+          !filters.boardingPoints.includes(bus.boardingPoint)
+        ) {
+          return false;
+        }
+        if (
+          filters.droppingPoints.length > 0 &&
+          !filters.droppingPoints.includes(bus.droppingPoint)
+        ) {
+          return false;
+        }
+        if (
+          filters.amenities.length > 0 &&
+          !filters.amenities.every((a) => bus.amenities.includes(a))
+        ) {
+          return false;
+        }
+        if (filters.operatorIds.length > 0) {
+          const allowedOperatorIds = OPERATOR_GROUPS.filter((g) =>
+            filters.operatorIds.includes(g.id)
+          ).flatMap((g) => g.matchOperatorIds);
+          if (!allowedOperatorIds.includes(bus.operatorId)) {
+            return false;
+          }
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        if (filters.sortBy === 'cheapest') return a.price - b.price;
+        if (filters.sortBy === 'earliest') {
+          return parseTimeMinutes(a.departureTime) - parseTimeMinutes(b.departureTime);
+        }
+        if (filters.sortBy === 'fastest') {
+          return parseDurationMinutes(a.duration) - parseDurationMinutes(b.duration);
+        }
+        if (filters.sortBy === 'rating') return (b.rating ?? 0) - (a.rating ?? 0);
+        return a.recommendedRank - b.recommendedRank;
+      });
+  }, [routeDepartures, filters, priceBounds.max]);
+
+  // Nearby date strip fare summaries (recomputed dynamically whenever todayKolkataIso advances)
+  const visibleDates = useMemo(() => {
+    void todayKolkataIso;
+    return getVisibleDateWindow(windowStartIso, 6);
+  }, [windowStartIso, todayKolkataIso]);
+  const dateSummaries = useMemo(
+    () => buildDateFareSummaries(origin, destination, visibleDates),
+    [origin, destination, visibleDates]
+  );
+
+  // Mobile sheet Escape key & focus restoration
+  useEffect(() => {
+    if (!mobileFiltersOpen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setMobileFiltersOpen(false);
+        mobileFilterTriggerRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [mobileFiltersOpen]);
+
+  // Seat confirmation dialog Escape key
+  useEffect(() => {
+    if (!bookingConfirmedInfo) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setBookingConfirmedInfo(null);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [bookingConfirmedInfo]);
+
+  const activeFilterCount = countActiveFilters(filters, priceBounds.max);
+
+  const handleOpenSeatModal = useCallback((ticket: BusTicket) => {
+    setEditingSeatIds([]);
+    setSelectedBusForModal(ticket);
+  }, []);
+
+  const handleConfirmSeatBooking = useCallback(
+    (ticket: BusTicket, selectedSeats: SelectedSeatInfo[]) => {
+      setSelectedBusForModal(null);
+      setBookingConfirmedInfo({
+        ticket,
+        seats: selectedSeats,
+        dateIso: selectedDateIso,
+      });
+    },
+    [selectedDateIso]
+  );
+
+  const handleContinueBooking = useCallback((ticket: BusTicket, seatId: string) => {
+    setActiveHoldDemoData({ ticket, seatId });
+  }, []);
+
+  const handleConfirmDemoHold = () => {
+    if (!activeHoldDemoData) return;
+    setActiveDemoHoldStatus({
+      operator: activeHoldDemoData.ticket.operator,
+      seatId: activeHoldDemoData.seatId,
+      dateIso: selectedDateIso,
+    });
+    setActiveHoldDemoData(null);
   };
+
+  const nextAvailableDateSummary = dateSummaries.find(
+    (d) => d.dateIso !== selectedDateIso && d.status === 'available'
+  );
+
+  const routeAdvisory = routeDepartures.find((b) => b.advisory)?.advisory;
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col space-y-6 pb-12 selection:bg-accent-tint selection:text-on-accent-tint">
-      {/* 1. TOP PROMO STRIP */}
-      <div className="bg-[#0B2341] text-white text-xs py-2 px-4 text-center font-medium tracking-wide flex items-center justify-center gap-2 rounded-2xl shadow-xs">
-        <span className="inline-flex items-center gap-1 bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-full text-[11px] font-bold">
-          <span className="material-symbols-outlined text-[13px]">auto_awesome</span>
-          <span>Bengal AI Route Advisor</span>
-        </span>
-        <span className="hidden sm:inline">
-          Heavy holiday rush expected on NH-12 for North Bengal routes. Book night sleeper berths early to lock fares!
-        </span>
-        <span className="sm:hidden">Holiday rush on NH-12: Lock fares early!</span>
-      </div>
+    <div className="w-full max-w-[1320px] mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-12 space-y-4 sm:space-y-5 selection:bg-accent-tint selection:text-on-accent-tint">
+      {/* 1. COMPACT ROUTE HEADER WITH FULL-BLEED RIGHT-ANCHORED BANNER */}
+      <header className="relative rounded-2xl overflow-hidden border border-[#EAE8E4] bg-[#FEFDF7] shadow-xs sm:min-h-[120px] lg:min-h-[128px] flex flex-col sm:flex-row sm:items-center justify-between transition-all">
+        {/* Desktop Right-Anchored Edge-to-Edge Banner Artwork (Permanent across all routes) */}
+        <RouteIllustration variant="desktop" />
 
-      {/* 2. ROUTE SUMMARY BAR (Clean Card) */}
-      <div className="bg-white rounded-2xl border border-[#E5E1D8] p-4 sm:p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+        {/* Mobile Top Panoramic Artwork Window with pinned Edit button */}
+        <div className="sm:hidden relative">
+          <RouteIllustration variant="mobile" />
           <button
             type="button"
-            onClick={() => navigate('/home')}
-            className="w-10 h-10 rounded-full border border-[#E5E1D8] bg-[#FBF9F5] hover:bg-[#F6F4EE] flex items-center justify-center text-[#64748B] hover:text-[#0B2341] transition-colors cursor-pointer"
-            title="Back to Route Planner"
+            onClick={handleEditSearch}
+            className="absolute top-3 right-3 z-20 inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-xl border border-[#EAE8E4] bg-white/95 backdrop-blur-md hover:bg-surface-2 text-brand text-xs font-bold shadow-xs transition-colors cursor-pointer pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
-            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+            <Pencil className="w-3.5 h-3.5 text-[#FC7728]" aria-hidden="true" />
+            <span>Edit search</span>
           </button>
-          <div>
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="font-sans text-2xl font-extrabold text-[#0B2341] tracking-tight flex items-center gap-2">
-                <span>{origin}</span>
-                <span className="text-[#FC7728] font-normal">⟿</span>
-                <span>{destination}</span>
-              </h1>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-teal-800 font-bold text-xs border border-teal-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-teal-600" />
-                <span>SAT, 14 NOV • 1 PASSENGER • AC SLEEPER</span>
-              </span>
-            </div>
-            <p className="text-xs text-[#64748B] mt-1 flex items-center gap-2 flex-wrap">
-              <span>Direct NH-12 Corridor</span>
-              <span className="text-[#E5E1D8]">•</span>
-              <span>Est. Distance: 574 km</span>
-              <span className="text-[#E5E1D8]">•</span>
-              <span className="text-teal-700 font-semibold">Average Travel Time: 11 hrs 15 mins</span>
-            </p>
-          </div>
         </div>
 
-        <div className="flex items-center gap-3 ml-auto sm:ml-0">
-          <div className="text-right hidden sm:block">
-            <span className="text-sm font-bold text-[#0B2341] block">
-              {filteredBuses.length} Verified Rides
+        {/* Left Route Identity over clean #FEFDF7 cream-white canvas */}
+        <div className="relative z-10 px-4 py-3.5 sm:px-6 sm:py-5 flex items-center justify-between gap-4 w-full pointer-events-none">
+          <div className="min-w-0 sm:max-w-[44%] lg:max-w-[40%] pointer-events-auto">
+            <h1 className="font-sans text-2xl sm:text-[32px] font-extrabold text-brand tracking-tight leading-tight flex items-center gap-2 sm:gap-2.5 flex-wrap">
+              <span>{origin}</span>
+              <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-[#FC7728] shrink-0" aria-hidden="true" />
+              <span>{destination}</span>
+            </h1>
+            <div className="text-[13px] sm:text-sm text-ink-muted font-medium flex items-center gap-2 flex-wrap mt-1">
+              <CalendarDays className="w-4 h-4 text-ink-muted shrink-0" aria-hidden="true" />
+              <span>{formatDateHeader(selectedDateIso)}</span>
+              {knownPassengers !== null && (
+                <>
+                  <span aria-hidden="true">•</span>
+                  <span>
+                    {knownPassengers} {knownPassengers === 1 ? 'passenger' : 'passengers'}
+                  </span>
+                </>
+              )}
+              {knownCoachPref && (
+                <>
+                  <span aria-hidden="true">•</span>
+                  <span>{knownCoachPref}</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Edit Search Action (Desktop / Tablet, crisp frosted surface over sky) */}
+          <button
+            type="button"
+            onClick={handleEditSearch}
+            className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-[#EAE8E4] bg-white/95 backdrop-blur-md hover:bg-surface-2 text-brand text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer shrink-0 pointer-events-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <Pencil className="w-3.5 h-3.5 text-[#FC7728]" aria-hidden="true" />
+            <span>Edit search</span>
+          </button>
+        </div>
+      </header>
+
+      {/* 2. DATE AND STARTING FARE STRIP (68-80px desktop) */}
+      <DateStrip
+        selectedDateIso={selectedDateIso}
+        dateSummaries={dateSummaries}
+        windowStartIso={windowStartIso}
+        onShiftWindow={handleShiftWindow}
+        onSelectDate={handleSelectDate}
+      />
+
+      {/* Active Demo Hold Status Strip (Only rendered after an explicit demo hold action) */}
+      {activeDemoHoldStatus && (
+        <div
+          role="status"
+          className="px-4 py-2.5 rounded-xl bg-success-tint border border-emerald-200 text-success text-xs font-semibold flex items-center justify-between gap-3"
+        >
+          <span>
+            Demo hold preview active for <strong>{activeDemoHoldStatus.seatId}</strong> on{' '}
+            <strong>{activeDemoHoldStatus.operator}</strong> ({formatDateCompact(activeDemoHoldStatus.dateIso)}).
+          </span>
+          <button
+            type="button"
+            onClick={() => setActiveDemoHoldStatus(null)}
+            className="text-xs font-bold underline cursor-pointer"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* MOBILE CONTROLS BAR (< lg) */}
+      <div className="lg:hidden flex items-center justify-between gap-3">
+        <button
+          ref={mobileFilterTriggerRef}
+          type="button"
+          onClick={() => setMobileFiltersOpen(true)}
+          className="min-h-[44px] px-4 py-2 rounded-xl bg-surface border border-[#EAE8E4] text-brand text-sm font-bold inline-flex items-center gap-2 shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          <SlidersHorizontal className="w-4 h-4 text-[#FC7728]" aria-hidden="true" />
+          <span>Filters</span>
+          {activeFilterCount > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full bg-brand text-on-brand text-[11px] font-bold tabular-nums">
+              {activeFilterCount}
             </span>
-            <span className="text-xs text-[#64748B]">Government &amp; Private fleets</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate('/home')}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#E5E1D8] bg-[#FBF9F5] hover:bg-[#F6F4EE] text-[#0B2341] text-xs font-bold transition-colors cursor-pointer"
+          )}
+        </button>
+
+        <div className="flex items-center gap-2">
+          <label htmlFor="mobile-sort-select" className="text-xs font-semibold text-ink-muted">
+            Sort:
+          </label>
+          <select
+            id="mobile-sort-select"
+            value={filters.sortBy}
+            onChange={(e) =>
+              setRawFilters((prev) => ({ ...prev, sortBy: e.target.value as SortOption }))
+            }
+            className="min-h-[44px] px-3 py-2 rounded-xl bg-surface border border-[#EAE8E4] text-brand text-xs sm:text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[16px] text-[#FC7728]">tune</span>
-            <span>Modify Route</span>
-          </button>
+            <option value="best">Recommended</option>
+            <option value="cheapest">Cheapest</option>
+            <option value="earliest">Earliest</option>
+            <option value="fastest">Fastest</option>
+            <option value="rating">Top rated</option>
+          </select>
         </div>
       </div>
 
-      {/* 3. DATE CAROUSEL STRIP */}
-      <DateStrip selectedDateId={selectedDateId} onSelectDate={setSelectedDateId} />
+      {/* 3. FILTERS & RESULTS TWO-COLUMN WORKSPACE */}
+      <div className="grid grid-cols-1 lg:grid-cols-[264px_minmax(0,1fr)] gap-5 lg:gap-6 items-start">
+        {/* Desktop Filter Sidebar */}
+        <FilterSidebar
+          filters={filters}
+          allDepartures={routeDepartures}
+          priceBounds={priceBounds}
+          onChange={handleFiltersChange}
+          onReset={handleResetFilters}
+        />
 
-      {/* 4. MAIN TWO-COLUMN WORKSPACE */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Filter Sidebar (~4 cols) */}
-        <FilterSidebar filters={filters} onChange={setFilters} onReset={handleResetFilters} />
+        {/* Flexible Results Column */}
+        <section aria-label="Available buses" className="min-w-0 space-y-3.5">
+          {/* Compact Results Toolbar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 py-1">
+            <h2 className="font-sans text-xl sm:text-2xl font-extrabold text-brand tracking-tight tabular-nums">
+              {isLoading
+                ? 'Searching buses...'
+                : `${filteredBuses.length} ${
+                    filteredBuses.length === 1 ? 'bus' : 'buses'
+                  } available`}
+            </h2>
 
-        {/* Right Results Stream (~8 cols) */}
-        <section className="lg:col-span-8 xl:col-span-8.5 space-y-5">
-          {/* Results Header & Segmented Sort Controls */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white border border-[#E5E1D8] shadow-xs">
-            <div>
-              <h2 className="font-sans font-bold text-xl text-[#0B2341]">
-                {filteredBuses.length} Buses Available
-              </h2>
-              <p className="text-xs text-[#64748B]">
-                Showing budget-filtered buses between ₹400 – ₹{filters.maxPrice}
-              </p>
-            </div>
-
-            {/* Segmented Sort Control */}
-            <div className="inline-flex p-1 rounded-xl bg-[#F6F4EE] border border-[#E5E1D8] text-xs font-semibold overflow-x-auto">
-              {[
-                { id: 'best', label: 'Best for You', icon: 'auto_awesome' },
-                { id: 'cheapest', label: 'Cheapest' },
-                { id: 'earliest', label: 'Earliest' },
-                { id: 'fastest', label: 'Fastest' },
-                { id: 'rating', label: 'Top Rated' },
-              ].map((s) => {
-                const active = filters.sortBy === s.id;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => setFilters((prev) => ({ ...prev, sortBy: s.id as typeof prev.sortBy }))}
-                    className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
-                      active
-                        ? 'bg-white text-[#0B2341] font-bold shadow-xs border border-[#E5E1D8]'
-                        : 'text-[#64748B] hover:text-[#0B2341]'
-                    }`}
-                  >
-                    {s.icon && (
-                      <span className="material-symbols-outlined text-[14px] text-teal-700">
-                        {s.icon}
-                      </span>
-                    )}
-                    <span>{s.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* AI Recommendation Banner */}
-          <div className="p-4 rounded-2xl bg-teal-50 border border-teal-200/80 shadow-xs flex items-start gap-3.5">
-            <div className="w-9 h-9 rounded-xl bg-teal-700 text-white flex items-center justify-center shrink-0 shadow-xs">
-              <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
-            </div>
-            <div className="flex-1 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-[#0B2341] text-sm">OneGoBus AI Trip Intelligence</span>
-                <span className="px-2 py-0.5 rounded-full bg-teal-700 text-white text-[10px] font-extrabold uppercase">
-                  Sleep Well Match
-                </span>
-              </div>
-              <p className="text-[#64748B] mt-1 leading-relaxed">
-                Night departures between 20:00 – 22:30 bypass peak NH-12 bottleneck traffic around Malda town bypass,
-                arriving in Siliguri refreshed right before sunrise. Recommended for your{' '}
-                <strong className="text-[#0B2341]">Sleep Well</strong> mood preference.
-              </p>
+            <div className="flex items-center gap-2.5 sm:gap-3 ml-auto">
               <Link
                 to="/ask-ai"
-                className="inline-flex items-center gap-1 font-bold text-teal-800 hover:underline mt-2"
+                className="min-h-[38px] px-3 py-1.5 rounded-xl bg-surface border border-[#EAE8E4] hover:bg-accent-tint/40 text-brand text-xs font-bold inline-flex items-center gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
-                <span>Ask AI about road conditions &amp; dinner stops on this route</span>
-                <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                <Sparkles className="w-3.5 h-3.5 text-[#FC7728]" aria-hidden="true" />
+                <span>Ask OneGo AI</span>
               </Link>
+
+              <div className="hidden lg:flex items-center gap-2">
+                <label
+                  htmlFor="desktop-sort-select"
+                  className="text-xs font-semibold text-ink-muted whitespace-nowrap"
+                >
+                  Sort by:
+                </label>
+                <select
+                  id="desktop-sort-select"
+                  value={filters.sortBy}
+                  onChange={(e) =>
+                    setRawFilters((prev) => ({ ...prev, sortBy: e.target.value as SortOption }))
+                  }
+                  className="min-h-[38px] px-3 py-1.5 rounded-xl bg-surface border border-[#EAE8E4] text-brand text-xs font-bold cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  <option value="best">Recommended</option>
+                  <option value="cheapest">Cheapest</option>
+                  <option value="earliest">Earliest</option>
+                  <option value="fastest">Fastest</option>
+                  <option value="rating">Top rated</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Ticket Stream */}
-          {filteredBuses.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-[#E5E1D8] p-12 text-center flex flex-col items-center">
-              <span className="material-symbols-outlined text-4xl text-[#64748B] mb-2">
-                directions_bus
-              </span>
-              <h3 className="font-sans text-lg font-bold text-[#0B2341] mb-1">
-                No rides matching filters
+          {/* Genuine Route Advisory (rendered only if supported by departure data) */}
+          {routeAdvisory && (
+            <div className="px-4 py-2.5 rounded-xl bg-surface-2 border border-[#EAE8E4] text-xs text-ink-muted">
+              {routeAdvisory}
+            </div>
+          )}
+
+          {/* Ticket List / Loading / Error / Empty States */}
+          {fetchError ? (
+            <div className="bg-surface rounded-2xl border border-[#EAE8E4] p-10 text-center space-y-3">
+              <p className="text-sm font-bold text-brand">{fetchError}</p>
+              <button
+                type="button"
+                onClick={() => setRetryTick((t) => t + 1)}
+                className="min-h-[44px] px-5 py-2.5 rounded-xl bg-accent text-on-accent hover:bg-accent-hover text-xs font-bold inline-flex items-center gap-2 cursor-pointer"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Retry search</span>
+              </button>
+            </div>
+          ) : isLoading ? (
+            <div className="space-y-3.5" aria-busy="true" aria-label="Loading bus departures">
+              {[0, 1].map((idx) => (
+                <div
+                  key={idx}
+                  className="bg-surface rounded-[14px] border border-[#EAE8E4] p-5 h-[178px] animate-pulse"
+                />
+              ))}
+            </div>
+          ) : routeDepartures.length === 0 ? (
+            <div className="bg-surface rounded-2xl border border-[#EAE8E4] p-10 text-center flex flex-col items-center">
+              <Bus className="w-9 h-9 text-ink-muted mb-2.5" aria-hidden="true" />
+              <h3 className="font-sans text-lg font-bold text-brand">
+                No buses scheduled for {origin} → {destination} on {formatDateCompact(selectedDateIso)}
               </h3>
-              <p className="text-xs text-[#64748B] max-w-sm mb-4">
-                Try widening your budget cap above ₹{filters.maxPrice} or resetting your mood filters to view all available coaches.
+              <p className="text-xs sm:text-sm text-ink-muted max-w-md mt-1 mb-5">
+                {nextAvailableDateSummary
+                  ? `No departures are listed for this day. Next available departures start at ${formatInr(
+                      nextAvailableDateSummary.lowestFare ?? 0
+                    )} on ${nextAvailableDateSummary.topLabel}.`
+                  : 'This corridor has no listed departures in the fixture schedule. Edit your search to pick an active Bengal corridor.'}
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                {nextAvailableDateSummary ? (
+                  <button
+                    type="button"
+                    onClick={() => handleSelectDate(nextAvailableDateSummary.dateIso)}
+                    className="min-h-[44px] px-5 py-2.5 rounded-xl bg-accent text-on-accent hover:bg-accent-hover text-sm font-bold cursor-pointer"
+                  >
+                    Choose another date ({nextAvailableDateSummary.topLabel})
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleEditSearch}
+                    className="min-h-[44px] px-5 py-2.5 rounded-xl bg-accent text-on-accent hover:bg-accent-hover text-sm font-bold cursor-pointer"
+                  >
+                    Edit search
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : filteredBuses.length === 0 ? (
+            <div className="bg-surface rounded-2xl border border-[#EAE8E4] p-10 text-center flex flex-col items-center">
+              <SlidersHorizontal className="w-8 h-8 text-ink-muted mb-2.5" aria-hidden="true" />
+              <h3 className="font-sans text-lg font-bold text-brand">
+                No buses match your active filters
+              </h3>
+              <p className="text-xs sm:text-sm text-ink-muted max-w-md mt-1 mb-5">
+                {routeDepartures.length} {routeDepartures.length === 1 ? 'bus is' : 'buses are'} available on{' '}
+                {formatDateCompact(selectedDateIso)} before filtering. Clear filters to compare all departures.
               </p>
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="px-5 py-2.5 rounded-full bg-[#FC7728] hover:bg-[#E06547] text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
+                className="min-h-[44px] px-5 py-2.5 rounded-xl bg-accent text-on-accent hover:bg-accent-hover text-sm font-bold cursor-pointer"
               >
-                Reset All Filters
+                Clear filters
               </button>
             </div>
           ) : (
-            filteredBuses.map((ticket) => (
-              <TicketCard
-                key={ticket.id}
-                ticket={ticket}
-                onViewSeats={handleOpenSeatModal}
-                onContinueBooking={handleContinueBooking}
-              />
-            ))
-          )}
-
-          {/* Load More Button */}
-          {filteredBuses.length > 0 && (
-            <div className="pt-2 text-center">
-              <button
-                type="button"
-                onClick={() => alert('All verified regional departures for this date corridor are already loaded.')}
-                className="px-8 py-3 rounded-full bg-white border border-[#E5E1D8] text-[#0B2341] text-sm font-bold hover:bg-[#F6F4EE] hover:border-teal-500/40 transition-all shadow-xs inline-flex items-center gap-2 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[18px] text-[#FC7728]">
-                  expand_more
-                </span>
-                <span>Load 14 more verified buses</span>
-              </button>
+            <div className="space-y-3.5">
+              {filteredBuses.map((ticket, index) => (
+                <TicketCard
+                  key={ticket.id}
+                  ticket={ticket}
+                  variant={index % 2 === 0 ? 'peach' : 'blue'}
+                  onViewSeats={handleOpenSeatModal}
+                  onContinueBooking={handleContinueBooking}
+                />
+              ))}
             </div>
           )}
         </section>
       </div>
 
-      {/* 5. SEAT HOLD PROTECTION TOAST / PREVIEW BANNER */}
-      <div className="bg-white rounded-2xl border border-teal-200/80 p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-[22px]">timer</span>
-          </div>
-          <div>
-            <span className="text-sm font-bold text-[#0B2341] flex items-center gap-1.5">
-              <span>7-Minute OneGoHold™ Seat Protection Guarantee Active</span>
-              <span className="text-[10px] uppercase font-bold bg-teal-700 text-white px-1.5 py-0.5 rounded">
-                Instant Lock
-              </span>
-            </span>
-            <p className="text-xs text-[#64748B] mt-0.5">
-              When you click a berth, your seat is held exclusively for 7 minutes without price spikes while you enter traveler details.
-            </p>
+      {/* MOBILE FILTERS SHEET (< lg) */}
+      {mobileFiltersOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Filter buses"
+          className="lg:hidden fixed inset-0 z-50 flex items-end justify-center bg-[#000D21]/50 backdrop-blur-xs animate-modal-backdrop-in"
+        >
+          <div
+            className="fixed inset-0 -z-10"
+            onClick={() => {
+              setMobileFiltersOpen(false);
+              mobileFilterTriggerRef.current?.focus();
+            }}
+            aria-hidden="true"
+          />
+          <div className="w-full max-h-[86vh] bg-surface rounded-t-3xl border-t border-[#EAE8E4] shadow-2xl flex flex-col animate-sheet-up">
+            <div className="px-5 py-4 border-b border-[#EAE8E4] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-brand" aria-hidden="true" />
+                <span className="font-sans font-bold text-base text-brand">Filters</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  disabled={activeFilterCount === 0}
+                  className="text-xs font-bold text-accent disabled:opacity-40 cursor-pointer"
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileFiltersOpen(false);
+                    mobileFilterTriggerRef.current?.focus();
+                  }}
+                  aria-label="Close filters"
+                  className="w-9 h-9 rounded-full bg-surface-2 flex items-center justify-center text-brand cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5">
+              <FilterPanelContent
+                filters={filters}
+                allDepartures={routeDepartures}
+                priceBounds={priceBounds}
+                onChange={handleFiltersChange}
+                onReset={handleResetFilters}
+                hideHeader
+              />
+            </div>
+
+            <div className="p-4 border-t border-[#EAE8E4] bg-surface">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileFiltersOpen(false);
+                  mobileFilterTriggerRef.current?.focus();
+                }}
+                className="w-full min-h-[46px] rounded-xl bg-accent text-on-accent hover:bg-accent-hover text-sm font-bold cursor-pointer"
+              >
+                Show {filteredBuses.length} {filteredBuses.length === 1 ? 'bus' : 'buses'}
+              </button>
+            </div>
           </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-extrabold text-teal-800">
-            Seat {heldSeat} Reserved
-          </span>
-          <span className="w-2.5 h-2.5 rounded-full bg-teal-600 animate-pulse" />
-        </div>
-      </div>
-
-      {/* 6. TRUST STRIP (3 Light Cards) */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-        <div className="bg-white rounded-2xl border border-[#E5E1D8] p-5 flex items-start gap-4 shadow-xs">
-          <div className="w-12 h-12 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-[26px]">verified_user</span>
-          </div>
-          <div>
-            <h4 className="font-sans font-bold text-base text-[#0B2341]">
-              100% Safe Journey &amp; GPS
-            </h4>
-            <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
-              Live tracking link shared via WhatsApp, dedicated SOS emergency desk, and verified CCTV sleeper coaches.
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-[#E5E1D8] p-5 flex items-start gap-4 shadow-xs">
-          <div className="w-12 h-12 rounded-xl bg-orange-50 border border-[#FC7728]/20 text-[#A04100] flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-[26px]">
-              airline_seat_recline_normal
-            </span>
-          </div>
-          <div>
-            <h4 className="font-sans font-bold text-base text-[#0B2341]">
-              Verified Bengal RTC &amp; Fleets
-            </h4>
-            <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
-              Direct real-time inventory from NBSTC, SBSTC, Shyamoli, and Greenline with zero hidden markups.
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-[#E5E1D8] p-5 flex items-start gap-4 shadow-xs">
-          <div className="w-12 h-12 rounded-xl bg-[#F6F4EE] border border-[#E5E1D8] text-[#0B2341] flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-[26px]">currency_exchange</span>
-          </div>
-          <div>
-            <h4 className="font-sans font-bold text-base text-[#0B2341]">
-              15-Min Instant UPI Refunds
-            </h4>
-            <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
-              Instant refund credited straight to your Google Pay, PhonePe, or bank account if a bus is delayed or canceled.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* 7. SEAT HOLD MODAL */}
-      {activeModalData && (
-        <SeatHoldModal
-          ticket={activeModalData.ticket}
-          seatId={activeModalData.seatId}
-          origin={origin}
-          destination={destination}
-          onClose={() => setActiveModalData(null)}
-          onConfirmed={handleConfirmedBooking}
-        />
       )}
 
-      {/* 8. STITCH SEAT SELECTION MODAL (Desktop Light 13a355a4fb44436b8b133a2b76e1f65d & Mobile Light dce2b070c6034041b93a50314ff81778) */}
+      {/* SEAT SELECTION MODAL */}
       {selectedBusForModal && (
         <SeatSelectionModal
           isOpen={!!selectedBusForModal}
           ticket={selectedBusForModal}
           origin={origin}
           destination={destination}
+          journeyDateDisplay={formatDateCompact(selectedDateIso)}
+          initialSelectedSeatIds={editingSeatIds}
           onClose={() => setSelectedBusForModal(null)}
           onConfirmBooking={handleConfirmSeatBooking}
         />
       )}
 
-      {/* 9. BOOKING CONFIRMED STAGING MODAL (PASSENGER DETAILS PROMPT) */}
+      {/* DEMO SEAT HOLD PREVIEW MODAL (via onContinueBooking in expanded details) */}
+      {activeHoldDemoData && (
+        <SeatHoldModal
+          ticket={activeHoldDemoData.ticket}
+          seatId={activeHoldDemoData.seatId}
+          origin={origin}
+          destination={destination}
+          journeyDateDisplay={formatDateCompact(selectedDateIso)}
+          onClose={() => setActiveHoldDemoData(null)}
+          onConfirmed={handleConfirmDemoHold}
+        />
+      )}
+
+      {/* SEATS SELECTED SUMMARY DIALOG */}
       {bookingConfirmedInfo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-modal-backdrop">
-          <div className="w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 border border-[#E5E1D8] shadow-2xl animate-modal-scale relative text-[#0B2341]">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="seats-selected-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000D21]/55 backdrop-blur-xs animate-modal-backdrop-in"
+        >
+          <div className="w-full max-w-lg bg-surface rounded-2xl p-6 sm:p-7 border border-[#EAE8E4] shadow-2xl animate-modal-scale-in relative text-brand">
             <button
               type="button"
               onClick={() => setBookingConfirmedInfo(null)}
-              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center cursor-pointer transition-colors"
+              aria-label="Close seat selection summary"
+              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-surface-2 hover:bg-surface-3 text-ink-muted hover:text-brand flex items-center justify-center cursor-pointer transition-colors"
             >
-              ✕
+              <X className="w-4 h-4" />
             </button>
 
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                OneGoHold™ 7-Min Guarantee Active
-              </span>
-            </div>
+            <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-accent bg-accent-tint/60 px-2.5 py-0.5 rounded-full">
+              Seats selected
+            </span>
 
-            <h3 className="font-sans text-2xl font-extrabold text-[#0B2341]">
-              Seats Locked Successfully!
+            <h3 id="seats-selected-title" className="font-sans text-2xl font-extrabold text-brand mt-2">
+              {bookingConfirmedInfo.ticket.operator}
             </h3>
-            <p className="text-xs text-[#64748B] mt-1 mb-5">
-              {bookingConfirmedInfo.ticket.operator} • {bookingConfirmedInfo.ticket.busType}
+            <p className="text-xs text-ink-muted mt-0.5 mb-5">
+              {bookingConfirmedInfo.ticket.coachTypeLabel} • {formatDateCompact(bookingConfirmedInfo.dateIso)}
             </p>
 
-            <div className="p-4 rounded-2xl bg-[#FBF9F5] border border-[#E5E1D8] space-y-2.5 text-xs mb-5">
-              <div className="flex justify-between items-center">
-                <span className="text-[#64748B]">Route:</span>
-                <span className="font-bold text-[#0B2341]">
-                  {origin} ➔ {destination}
+            <div className="p-4 rounded-xl bg-surface-2/70 border border-[#EAE8E4] space-y-2.5 text-xs mb-5">
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-ink-muted">Route:</span>
+                <span className="font-bold text-brand">
+                  {origin} → {destination}
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[#64748B]">Confirmed Seats:</span>
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-ink-muted">Seats selected:</span>
                 <div className="flex flex-wrap gap-1.5 justify-end">
                   {bookingConfirmedInfo.seats.map((s) => (
                     <span
                       key={s.id}
-                      className="px-2 py-0.5 rounded-md bg-teal-50 border border-teal-200 text-teal-800 font-bold font-mono text-[11px]"
+                      className="px-2 py-0.5 rounded-md bg-surface border border-[#EAE8E4] text-brand font-bold text-[11px]"
                     >
-                      {s.id} ({s.deck})
+                      {s.id} ({s.deck === 'upper' ? 'Upper deck' : 'Lower deck'})
                     </span>
                   ))}
                 </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[#64748B]">Boarding Point:</span>
-                <span className="font-semibold text-[#0B2341]">
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-ink-muted">Boarding point:</span>
+                <span className="font-semibold text-brand">
                   {bookingConfirmedInfo.ticket.originStation} ({bookingConfirmedInfo.ticket.departureTime})
                 </span>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-[#E5E1D8]">
-                <span className="text-[#64748B] font-medium">Total Fare:</span>
-                <span className="font-sans font-extrabold text-lg text-[#FC7728]">
-                  ₹{bookingConfirmedInfo.seats.reduce((sum, s) => sum + s.price, 0).toLocaleString('en-IN')}{' '}
-                  <span className="text-[10px] text-[#64748B] font-normal">(all taxes incl.)</span>
+              <div className="flex justify-between items-center pt-2 border-t border-[#EAE8E4]">
+                <span className="text-ink-muted font-medium">Total fare:</span>
+                <span className="font-sans font-extrabold text-lg text-brand tabular-nums">
+                  {formatInr(bookingConfirmedInfo.seats.reduce((sum, s) => sum + s.price, 0))}
                 </span>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-teal-50 border border-teal-200/80 mb-6 text-xs text-teal-900 flex items-start gap-2.5">
-              <span className="material-symbols-outlined text-[18px] text-teal-700 shrink-0">
-                security
-              </span>
-              <p className="leading-relaxed">
-                <strong>Instant Seat Protection:</strong> Zero double booking. Your seats are held in memory for 7 minutes while you proceed to passenger details.
-              </p>
-            </div>
+            <p className="text-xs text-ink-muted mb-5 leading-relaxed">
+              Seat selection is complete for this stage. Passenger details and payment checkout are next-stage prototype workflows not yet wired to a live booking service.
+            </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 type="button"
                 onClick={() => {
+                  setEditingSeatIds(bookingConfirmedInfo.seats.map((s) => s.id));
                   setSelectedBusForModal(bookingConfirmedInfo.ticket);
                   setBookingConfirmedInfo(null);
                 }}
-                className="w-full sm:w-1/2 py-3 rounded-xl border border-[#0B2341] text-[#0B2341] hover:bg-slate-100 font-bold text-xs transition-colors cursor-pointer"
+                className="w-full sm:w-1/2 min-h-[44px] py-2.5 rounded-xl border border-[#EAE8E4] hover:bg-surface-2 text-brand font-bold text-xs transition-colors cursor-pointer"
               >
-                Change Seats
+                Change seats
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  alert(
-                    `Proceeding to Stage 3: Passenger Details for seat(s) ${bookingConfirmedInfo.seats.map((s) => s.id).join(', ')}!`
-                  );
-                  setBookingConfirmedInfo(null);
-                }}
-                className="w-full sm:w-1/2 py-3 rounded-xl bg-[#FC7728] hover:bg-[#E06547] text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                onClick={() => setBookingConfirmedInfo(null)}
+                className="w-full sm:w-1/2 min-h-[44px] py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-on-accent font-bold text-xs transition-colors cursor-pointer"
               >
-                <span>Enter Passenger Details</span>
-                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                Done
               </button>
             </div>
           </div>

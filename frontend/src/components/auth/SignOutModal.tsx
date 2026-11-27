@@ -1,6 +1,6 @@
 import { useEffect, useRef, type FC } from 'react';
 import { LogOut, X } from 'lucide-react';
-import kolkataBannerImg from '../../assets/kolkata-profile-banner.webp';
+import { kolkataBannerImg } from '../../utils/preloadKolkataBanner';
 
 export interface SignOutModalProps {
   isOpen: boolean;
@@ -113,21 +113,35 @@ export const SignOutModal: FC<SignOutModalProps> = ({
         aria-hidden="true"
       />
 
-      {/* Modal Dialog Card with max-width 480px, 16px mobile margins, and smooth pop-in animation */}
+      {/* Modal Dialog Card with max-width 480px, 16px mobile margins, and smooth GPU-composited pop-in animation */}
       <div
         ref={dialogRef}
-        className="relative w-full max-w-[480px] bg-white rounded-[28px] sm:rounded-[32px] border border-[#EAE8E4] shadow-[0_25px_60px_-15px_rgba(11,35,65,0.35)] overflow-hidden z-10 transition-all duration-200 ease-out animate-in fade-in zoom-in-95"
+        className="relative w-full max-w-[480px] bg-white rounded-[28px] sm:rounded-[32px] border border-[#EAE8E4] shadow-[0_25px_60px_-15px_rgba(11,35,65,0.35)] overflow-hidden z-10 transition-all duration-200 ease-out animate-in fade-in zoom-in-95 transform-gpu will-change-[transform,opacity]"
       >
-        {/* Scenic Header with Kolkata Heritage Artwork (Howrah Bridge, Ganges, Vintage Bus) */}
-        <div className="relative h-[170px] sm:h-[185px] w-full bg-[#FCEBD7] overflow-hidden select-none">
+        {/* Scenic Header with 8000x2664 (3:1) Kolkata Heritage Artwork (Howrah Bridge, Ganges, Vintage Bus) */}
+        <div className="relative h-[148px] sm:h-[164px] w-full bg-[#FEE6D3] overflow-hidden select-none">
           <img
             src={kolkataBannerImg}
             alt="Kolkata heritage illustration with Howrah Bridge and vintage bus"
-            className="absolute inset-0 w-full h-full object-cover object-right pointer-events-none"
+            width={8000}
+            height={2664}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            className="absolute inset-0 w-full h-full object-cover object-right pointer-events-none transform-gpu"
+          />
+
+          {/* Subtle left cream protection feather for sharp [-> | One Go Bus brand legibility on all viewports */}
+          <div
+            className="absolute inset-y-0 left-0 w-[52%] pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(to right, rgba(254, 230, 211, 0.96) 0%, rgba(254, 230, 211, 0.72) 55%, rgba(254, 230, 211, 0) 100%)',
+            }}
           />
 
           {/* Left Brand Identifier: [→ | One Go Bus */}
-          <div className="absolute top-6 left-6 sm:top-7 sm:left-7 flex items-center gap-2.5 z-10 pointer-events-none">
+          <div className="absolute top-5 left-5 sm:top-6 sm:left-6 flex items-center gap-2.5 z-10 pointer-events-none">
             <LogOut className="w-5 h-5 text-[#0B2341] stroke-[2.4]" />
             <span className="w-0.5 h-4.5 bg-[#FC7728] rounded-full opacity-90" aria-hidden="true" />
             <span className="text-[17px] sm:text-lg font-bold text-[#0B2341] tracking-tight">

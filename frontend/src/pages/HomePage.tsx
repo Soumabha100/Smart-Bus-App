@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { parseJourneyDateInput } from '../features/results/journeyDate';
 import heroBg from '../assets/hero_bussathi_compact.webp';
 import exploreBus from '../assets/explore_bus.webp';
 import exploreVoucher from '../assets/explore_voucher.webp';
@@ -50,14 +51,41 @@ const DAY_NAMES_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  const navPrefill = (location.state as {
+    from?: string;
+    to?: string;
+    date?: string;
+    time?: string;
+    budget?: number;
+  } | null) || {};
+
+  const initialFromCity = searchParams.get('from') || navPrefill.from || 'Kolkata';
+  const initialToCity = searchParams.get('to') || navPrefill.to || 'Siliguri';
+  const initialDateIso = parseJourneyDateInput(searchParams.get('date') || navPrefill.date);
+  const initialDateObj = initialDateIso
+    ? new Date(
+        Number(initialDateIso.slice(0, 4)),
+        Number(initialDateIso.slice(5, 7)) - 1,
+        Number(initialDateIso.slice(8, 10))
+      )
+    : new Date(2026, 10, 17);
 
   // ─────────────────────────────────────────────────────────────
   // 1. SEARCH FORM STATES
   // ─────────────────────────────────────────────────────────────
-  const [fromCity, setFromCity] = useState('Kolkata');
-  const [fromSub, setFromSub] = useState('Esplanade / Babughat');
-  const [toCity, setToCity] = useState('Siliguri');
-  const [toSub, setToSub] = useState('Old Bus Stand');
+  const [fromCity, setFromCity] = useState(initialFromCity);
+  const [fromSub, setFromSub] = useState(
+    BENGAL_CITIES.find((c) => c.city.toLowerCase().startsWith(initialFromCity.toLowerCase()))?.terminal ||
+      'Esplanade / Babughat'
+  );
+  const [toCity, setToCity] = useState(initialToCity);
+  const [toSub, setToSub] = useState(
+    BENGAL_CITIES.find((c) => c.city.toLowerCase().startsWith(initialToCity.toLowerCase()))?.terminal ||
+      'Old Bus Stand'
+  );
 
   const [fromDropdownOpen, setFromDropdownOpen] = useState(false);
   const [toDropdownOpen, setToDropdownOpen] = useState(false);
@@ -65,16 +93,17 @@ export const HomePage: React.FC = () => {
   const [toSearch, setToSearch] = useState('');
   const [isSwapping, setIsSwapping] = useState(false);
 
-  // Calendar states (17 Nov 2026 as per finalized Stitch design)
+  // Calendar states (17 Nov 2026 default or restored from Edit search)
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date(2026, 10, 17));
-  const [displayedYear, setDisplayedYear] = useState(2026);
-  const [displayedMonth, setDisplayedMonth] = useState(10); // November
+  const [selectedDate, setSelectedDate] = useState<Date>(initialDateObj);
+  const [displayedYear, setDisplayedYear] = useState(initialDateObj.getFullYear());
+  const [displayedMonth, setDisplayedMonth] = useState(initialDateObj.getMonth());
 
   // Time & Budget
-  const [selectedTime, setSelectedTime] = useState('Anytime');
+  const [selectedTime, setSelectedTime] = useState(navPrefill.time || 'Anytime');
   const [timeDropdownOpen, setTimeDropdownOpen] = useState(false);
-  const [budget, setBudget] = useState(800);
+  const [budget, setBudget] = useState(navPrefill.budget || 800);
+  const [hasCustomBudget, setHasCustomBudget] = useState(typeof navPrefill.budget === 'number');
 
   // ─────────────────────────────────────────────────────────────
   // 2. UI NAVIGATION & COPILOT DRAWER STATES
@@ -162,16 +191,36 @@ export const HomePage: React.FC = () => {
     setTimeout(() => setIsSwapping(false), 300);
   };
 
+  const formatDateIso = (d: Date): string => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const handleTriggerSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    navigate('/results', {
+    const dateIso = formatDateIso(selectedDate);
+    const params = new URLSearchParams({
+      from: fromCity,
+      to: toCity,
+      date: dateIso,
+    });
+    if (hasCustomBudget) {
+      params.set('maxPrice', String(budget));
+    }
+    if (selectedTime !== 'Anytime') {
+      params.set('time', selectedTime);
+    }
+
+    navigate(`/results?${params.toString()}`, {
       state: {
         from: fromCity,
         to: toCity,
-        date: formatDateForDisplay(selectedDate),
-        budget,
-        time: selectedTime,
-        mood: 'Recommended',
+        date: dateIso,
+        dateDisplay: formatDateForDisplay(selectedDate),
+        budget: hasCustomBudget ? budget : undefined,
+        time: selectedTime !== 'Anytime' ? selectedTime : undefined,
       },
     });
   };
@@ -889,7 +938,10 @@ export const HomePage: React.FC = () => {
                       max="2500"
                       step="50"
                       value={budget}
-                      onChange={(e) => setBudget(Number(e.target.value))}
+                      onChange={(e) => {
+                        setBudget(Number(e.target.value));
+                        setHasCustomBudget(true);
+                      }}
                       style={{
                         background: `linear-gradient(to right, #FF7900 0%, #FF7900 ${((budget - 200) / (2500 - 200)) * 100
                           }%, #374151 ${((budget - 200) / (2500 - 200)) * 100}%, #374151 100%)`,
@@ -912,6 +964,14 @@ export const HomePage: React.FC = () => {
               {/* Row 4: Search Button */}
               <button
                 type="submit"
+                onMouseEnter={() => {
+                  void import('./ResultsPage');
+                  void import('../features/results/RouteIllustration');
+                }}
+                onFocus={() => {
+                  void import('./ResultsPage');
+                  void import('../features/results/RouteIllustration');
+                }}
                 className="h-[38px] sm:h-[40px] lg:h-[42px] rounded-[10px] sm:rounded-[11px] bg-gradient-to-r from-[#104FBD] to-[#062E79] hover:from-[#0B44A8] hover:to-[#042055] text-white text-[14px] sm:text-[14.5px] font-[800] flex items-center justify-center gap-2 shadow-[0_3px_10px_rgba(11,61,146,0.2)] hover:shadow-[0_5px_15px_rgba(11,61,146,0.28)] transition-all duration-200 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">search</span>
@@ -972,6 +1032,7 @@ export const HomePage: React.FC = () => {
             <div
               onClick={() => {
                 setBudget(400);
+                setHasCustomBudget(true);
                 searchSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
               }}
               className="group bg-[#FFF0DF] hover:bg-[#FFE5C7] p-4 rounded-2xl transition-all duration-200 flex flex-col justify-between shadow-xs border border-[#FFE1BF] cursor-pointer"
