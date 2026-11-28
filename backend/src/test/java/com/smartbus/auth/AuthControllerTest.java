@@ -5,11 +5,15 @@ import com.smartbus.auth.controller.AuthController;
 import com.smartbus.auth.dto.AuthResponse;
 import com.smartbus.auth.dto.LoginRequest;
 import com.smartbus.auth.dto.RegisterRequest;
+import com.smartbus.auth.dto.SendOtpRequest;
+import com.smartbus.auth.dto.SendOtpResponse;
 import com.smartbus.auth.dto.UserResponse;
+import com.smartbus.auth.dto.VerifyOtpRequest;
 import com.smartbus.auth.entity.Role;
 import com.smartbus.auth.jwt.JwtAuthenticationFilter;
 import com.smartbus.auth.jwt.JwtTokenProvider;
 import com.smartbus.auth.service.AuthService;
+import com.smartbus.auth.service.OtpService;
 import com.smartbus.common.exception.EmailAlreadyExistsException;
 import com.smartbus.common.exception.GlobalExceptionHandler;
 import com.smartbus.common.exception.InvalidCredentialsException;
@@ -27,6 +31,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -42,6 +47,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private OtpService otpService;
 
     @Test
     @DisplayName("POST /api/v1/auth/register should return 201 Created on valid payload")
@@ -142,5 +150,50 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.status").value(401))
             .andExpect(jsonPath("$.error").value("Unauthorized"))
             .andExpect(jsonPath("$.message").value("Invalid email or password"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/otp/send should return 200 OK with dispatch confirmation")
+    void shouldSendOtpSuccessfully() throws Exception {
+        SendOtpRequest request = new SendOtpRequest("9876543210");
+        SendOtpResponse response = SendOtpResponse.of("OTP sent successfully", true, "+91 98765 43210", "123456");
+
+        given(otpService.sendOtp(anyString())).willReturn(response);
+
+        mockMvc.perform(post("/api/v1/auth/otp/send")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.phone").value("+91 98765 43210"))
+            .andExpect(jsonPath("$.devOtp").value("123456"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/otp/verify should return 200 OK with JWT token upon valid OTP")
+    void shouldVerifyOtpAndLoginSuccessfully() throws Exception {
+        VerifyOtpRequest request = new VerifyOtpRequest("9876543210", "123456");
+
+        UserResponse userResponse = new UserResponse(
+            UUID.randomUUID(),
+            "Commuter",
+            "3210",
+            "9876543210@phone.onego",
+            "+91 9876543210",
+            Role.PASSENGER,
+            LocalDateTime.now()
+        );
+
+        AuthResponse authResponse = AuthResponse.of("mock_phone_jwt_token", userResponse);
+
+        given(otpService.verifyOtp(anyString(), anyString())).willReturn(true);
+        given(authService.loginOrRegisterWithPhone(anyString())).willReturn(authResponse);
+
+        mockMvc.perform(post("/api/v1/auth/otp/verify")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.accessToken").value("mock_phone_jwt_token"))
+            .andExpect(jsonPath("$.user.phone").value("+91 9876543210"));
     }
 }

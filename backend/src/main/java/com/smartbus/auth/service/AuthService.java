@@ -71,4 +71,31 @@ public class AuthService {
 
         return AuthResponse.of(token, UserResponse.fromEntity(user));
     }
+
+    @Transactional
+    public AuthResponse loginOrRegisterWithPhone(String rawPhone) {
+        String digits = rawPhone != null ? rawPhone.replaceAll("\\D", "") : "";
+        final String cleanDigits = digits.length() > 10 ? digits.substring(digits.length() - 10) : digits;
+        final String standardizedPhone = "+91 " + cleanDigits;
+
+        User user = userRepository.findByPhone(standardizedPhone)
+            .or(() -> userRepository.findByPhone(cleanDigits))
+            .orElseGet(() -> {
+                String defaultEmail = cleanDigits + "@phone.onego";
+                String randomSecret = java.util.UUID.randomUUID().toString();
+                String placeholderPasswordHash = passwordEncoder.encode(randomSecret);
+                User newUser = new User(
+                    "Commuter",
+                    cleanDigits.length() >= 4 ? cleanDigits.substring(cleanDigits.length() - 4) : "User",
+                    defaultEmail,
+                    standardizedPhone,
+                    placeholderPasswordHash,
+                    Role.PASSENGER
+                );
+                return userRepository.save(newUser);
+            });
+
+        String token = tokenProvider.generateToken(user);
+        return AuthResponse.of(token, UserResponse.fromEntity(user));
+    }
 }

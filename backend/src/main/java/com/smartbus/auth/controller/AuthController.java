@@ -3,7 +3,11 @@ package com.smartbus.auth.controller;
 import com.smartbus.auth.dto.AuthResponse;
 import com.smartbus.auth.dto.LoginRequest;
 import com.smartbus.auth.dto.RegisterRequest;
+import com.smartbus.auth.dto.SendOtpRequest;
+import com.smartbus.auth.dto.SendOtpResponse;
+import com.smartbus.auth.dto.VerifyOtpRequest;
 import com.smartbus.auth.service.AuthService;
+import com.smartbus.auth.service.OtpService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,9 +27,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final OtpService otpService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, OtpService otpService) {
         this.authService = authService;
+        this.otpService = otpService;
     }
 
     @PostMapping("/register")
@@ -46,6 +52,25 @@ public class AuthController {
         HttpServletResponse response
     ) {
         AuthResponse authResponse = authService.login(request);
+        attachAuthCookie(response, authResponse.accessToken());
+        return ResponseEntity.ok(authResponse);
+    }
+
+    @PostMapping("/otp/send")
+    @Operation(summary = "Send OTP to mobile phone", description = "Dispatches a 6-digit verification code via SMS to the mobile number")
+    public ResponseEntity<SendOtpResponse> sendOtp(@Valid @RequestBody SendOtpRequest request) {
+        SendOtpResponse response = otpService.sendOtp(request.phone());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/otp/verify")
+    @Operation(summary = "Verify OTP and login", description = "Validates the 6-digit code and issues a signed JWT access token")
+    public ResponseEntity<AuthResponse> verifyOtp(
+        @Valid @RequestBody VerifyOtpRequest request,
+        HttpServletResponse response
+    ) {
+        otpService.verifyOtp(request.phone(), request.otp());
+        AuthResponse authResponse = authService.loginOrRegisterWithPhone(request.phone());
         attachAuthCookie(response, authResponse.accessToken());
         return ResponseEntity.ok(authResponse);
     }
