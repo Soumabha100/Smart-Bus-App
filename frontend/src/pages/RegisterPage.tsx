@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, type RegisterFormData } from '../schemas/authSchema';
 import { registerUser } from '../api/authApi';
 import { useAuth } from '../context/useAuth';
+import { useToast } from '../context/useToast';
 import { AuthLayout } from '../features/auth/AuthLayout';
 import { AuthField } from '../features/auth/AuthField';
 import { PasswordField } from '../features/auth/PasswordField';
@@ -14,6 +15,7 @@ import { AuthSocialButtons } from '../features/auth/AuthSocialButtons';
 export const RegisterPage: FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phone, setPhone] = useState('');
   const [isStudent, setIsStudent] = useState(false);
@@ -68,7 +70,14 @@ export const RegisterPage: FC = () => {
 
     // Normalize phone number (backend expects 10-15 digits)
     const cleanedDigits = phone.replace(/\D/g, '');
-    const normalizedPhone = cleanedDigits.length >= 10 ? cleanedDigits : '9830124567';
+    if (cleanedDigits.length < 10) {
+      const errorMsg = 'Please enter a valid 10-digit mobile number.';
+      setServerError(errorMsg);
+      toast.warning(errorMsg);
+      setIsSubmitting(false);
+      return;
+    }
+    const normalizedPhone = cleanedDigits;
 
     try {
       const authResponse = await registerUser({
@@ -93,7 +102,7 @@ export const RegisterPage: FC = () => {
         memberSince: 'November 2026',
         isStudent: isStudent,
         emergencyContactName: 'Family Contact',
-        emergencyContactPhone: '+91 98300 11223',
+        emergencyContactPhone: '',
         gender: 'Not Specified',
         seatPreference: 'lower_window' as const,
         whatsappNotifications: true,
@@ -102,16 +111,20 @@ export const RegisterPage: FC = () => {
 
       // Call login from useAuth to update both React state and localStorage
       login(userData, authResponse.accessToken);
+      toast.success('User registered successfully');
 
       navigate('/', { replace: true });
     } catch (err: unknown) {
       const errWithDetails = err as Error & { details?: { validationErrors?: Record<string, string> } };
+      let errorMsg = 'Registration failed. Please try again.';
       if (errWithDetails.details?.validationErrors) {
         const firstField = Object.keys(errWithDetails.details.validationErrors)[0];
-        setServerError(`${firstField}: ${errWithDetails.details.validationErrors[firstField]}`);
-      } else {
-        setServerError(errWithDetails.message || 'Registration failed. Please try again.');
+        errorMsg = `${firstField}: ${errWithDetails.details.validationErrors[firstField]}`;
+      } else if (errWithDetails.message) {
+        errorMsg = errWithDetails.message;
       }
+      setServerError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -141,7 +154,8 @@ export const RegisterPage: FC = () => {
             id="reg-name"
             type="text"
             label="Full Name"
-            placeholder="e.g. Rohan Sen"
+            autoComplete="name"
+            required
             error={errors.name?.message}
             leadingIcon={<span className="material-symbols-outlined text-[18px]">badge</span>}
             {...register('name')}
@@ -151,9 +165,11 @@ export const RegisterPage: FC = () => {
             id="reg-phone"
             type="tel"
             label="Mobile Phone"
-            placeholder="98765 43210"
+            autoComplete="tel"
+            maxLength={10}
+            required
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
             leadingIcon={<span className="material-symbols-outlined text-[18px]">phone_iphone</span>}
           />
         </div>
@@ -163,7 +179,8 @@ export const RegisterPage: FC = () => {
           id="reg-email"
           type="email"
           label="Email Address"
-          placeholder="e.g. rohan.wanderer@gmail.com"
+          autoComplete="email"
+          required
           error={errors.email?.message}
           leadingIcon={<span className="material-symbols-outlined text-[18px]">mail</span>}
           {...register('email')}
@@ -173,7 +190,8 @@ export const RegisterPage: FC = () => {
         <PasswordField
           id="reg-password"
           label="Password"
-          placeholder="At least 8 chars with letter & number"
+          autoComplete="new-password"
+          required
           error={errors.password?.message}
           strength={strength}
           leadingIcon={<span className="material-symbols-outlined text-[18px]">lock</span>}

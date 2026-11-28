@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AppLayout } from './components/layout/AppLayout';
 
@@ -32,55 +33,57 @@ const PageLoader = () => (
 export function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {/* Universal Glassmorphic Layout wrapping all pages */}
-            <Route element={<AppLayout />}>
-              {/* Primary Entry Point: OneGoBus Home */}
-              <Route path="/" element={<HomePage />} />
-              <Route path="/home" element={<Navigate to="/" replace />} />
+      <ToastProvider>
+        <AuthProvider>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Universal Glassmorphic Layout wrapping all pages */}
+              <Route element={<AppLayout />}>
+                {/* Primary Entry Point: OneGoBus Home */}
+                <Route path="/" element={<HomePage />} />
+                <Route path="/home" element={<Navigate to="/" replace />} />
 
-              {/* Public Discovery Routes */}
-              <Route path="/features" element={<FeaturesPage />} />
-              <Route path="/how-it-works" element={<HowItWorksPage />} />
-              <Route path="/routes" element={<RoutesPage />} />
-              <Route path="/ask-ai" element={<AskAiPage />} />
-              <Route path="/about" element={<AboutPage />} />
+                {/* Public Discovery Routes */}
+                <Route path="/features" element={<FeaturesPage />} />
+                <Route path="/how-it-works" element={<HowItWorksPage />} />
+                <Route path="/routes" element={<RoutesPage />} />
+                <Route path="/ask-ai" element={<AskAiPage />} />
+                <Route path="/about" element={<AboutPage />} />
 
-              {/* Auth Routes */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
+                {/* Auth Routes */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
 
-              {/* Authenticated Traveler Profile Route */}
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Authenticated Traveler Profile Route */}
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Support & Legal Routes */}
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/faq" element={<FaqPage />} />
+                {/* Support & Legal Routes */}
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/faq" element={<FaqPage />} />
 
-              {/* Bus Search Results */}
-              <Route path="/results" element={<ResultsPage />} />
+                {/* Bus Search Results */}
+                <Route path="/results" element={<ResultsPage />} />
 
-              {/* Sprint 0 System Health */}
-              <Route path="/system-status" element={<SystemStatusPage />} />
+                {/* Sprint 0 System Health */}
+                <Route path="/system-status" element={<SystemStatusPage />} />
 
-              {/* 404 Fallback */}
-              <Route path="/404" element={<NotFoundPage />} />
-              <Route path="*" element={<Navigate to="/404" replace />} />
-            </Route>
-          </Routes>
-        </Suspense>
-      </AuthProvider>
+                {/* 404 Fallback */}
+                <Route path="/404" element={<NotFoundPage />} />
+                <Route path="*" element={<Navigate to="/404" replace />} />
+              </Route>
+            </Routes>
+          </Suspense>
+        </AuthProvider>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

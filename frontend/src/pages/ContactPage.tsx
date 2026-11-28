@@ -65,7 +65,6 @@ export const ContactPage: FC = () => {
                 id="contact-name"
                 type="text"
                 required
-                placeholder="Rohan Sen"
                 className="w-full min-h-[42px] px-3.5 rounded-xl bg-surface-2 border border-line/60 text-xs text-ink-strong focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </div>
@@ -78,7 +77,6 @@ export const ContactPage: FC = () => {
                 id="contact-email"
                 type="email"
                 required
-                placeholder="rohan@example.com"
                 className="w-full min-h-[42px] px-3.5 rounded-xl bg-surface-2 border border-line/60 text-xs text-ink-strong focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </div>
@@ -91,7 +89,6 @@ export const ContactPage: FC = () => {
                 id="contact-message"
                 rows={3}
                 required
-                placeholder="Describe your inquiry..."
                 className="w-full p-3 rounded-xl bg-surface-2 border border-line/60 text-xs text-ink-strong focus:outline-none focus:ring-2 focus:ring-accent resize-none"
               />
             </div>
