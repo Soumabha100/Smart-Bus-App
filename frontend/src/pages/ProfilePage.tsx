@@ -21,6 +21,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
+import { useToast } from '../context/useToast';
 import { kolkataBannerImg, preloadKolkataBanner } from '../utils/preloadKolkataBanner';
 
 const SignOutModal = lazy(() => import('../components/auth/SignOutModal'));
@@ -28,6 +29,7 @@ const SignOutModal = lazy(() => import('../components/auth/SignOutModal'));
 export const ProfilePage: FC = () => {
   const navigate = useNavigate();
   const { user, logout, updateUser } = useAuth();
+  const { toast } = useToast();
 
   // Active sub-tab state: 'personal' | 'preferences' | 'security'
   const [activeTab, setActiveTab] = useState<'personal' | 'preferences' | 'security'>('personal');
@@ -76,6 +78,7 @@ export const ProfilePage: FC = () => {
     });
     setToastMessage('Personal profile updated successfully!');
     setShowSaveToast(true);
+    toast.success('Personal profile updated successfully!');
     setTimeout(() => setShowSaveToast(false), 3000);
   };
 
@@ -88,6 +91,7 @@ export const ProfilePage: FC = () => {
     });
     setToastMessage('Travel preferences saved!');
     setShowSaveToast(true);
+    toast.success('Travel preferences saved!');
     setTimeout(() => setShowSaveToast(false), 3000);
   };
 
@@ -418,7 +422,6 @@ export const ProfilePage: FC = () => {
                     onChange={(e) => setName(e.target.value)}
                     required
                     className="w-full pl-11 pr-4 py-3 rounded-xl bg-white border border-slate-200 text-xs sm:text-sm font-semibold text-[#0B2341] focus:ring-2 focus:ring-[#FC7728] focus:border-transparent outline-none transition-all shadow-2xs"
-                    placeholder="e.g. Soumabha Majumder"
                   />
                 </div>
               </div>
@@ -460,7 +463,6 @@ export const ProfilePage: FC = () => {
                     onChange={(e) => setPhone(e.target.value)}
                     required
                     className="w-full pl-11 pr-4 py-3 rounded-xl bg-white border border-slate-200 text-xs sm:text-sm font-semibold text-[#0B2341] focus:ring-2 focus:ring-[#FC7728] focus:border-transparent outline-none transition-all shadow-2xs"
-                    placeholder="08420360166"
                   />
                 </div>
               </div>
@@ -494,7 +496,6 @@ export const ProfilePage: FC = () => {
                   value={emergencyContactName}
                   onChange={(e) => setEmergencyContactName(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-xs sm:text-sm font-semibold text-[#0B2341] focus:ring-2 focus:ring-[#FC7728] focus:border-transparent outline-none transition-all shadow-2xs"
-                  placeholder="e.g. Priya Sen (Sister)"
                 />
               </div>
 
@@ -509,7 +510,6 @@ export const ProfilePage: FC = () => {
                   value={emergencyContactPhone}
                   onChange={(e) => setEmergencyContactPhone(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-xs sm:text-sm font-semibold text-[#0B2341] focus:ring-2 focus:ring-[#FC7728] focus:border-transparent outline-none transition-all shadow-2xs"
-                  placeholder="+91 98309 87654"
                 />
               </div>
             </div>

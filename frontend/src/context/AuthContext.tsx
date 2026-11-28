@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, type FC, type ReactNode } from 'react
 import { tokenStorage, type StoredUser } from '../utils/tokenStorage';
 import { AuthContext } from './authContextInstance';
 import { logoutUser } from '../api/authApi';
+import { toast } from './ToastContext';
 
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<StoredUser | null>(() => tokenStorage.getUser());
@@ -33,6 +34,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       tokenStorage.clear();
       setUser(null);
       setIsAuthenticated(false);
+      toast.success('Logged out successfully');
     }
   }, []);
 

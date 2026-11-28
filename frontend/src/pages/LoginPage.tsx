@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { tokenStorage } from '../utils/tokenStorage';
 import { loginUser, sendOtp, verifyOtp } from '../api/authApi';
 import { useAuth } from '../context/useAuth';
+import { useToast } from '../context/useToast';
 import { AuthLayout } from '../features/auth/AuthLayout';
 import { AuthField } from '../features/auth/AuthField';
 import { PasswordField } from '../features/auth/PasswordField';
@@ -14,9 +15,10 @@ export const LoginPage: FC = () => {
   const location = useLocation();
 
   const { login } = useAuth();
+  const { toast } = useToast();
   const [authMode, setAuthMode] = useState<'email' | 'phone'>('email');
-  const [email, setEmail] = useState('rohan.wanderer@gmail.com');
-  const [password, setPassword] = useState('journey2024');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   // Phone OTP States
   const [phone, setPhone] = useState('');
@@ -42,8 +44,10 @@ export const LoginPage: FC = () => {
   const handleSendOtp = async () => {
     const cleanedDigits = phone.replace(/\D/g, '');
     if (cleanedDigits.length < 10) {
-      setErrorMessage('Please enter a valid 10-digit mobile number.');
+      const msg = 'Please enter a valid 10-digit mobile number.';
+      setErrorMessage(msg);
       setShowErrorBanner(true);
+      toast.warning(msg);
       return;
     }
 
@@ -55,7 +59,9 @@ export const LoginPage: FC = () => {
       const response = await sendOtp({ phone: cleanedDigits });
       setPhoneStep('otp');
       setCountdown(30);
-      setSuccessMessage(response.message || 'Verification passcode dispatched.');
+      const sentMsg = response.message || 'Verification passcode dispatched.';
+      setSuccessMessage(sentMsg);
+      toast.info(sentMsg);
       if (response.devOtp) {
         setDevOtpHint(response.devOtp);
       }
@@ -72,13 +78,16 @@ export const LoginPage: FC = () => {
         setDevOtpHint(simulatedOtp);
         setPhoneStep('otp');
         setCountdown(30);
-        setSuccessMessage('Backend offline: switched to Local Dev Mode. Use the passcode below to verify.');
+        const notice = 'Backend offline: switched to Local Dev Mode. Use the passcode below to verify.';
+        setSuccessMessage(notice);
+        toast.warning(notice);
         return;
       }
 
       const message = err instanceof Error ? err.message : 'Failed to dispatch verification code. Please try again.';
       setErrorMessage(message);
       setShowErrorBanner(true);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -87,8 +96,10 @@ export const LoginPage: FC = () => {
   const handleVerifyOtp = async () => {
     const cleanedOtp = otpCode.trim();
     if (cleanedOtp.length !== 6) {
-      setErrorMessage('Please enter the 6-digit verification code.');
+      const msg = 'Please enter the 6-digit verification code.';
+      setErrorMessage(msg);
       setShowErrorBanner(true);
+      toast.warning(msg);
       return;
     }
 
@@ -126,6 +137,7 @@ export const LoginPage: FC = () => {
       tokenStorage.setToken(authResponse.accessToken);
       tokenStorage.setUser(userData);
       login(userData, authResponse.accessToken);
+      toast.success(`Welcome, ${userData.name}`);
 
       const destination = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
       navigate(destination, { replace: true });
@@ -160,6 +172,7 @@ export const LoginPage: FC = () => {
         tokenStorage.setToken(devToken);
         tokenStorage.setUser(userData);
         login(userData, devToken);
+        toast.success(`Welcome, ${userData.name}`);
         const destination = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
         navigate(destination, { replace: true });
         return;
@@ -168,6 +181,7 @@ export const LoginPage: FC = () => {
       const message = err instanceof Error ? err.message : 'Invalid verification code. Please try again.';
       setErrorMessage(message);
       setShowErrorBanner(true);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -178,8 +192,10 @@ export const LoginPage: FC = () => {
 
     if (authMode === 'email') {
       if (!email.trim() || !password) {
-        setErrorMessage('Please enter your registered email and password.');
+        const msg = 'Please enter your registered email and password.';
+        setErrorMessage(msg);
         setShowErrorBanner(true);
+        toast.warning(msg);
         return;
       }
 
@@ -216,6 +232,7 @@ export const LoginPage: FC = () => {
         tokenStorage.setToken(authResponse.accessToken);
         tokenStorage.setUser(userData);
         login(userData, authResponse.accessToken);
+        toast.success(`Welcome, ${userData.name}`);
 
         const destination = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
         navigate(destination, { replace: true });
@@ -223,6 +240,7 @@ export const LoginPage: FC = () => {
         const message = err instanceof Error ? err.message : 'Invalid email or password';
         setErrorMessage(message);
         setShowErrorBanner(true);
+        toast.error(message);
       } finally {
         setIsLoading(false);
       }
@@ -251,11 +269,10 @@ export const LoginPage: FC = () => {
             setShowErrorBanner(false);
             setSuccessMessage(null);
           }}
-          className={`min-h-[42px] py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all ${
-            authMode === 'email'
+          className={`min-h-[42px] py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all ${authMode === 'email'
               ? 'bg-brand text-on-brand border-brand shadow-sm'
               : 'bg-surface-2/60 border-line/50 text-ink-muted hover:text-ink-strong'
-          }`}
+            }`}
         >
           <span className="material-symbols-outlined text-[16px]">mail</span>
           <span>Email &amp; Password</span>
@@ -268,11 +285,10 @@ export const LoginPage: FC = () => {
             setShowErrorBanner(false);
             setSuccessMessage(null);
           }}
-          className={`min-h-[42px] py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all ${
-            authMode === 'phone'
+          className={`min-h-[42px] py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border transition-all ${authMode === 'phone'
               ? 'bg-brand text-on-brand border-brand shadow-sm'
               : 'bg-surface-2/60 border-line/50 text-ink-muted hover:text-ink-strong'
-          }`}
+            }`}
         >
           <span className="material-symbols-outlined text-[16px]">smartphone</span>
           <span>Phone OTP</span>
@@ -331,7 +347,7 @@ export const LoginPage: FC = () => {
                 setEmail(e.target.value);
                 setShowErrorBanner(false);
               }}
-              placeholder="e.g. rohan.wanderer@gmail.com"
+              autoComplete="email"
               required
               leadingIcon={<span className="material-symbols-outlined text-[18px]">mail</span>}
             />
@@ -344,7 +360,7 @@ export const LoginPage: FC = () => {
                 setPassword(e.target.value);
                 setShowErrorBanner(false);
               }}
-              placeholder="••••••••"
+              autoComplete="current-password"
               required
               leadingIcon={<span className="material-symbols-outlined text-[18px]">lock</span>}
             />
@@ -394,8 +410,8 @@ export const LoginPage: FC = () => {
                     setPhone(val);
                     setShowErrorBanner(false);
                   }}
-                  placeholder="98765 43210"
-                  className="w-full pl-24 pr-4 py-3 bg-surface border border-line rounded-xl text-ink-strong text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand font-medium placeholder:text-ink-muted/50"
+                  autoComplete="tel"
+                  className="w-full pl-24 pr-4 py-3 bg-surface border border-line rounded-xl text-ink-strong text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand font-medium"
                   required
                 />
               </div>
@@ -441,14 +457,14 @@ export const LoginPage: FC = () => {
                 inputMode="numeric"
                 maxLength={6}
                 autoFocus
+                autoComplete="one-time-code"
                 value={otpCode}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '');
                   setOtpCode(val);
                   setShowErrorBanner(false);
                 }}
-                placeholder="000000"
-                className="w-full px-4 py-3 bg-surface border border-line rounded-xl text-ink-strong text-xl font-mono text-center tracking-[0.4em] focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand placeholder:tracking-normal placeholder:text-ink-muted/40 font-bold"
+                className="w-full px-4 py-3 bg-surface border border-line rounded-xl text-ink-strong text-xl font-mono text-center tracking-[0.4em] focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand font-bold"
                 required
               />
             </div>
